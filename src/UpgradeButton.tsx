@@ -20,6 +20,10 @@ export function UpgradeButton() {
         return;
       }
 
+      if (user.subscriptionStatus === "active") {
+        return;
+      }
+
       const result = await createCheckoutSession({
         clerkId: user.clerkId,
         domain: window.location.origin,
@@ -45,8 +49,9 @@ export function UpgradeButton() {
     <button
       className="px-4 py-2 rounded bg-primary text-white font-semibold hover:bg-primary-hover transition-colors shadow-sm hover:shadow mr-2 uppercase tracking-wide text-sm"
       onClick={handleUpgrade}
+      disabled={user?.subscriptionStatus === "active"}
     >
-      Upgrade - $19/mo
+      {user?.subscriptionStatus === "active" ? "Party Member" : "Upgrade - $19/mo"}
     </button>
   );
 }

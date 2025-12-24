@@ -1,4 +1,4 @@
-import { Authenticated, Unauthenticated, useQuery, useMutation } from "convex/react";
+import { Authenticated, Unauthenticated, useAction, useQuery, useMutation } from "convex/react";
 import { SignInButton, UserButton } from "@clerk/clerk-react";
 import { api } from "../convex/_generated/api";
 import { UpgradeButton } from "./UpgradeButton";
@@ -94,6 +94,7 @@ function Content() {
 function UserContent() {
   const user = useQuery(api.users.getCurrentUser);
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  const syncAfterSuccess = useAction(api.stripe.syncAfterSuccess);
   const messageCount = useQuery(api.queries.countMessagesByUserId, { userId: user?.clerkId || "unknown" });
   const requestedCreateRef = useRef(false);
 
@@ -104,6 +105,25 @@ function UserContent() {
       void getOrCreateUser();
     }
   }, [user, getOrCreateUser]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get("success");
+
+    if (success === "true" && user && user.clerkId) {
+      syncAfterSuccess({
+        clerkId: user.clerkId,
+      }).then((result) => {
+        if (result.success) {
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("success");
+          window.history.replaceState({}, "", newUrl.toString());
+        } else {
+          console.error("Failed to sync subscription data:", result.error);
+        }
+      });
+    }
+  }, [user, syncAfterSuccess]);
 
   if (user === undefined) {
     return (
