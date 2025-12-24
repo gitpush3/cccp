@@ -52,7 +52,7 @@ export function Paywall() {
 
         <div className="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-gray-800 p-6 mb-6 shadow-md">
           <div className="text-center mb-6">
-            <div className="text-4xl font-bold text-primary">$49</div>
+            <div className="text-4xl font-bold text-primary">$19</div>
             <div className="text-gray-500 dark:text-gray-400">per month</div>
           </div>
 

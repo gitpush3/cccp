@@ -234,6 +234,10 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
             <input
               type="text"
               id="message-input"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ask about codes, regulations, or upload blueprints..."
