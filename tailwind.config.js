@@ -10,9 +10,12 @@ module.exports = {
         sans: ["Inter var", ...fontFamily.sans],
       },
       borderRadius: {
-        DEFAULT: "8px",
-        secondary: "4px",
-        container: "12px",
+        DEFAULT: "1rem", // More rounded default
+        lg: "1.5rem",
+        xl: "2rem",
+        "2xl": "3rem",
+        full: "9999px", // Pill shape
+        container: "2rem",
       },
       boxShadow: {
         DEFAULT: "0 1px 4px rgba(0, 0, 0, 0.1)",
@@ -20,20 +23,25 @@ module.exports = {
       },
       colors: {
         primary: {
-          DEFAULT: "#DA291C", // Soviet Red
-          hover: "#B91C1C",
+          DEFAULT: "#002D4D", // Deep Blue
+          hover: "#001f36",
         },
         secondary: {
-          DEFAULT: "#6B7280",
-          hover: "#4B5563",
+          DEFAULT: "#757575", // Mid Gray
+          hover: "#424242",
         },
         accent: {
-          DEFAULT: "#FFD700", // Gold
-          hover: "#D4AF37",
+          DEFAULT: "#B85042", // Terracotta
+          hover: "#9a3f33",
         },
         dark: {
-          DEFAULT: "#171717",
-          surface: "#262626",
+          DEFAULT: "#424242", // Dark Gray for dark mode background
+          surface: "#303030", // Slightly darker/lighter for surfaces? Or keep same? User said "Dark Gray (for dark mode fill)"
+        },
+        gray: {
+          light: "#E0E0E0",
+          mid: "#757575",
+          dark: "#424242",
         },
       },
       spacing: {

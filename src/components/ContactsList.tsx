@@ -14,7 +14,7 @@ export function ContactsList({ city }: ContactsListProps) {
       <div className="p-4">
         <div className="animate-pulse space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div key={i} className="h-16 bg-white/10 rounded-xl"></div>
           ))}
         </div>
       </div>
@@ -28,8 +28,8 @@ export function ContactsList({ city }: ContactsListProps) {
     <div className="p-4 space-y-6">
       {govContacts.length > 0 && (
         <div>
-          <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2 uppercase tracking-wide">
-            <Building className="h-4 w-4 text-primary" />
+          <h4 className="text-xs font-bold text-white/60 mb-3 flex items-center gap-2 uppercase tracking-wider">
+            <Building className="h-3 w-3" />
             Government Officials
           </h4>
           <div className="space-y-2">
@@ -42,8 +42,8 @@ export function ContactsList({ city }: ContactsListProps) {
 
       {commercialContacts.length > 0 && (
         <div>
-          <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2 uppercase tracking-wide">
-            <Users className="h-4 w-4 text-primary" />
+          <h4 className="text-xs font-bold text-white/60 mb-3 flex items-center gap-2 uppercase tracking-wider">
+            <Users className="h-3 w-3" />
             Commercial Partners
           </h4>
           <div className="space-y-2">
@@ -56,7 +56,7 @@ export function ContactsList({ city }: ContactsListProps) {
 
       {contacts.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500 dark:text-gray-400">No contacts found for {city}</p>
+          <p className="text-white/60">No contacts found for {city}</p>
         </div>
       )}
     </div>
@@ -65,14 +65,14 @@ export function ContactsList({ city }: ContactsListProps) {
 
 function ContactCard({ contact }: { contact: any }) {
   return (
-    <div className="p-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow">
-      <h5 className="font-bold text-gray-900 dark:text-gray-100">{contact.name}</h5>
-      <div className="flex items-center gap-1 mt-1">
+    <div className="p-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl transition-all shadow-sm group">
+      <h5 className="font-bold text-white group-hover:text-accent transition-colors">{contact.name}</h5>
+      <div className="flex items-center gap-2 mt-2">
         <Phone className="h-3 w-3 text-accent" />
-        <span className="text-sm text-gray-600 dark:text-gray-300">{contact.phone}</span>
+        <span className="text-sm text-white/80 font-medium">{contact.phone}</span>
       </div>
       {contact.notes && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">{contact.notes}</p>
+        <p className="text-xs text-white/60 mt-2 italic border-t border-white/10 pt-2">{contact.notes}</p>
       )}
     </div>
   );

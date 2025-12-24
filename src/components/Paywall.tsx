@@ -43,10 +43,10 @@ export function Paywall() {
             <Zap className="h-8 w-8 text-primary" />
           </div>
           <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-wide">
-            Upgrade to Party Member
+            Upgrade to Pro
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Unlock advanced compliance tools for the collective good.
+            Unlock advanced compliance tools.
           </p>
         </div>
 
@@ -81,14 +81,14 @@ export function Paywall() {
           <button
             onClick={handleUpgrade}
             disabled={isLoading}
-            className="w-full bg-primary text-white py-3 px-4 rounded-lg font-bold hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-sm"
+            className="w-full bg-primary text-white py-4 px-6 rounded-full font-bold hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-md hover:shadow-lg transform active:scale-[0.98] transition-all"
           >
-            {isLoading ? "Processing Request..." : "Join the Party"}
+            {isLoading ? "Processing Request..." : "Subscribe Now"}
           </button>
         </div>
 
         <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>Cancel anytime. Service to the state is voluntary.</p>
+          <p>Cancel anytime.</p>
         </div>
       </div>
     </div>

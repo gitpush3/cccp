@@ -47,11 +47,11 @@ export function UpgradeButton() {
 
   return (
     <button
-      className="px-4 py-2 rounded bg-primary text-white font-semibold hover:bg-primary-hover transition-colors shadow-sm hover:shadow mr-2 uppercase tracking-wide text-sm"
+      className="px-6 py-2 rounded-full bg-primary text-white font-semibold hover:bg-primary-hover transition-colors shadow-sm hover:shadow mr-2 uppercase tracking-wide text-sm"
       onClick={handleUpgrade}
       disabled={user?.subscriptionStatus === "active"}
     >
-      {user?.subscriptionStatus === "active" ? "Party Member" : "Upgrade - $19/mo"}
+      {user?.subscriptionStatus === "active" ? "Pro Member" : "Upgrade - $19/mo"}
     </button>
   );
 }

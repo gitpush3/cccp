@@ -117,23 +117,13 @@ export const createCheckoutSession = action({
         payment_method_types: ["card"],
         line_items: [
           {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Architect Pro Subscription",
-                description: "Access to municipal codes, AI assistance, and expert tips",
-              },
-              unit_amount: 1900, // $19.00
-              recurring: {
-                interval: "month",
-              },
-            },
+            price: process.env.STRIPE_PRICE_ID,
             quantity: 1,
           },
         ],
         mode: "subscription",
         success_url: `${domain}/chat?success=true`,
-        cancel_url: `${domain}/chat?canceled=true`,
+        cancel_url: `${domain}/join?canceled=true`,
         metadata: {
           clerkId: args.clerkId,
         },

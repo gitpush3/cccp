@@ -144,7 +144,7 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-surface shadow-sm">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
-          Comrade AI - {jurisdiction}
+          AI Assistant - {jurisdiction}
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Ask questions about municipal codes, building regulations, and receive state-approved guidance.
@@ -159,20 +159,20 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+              className={`max-w-xs lg:max-w-md px-6 py-3 shadow-md ${
                 msg.role === "user"
-                  ? "bg-primary text-white"
-                  : "bg-white dark:bg-dark-surface text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
+                  ? "bg-primary text-white rounded-3xl rounded-tr-sm"
+                  : "bg-white text-primary dark:text-primary rounded-3xl rounded-tl-sm border border-gray-100 dark:border-gray-700"
               }`}
             >
               {msg.imageUrl && (
                 <img
                   src={msg.imageUrl}
                   alt="Uploaded"
-                  className="w-full h-auto rounded mb-2 max-h-48 object-cover border border-gray-200 dark:border-gray-700"
+                  className="w-full h-auto rounded-xl mb-3 max-h-48 object-cover border border-white/20"
                 />
               )}
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm whitespace-pre-wrap leading-relaxed font-medium">
                 {renderContentWithLinks(msg.content)}
               </p>
             </div>
@@ -180,11 +180,11 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-lg shadow-sm bg-white dark:bg-dark-surface text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
-                <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
-                <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+            <div className="max-w-xs lg:max-w-md px-6 py-4 shadow-md bg-white text-primary rounded-3xl rounded-tl-sm border border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
               </div>
             </div>
           </div>
