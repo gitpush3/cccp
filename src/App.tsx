@@ -6,31 +6,52 @@ import { Toaster } from "sonner";
 import { Dashboard } from "./components/Dashboard";
 import { Paywall } from "./components/Paywall";
 import { useEffect, useRef } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ThemeToggle } from "./components/ThemeToggle";
 import Logo from "./assets/logo.jpeg";
 
 export default function App() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-dark text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      <header className="sticky top-0 z-10 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-sm h-16 flex justify-between items-center border-b border-gray-200 dark:border-gray-800 shadow-sm px-4 transition-colors duration-300">
-        <div className="flex items-center gap-3">
-          <img src={Logo} alt="CCCP Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
-          <h2 className="text-xl font-bold text-primary tracking-tight">CCCP</h2>
-        </div>
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <Authenticated>
-            <div className="flex items-center gap-2">
-              <UpgradeButton />
-              <UserButton />
-            </div>
-          </Authenticated>
-        </div>
-      </header>
-      <main className="flex-1">
-        <Content />
-      </main>
-      <Toaster />
+    <BrowserRouter>
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-dark text-gray-900 dark:text-gray-100 transition-colors duration-300">
+        <header className="sticky top-0 z-10 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-sm h-16 flex justify-between items-center border-b border-gray-200 dark:border-gray-800 shadow-sm px-4 transition-colors duration-300">
+          <div className="flex items-center gap-3">
+            <img src={Logo} alt="CCCP Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
+            <h2 className="text-xl font-bold text-primary tracking-tight">CCCP</h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <Authenticated>
+              <div className="flex items-center gap-2">
+                <UpgradeButton />
+                <UserButton />
+              </div>
+            </Authenticated>
+          </div>
+        </header>
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<Navigate to="/chat" replace />} />
+            <Route path="/chat" element={<Content />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="*" element={<Navigate to="/chat" replace />} />
+          </Routes>
+        </main>
+        <Toaster />
+      </div>
+    </BrowserRouter>
+  );
+}
+
+function ProfilePage() {
+  return (
+    <div className="flex items-center justify-center min-h-[80vh] bg-gray-50 dark:bg-dark">
+      <div className="w-full max-w-md mx-auto p-8 bg-white dark:bg-dark-surface rounded-container shadow-lg border border-gray-200 dark:border-gray-800">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Profile
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">Coming soon.</p>
+      </div>
     </div>
   );
 }

@@ -132,8 +132,8 @@ export const createCheckoutSession = action({
           },
         ],
         mode: "subscription",
-        success_url: `${domain}/dashboard?success=true`,
-        cancel_url: `${domain}/pricing?canceled=true`,
+        success_url: `${domain}/chat?success=true`,
+        cancel_url: `${domain}/chat?canceled=true`,
         metadata: {
           clerkId: args.clerkId,
         },
