@@ -57,13 +57,14 @@ export const syncStripeDataToDB = internalMutation({
 export const createCheckoutSession = action({
   args: {
     clerkId: v.string(),
+    domain: v.optional(v.string()), // Allow client to pass current domain
   },
   handler: async (ctx, args): Promise<{ url?: string; error?: string }> => {
     if (!stripe) {
       return { error: "Stripe not configured" };
     }
 
-    // Get user from database
+    const domain = args.domain || process.env.SITE_URL || "http://localhost:5174";
     const user = await ctx.runQuery(api.users.getUserByClerkId, {
       clerkId: args.clerkId,
     });
@@ -120,8 +121,8 @@ export const createCheckoutSession = action({
           },
         ],
         mode: "subscription",
-        success_url: `${process.env.SITE_URL || "http://localhost:5174"}/dashboard?success=true`,
-        cancel_url: `${process.env.SITE_URL || "http://localhost:5174"}/pricing?canceled=true`,
+        success_url: `${domain}/dashboard?success=true`,
+        cancel_url: `${domain}/pricing?canceled=true`,
         metadata: {
           clerkId: args.clerkId,
         },

@@ -22,6 +22,7 @@ export function UpgradeButton() {
 
       const result = await createCheckoutSession({
         clerkId: user.clerkId,
+        domain: window.location.origin,
       });
 
       if (result.error) {

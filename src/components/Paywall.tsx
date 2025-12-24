@@ -19,6 +19,7 @@ export function Paywall() {
     try {
       const result = await createCheckoutSession({
         clerkId: user.clerkId,
+        domain: window.location.origin,
       });
 
       if (result.error) {
