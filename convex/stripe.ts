@@ -123,7 +123,7 @@ export const createCheckoutSession = action({
                 name: "Architect Pro Subscription",
                 description: "Access to municipal codes, AI assistance, and expert tips",
               },
-              unit_amount: 4900, // $49.00
+              unit_amount: 1900, // $19.00
               recurring: {
                 interval: "month",
               },

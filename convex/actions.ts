@@ -328,17 +328,10 @@ export const chatWithPro = action({
 
     const responseText: string = assistantMessage.content || "I couldn't generate a response.";
 
-    // Save messages to chat history
+    // Save assistant response to chat history (user message already added by client)
     await ctx.runMutation(api.messages.addMessage, {
       chatId: args.chatId,
-      userId: userId,
-      role: "user",
-      content: args.question,
-    });
-
-    await ctx.runMutation(api.messages.addMessage, {
-      chatId: args.chatId,
-      userId: userId,
+      userId: args.clerkId,
       role: "assistant",
       content: responseText,
     });

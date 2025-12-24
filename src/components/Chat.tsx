@@ -79,20 +79,27 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
     e.preventDefault();
     if ((!message.trim() && !selectedFile) || !user || isLoading) return;
 
-    const originalMessage = message;
+    const currentMessage = message.trim();
+    const currentFile = selectedFile;
     const userId = user.clerkId;
 
     if (!userId) return;
 
+    // Clear input immediately for better UX
+    setMessage("");
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     setIsLoading(true);
 
     try {
       let imageStorageId;
-      if (selectedFile) {
-        imageStorageId = await uploadFile(selectedFile);
+      if (currentFile) {
+        imageStorageId = await uploadFile(currentFile);
       }
 
-      const messageContent = message.trim() || "Uploaded image for analysis";
+      const messageContent = currentMessage || "Uploaded image for analysis";
 
       await addMessage({
         chatId,
@@ -102,10 +109,10 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
         imageStorageId,
       });
 
-      if (message.trim() && userId) {
+      if (currentMessage && userId) {
         const response = await chatWithPro({
           clerkId: userId,
-          question: message,
+          question: currentMessage,
           jurisdiction,
           chatId,
         });
@@ -119,20 +126,14 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
           });
         } else if (response.error) {
           toast.error(response.message ?? "We couldn't complete that request. Please try again.");
-          setMessage(originalMessage);
+          setMessage(currentMessage); // Restore message on error
           return;
         }
-      }
-
-      setMessage("");
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
       }
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Something went wrong sending your message. Please try again.");
-      setMessage(originalMessage);
+      setMessage(currentMessage); // Restore message on error
     } finally {
       setIsLoading(false);
     }
@@ -177,6 +178,17 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
             </div>
           </div>
         ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-lg shadow-sm bg-white dark:bg-dark-surface text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+              </div>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
