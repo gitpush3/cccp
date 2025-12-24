@@ -11,7 +11,7 @@ export function Paywall() {
   const [error, setError] = useState<string | null>(null);
 
   const handleUpgrade = async () => {
-    if (!user) return;
+    if (!user || !user.clerkId) return;
 
     setIsLoading(true);
     setError(null);
@@ -19,7 +19,6 @@ export function Paywall() {
     try {
       const result = await createCheckoutSession({
         clerkId: user.clerkId,
-        googleId: user.googleId,
       });
 
       if (result.error) {
@@ -36,24 +35,24 @@ export function Paywall() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-8">
+    <div className="min-h-[80vh] flex items-center justify-center p-8 bg-gray-50 dark:bg-dark transition-colors duration-300">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-            <Zap className="h-8 w-8 text-blue-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+            <Zap className="h-8 w-8 text-primary" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Upgrade to Pro
+          <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-wide">
+            Upgrade to Party Member
           </h2>
-          <p className="text-gray-600">
-            Unlock AI-powered municipal code search and expert guidance
+          <p className="text-gray-600 dark:text-gray-400">
+            Unlock advanced compliance tools for the collective good.
           </p>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div className="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-gray-800 p-6 mb-6 shadow-md">
           <div className="text-center mb-6">
-            <div className="text-4xl font-bold text-gray-900">$49</div>
-            <div className="text-gray-500">per month</div>
+            <div className="text-4xl font-bold text-primary">$49</div>
+            <div className="text-gray-500 dark:text-gray-400">per month</div>
           </div>
 
           <ul className="space-y-3 mb-6">
@@ -66,29 +65,29 @@ export function Paywall() {
               "Priority support",
             ].map((feature) => (
               <li key={feature} className="flex items-center gap-3">
-                <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                <span className="text-gray-700">{feature}</span>
+                <Check className="h-5 w-5 text-accent flex-shrink-0" />
+                <span className="text-gray-700 dark:text-gray-300">{feature}</span>
               </li>
             ))}
           </ul>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
 
           <button
             onClick={handleUpgrade}
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary text-white py-3 px-4 rounded-lg font-bold hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-sm"
           >
-            {isLoading ? "Creating Checkout..." : "Upgrade to Pro"}
+            {isLoading ? "Processing Request..." : "Join the Party"}
           </button>
         </div>
 
-        <div className="text-center text-sm text-gray-500">
-          <p>Cancel anytime. No long-term commitments.</p>
+        <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+          <p>Cancel anytime. Service to the state is voluntary.</p>
         </div>
       </div>
     </div>

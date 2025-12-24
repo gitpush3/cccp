@@ -20,10 +20,10 @@ export function GoogleSignIn() {
     <button
       onClick={handleGoogleSignIn}
       disabled={isLoading}
-      className="w-full px-4 py-3 rounded bg-white text-gray-700 font-semibold border border-gray-300 hover:bg-gray-50 transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      className="w-full px-4 py-3 rounded bg-white dark:bg-dark-surface text-gray-700 dark:text-gray-200 font-bold border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {isLoading ? (
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 dark:border-gray-400"></div>
       ) : (
         <>
           <svg className="w-5 h-5" viewBox="0 0 24 24">

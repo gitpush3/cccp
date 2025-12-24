@@ -2,6 +2,7 @@ const { fontFamily } = require("tailwindcss/defaultTheme");
 
 module.exports = {
   mode: "jit",
+  darkMode: "class",
   purge: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
   theme: {
     extend: {
@@ -19,16 +20,20 @@ module.exports = {
       },
       colors: {
         primary: {
-          DEFAULT: "#4F46E5",
-          hover: "#4338CA",
+          DEFAULT: "#DA291C", // Soviet Red
+          hover: "#B91C1C",
         },
         secondary: {
           DEFAULT: "#6B7280",
           hover: "#4B5563",
         },
         accent: {
-          DEFAULT: "#8B5CF6",
-          hover: "#7C3AED",
+          DEFAULT: "#FFD700", // Gold
+          hover: "#D4AF37",
+        },
+        dark: {
+          DEFAULT: "#171717",
+          surface: "#262626",
         },
       },
       spacing: {

@@ -36,11 +36,11 @@ export function Dashboard() {
   }, [user, syncAfterSuccess]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-4rem)] bg-gray-50 dark:bg-dark transition-colors duration-300">
       {/* Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="w-80 bg-white dark:bg-dark-surface border-r border-gray-200 dark:border-gray-800 flex flex-col transition-colors duration-300">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Select Jurisdiction
           </h3>
           <CitySelector
@@ -49,23 +49,23 @@ export function Dashboard() {
           />
         </div>
 
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex-1 px-4 py-2 text-sm font-medium ${
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === "chat"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                ? "text-primary border-b-2 border-primary bg-primary/5 dark:bg-primary/10"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
             }`}
           >
             AI Assistant
           </button>
           <button
             onClick={() => setActiveTab("contacts")}
-            className={`flex-1 px-4 py-2 text-sm font-medium ${
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === "contacts"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                ? "text-primary border-b-2 border-primary bg-primary/5 dark:bg-primary/10"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
             }`}
           >
             Contacts
@@ -80,17 +80,17 @@ export function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-gray-50 dark:bg-dark transition-colors duration-300">
         {activeTab === "chat" ? (
           selectedCity ? (
             <Chat chatId={chatId} jurisdiction={selectedCity} />
           ) : (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <div className="text-center p-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-wide">
                   Select a Jurisdiction
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-gray-500 dark:text-gray-400">
                   Choose a city to start getting AI assistance with municipal codes
                 </p>
               </div>
@@ -98,11 +98,11 @@ export function Dashboard() {
           )
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="text-center p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-wide">
                 City Contacts
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-500 dark:text-gray-400">
                 {selectedCity
                   ? `Viewing contacts for ${selectedCity}`
                   : "Select a city to view contacts"}

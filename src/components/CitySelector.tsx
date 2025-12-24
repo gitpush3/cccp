@@ -33,21 +33,21 @@ export function CitySelector({ selectedCity, onCitySelect }: CitySelectorProps) 
       <input
         type="text"
         id="city-search"
-        placeholder="Search cities..."
+        placeholder="Search territories..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-surface text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500"
       />
       
-      <div className="max-h-96 overflow-y-auto space-y-1">
+      <div className="max-h-96 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
         {filteredCities.map((city) => (
           <button
             key={city}
             onClick={() => onCitySelect(city)}
             className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
               selectedCity === city
-                ? "bg-blue-100 text-blue-700 font-medium"
-                : "hover:bg-gray-100 text-gray-700"
+                ? "bg-primary/10 text-primary font-bold dark:text-red-400"
+                : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
             }`}
           >
             {city}
@@ -56,8 +56,8 @@ export function CitySelector({ selectedCity, onCitySelect }: CitySelectorProps) 
       </div>
       
       {filteredCities.length === 0 && (
-        <p className="text-sm text-gray-500 text-center py-4">
-          No cities found matching "{searchTerm}"
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+          No territories found matching "{searchTerm}"
         </p>
       )}
     </div>

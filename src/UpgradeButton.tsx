@@ -42,7 +42,7 @@ export function UpgradeButton() {
 
   return (
     <button
-      className="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-sm hover:shadow mr-2"
+      className="px-4 py-2 rounded bg-primary text-white font-semibold hover:bg-primary-hover transition-colors shadow-sm hover:shadow mr-2 uppercase tracking-wide text-sm"
       onClick={handleUpgrade}
     >
       Upgrade - $19/mo
