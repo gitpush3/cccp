@@ -1,19 +1,22 @@
 import { useState } from "react";
 
 const CITIES = [
-  "Los Angeles", "San Francisco", "San Diego", "Sacramento", "Oakland",
-  "New York", "Brooklyn", "Queens", "Manhattan", "Bronx",
-  "Chicago", "Aurora", "Rockford", "Joliet", "Naperville",
-  "Houston", "San Antonio", "Dallas", "Austin", "Fort Worth",
-  "Phoenix", "Tucson", "Mesa", "Chandler", "Scottsdale",
-  "Philadelphia", "Pittsburgh", "Allentown", "Erie", "Reading",
-  "Jacksonville", "Miami", "Tampa", "Orlando", "St. Petersburg",
-  "Columbus", "Cleveland", "Cincinnati", "Toledo", "Akron",
-  "Charlotte", "Raleigh", "Greensboro", "Durham", "Winston-Salem",
-  "Indianapolis", "Fort Wayne", "Evansville", "South Bend", "Carmel",
-  "Seattle", "Spokane", "Tacoma", "Vancouver", "Bellevue",
-  "Denver", "Colorado Springs", "Fort Collins", "Lakewood",
-  "Boston", "Worcester", "Springfield", "Lowell", "Cambridge"
+  // Cities
+  "Bay Village", "Beachwood", "Bedford", "Bedford Heights", "Berea",
+  "Brecksville", "Broadview Heights", "Brook Park", "Brooklyn", "Cleveland",
+  "Cleveland Heights", "East Cleveland", "Euclid", "Fairview Park", "Garfield Heights",
+  "Highland Heights", "Independence", "Lakewood", "Lyndhurst", "Maple Heights",
+  "Mayfield Heights", "Middleburg Heights", "North Olmsted", "North Royalton", "Olmsted Falls",
+  "Parma", "Parma Heights", "Pepper Pike", "Richmond Heights", "Rocky River",
+  "Seven Hills", "Shaker Heights", "Solon", "South Euclid", "Strongsville",
+  "University Heights", "Warrensville Heights", "Westlake",
+  // Villages
+  "Bentleyville", "Bratenahl", "Brooklyn Heights", "Chagrin Falls", "Cuyahoga Heights",
+  "Gates Mills", "Glenwillow", "Highland Hills", "Hunting Valley", "Linndale",
+  "Mayfield", "Moreland Hills", "Newburgh Heights", "North Randall", "Oakwood",
+  "Orange", "Valley View", "Walton Hills", "Woodmere",
+  // Townships
+  "Chagrin Falls Township", "Olmsted Township"
 ];
 
 interface CitySelectorProps {

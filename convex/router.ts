@@ -103,7 +103,7 @@ http.route({
       );
 
       // Process the event asynchronously
-      ctx.runMutation(internal.stripe.handleWebhook, {
+      await ctx.runAction(internal.stripe.handleWebhook, {
         type: event.type,
         data: event.data,
       });

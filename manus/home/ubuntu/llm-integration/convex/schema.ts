@@ -1,26 +1,26 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
-const applicationTables = {
+export default defineSchema({
+  // Users table
   users: defineTable({
-    clerkId: v.optional(v.string()),
-    googleId: v.optional(v.string()),
+    clerkId: v.string(),
     email: v.string(),
     name: v.optional(v.string()),
-    picture: v.optional(v.string()),
+    subscriptionTier: v.union(
+      v.literal("free"),
+      v.literal("pro"),
+      v.literal("enterprise")
+    ),
     stripeCustomerId: v.optional(v.string()),
-    subscriptionStatus: v.optional(v.union(v.literal("active"), v.literal("none"))),
-    endsAt: v.optional(v.number()),
-    // Usage tracking for billing
-    questionsUsed: v.optional(v.number()),
-    questionsLimit: v.optional(v.number()),
+    questionsUsed: v.number(),
+    questionsLimit: v.number(),
+    createdAt: v.number(),
   })
     .index("by_clerk_id", ["clerkId"])
-    .index("by_google_id", ["googleId"])
-    .index("by_stripe_customer", ["stripeCustomerId"]),
+    .index("by_email", ["email"]),
 
-  // Municipalities table - 59 Cuyahoga County cities/villages/townships + Ohio State + County
+  // Municipalities table
   municipalities: defineTable({
     name: v.string(),
     type: v.union(
@@ -37,7 +37,7 @@ const applicationTables = {
     .index("by_name", ["name"])
     .index("by_type", ["type"]),
 
-  // Regulation URLs table - links to building codes, permits, zoning for each municipality
+  // Regulation URLs table
   regulationUrls: defineTable({
     municipalityId: v.id("municipalities"),
     regulationType: v.union(
@@ -68,7 +68,7 @@ const applicationTables = {
     .index("by_type", ["regulationType"])
     .index("by_municipality_and_type", ["municipalityId", "regulationType"]),
 
-  // Regulation content cache (for frequently accessed regulations)
+  // Regulation content cache (optional, for frequently accessed regulations)
   regulationContent: defineTable({
     regulationUrlId: v.id("regulationUrls"),
     content: v.string(),
@@ -77,52 +77,39 @@ const applicationTables = {
     fetchCount: v.number(),
   }).index("by_regulation_url", ["regulationUrlId"]),
 
-  // Legacy muniCodes table (for vector search - kept for backward compatibility)
-  muniCodes: defineTable({
-    jurisdiction: v.string(),
-    category: v.union(v.literal("zoning"), v.literal("building"), v.literal("fire")),
-    text: v.string(),
-    embedding: v.array(v.number()),
-  })
-    .index("by_jurisdiction", ["jurisdiction"]),
-
-  architectLore: defineTable({
+  // Conversations
+  conversations: defineTable({
+    userId: v.id("users"),
     title: v.string(),
-    tip: v.string(),
-    jurisdiction: v.optional(v.string()),
-    embedding: v.array(v.number()),
-  }),
-
-  contacts: defineTable({
-    city: v.string(),
-    type: v.union(v.literal("gov"), v.literal("commercial")),
-    name: v.string(),
-    phone: v.string(),
-    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    messageCount: v.number(),
   })
-    .index("by_city", ["city"])
-    .index("by_type", ["type"]),
+    .index("by_user", ["userId"])
+    .index("by_user_and_updated", ["userId", "updatedAt"]),
 
+  // Chat messages
   messages: defineTable({
-    chatId: v.string(),
-    userId: v.string(),
-    role: v.union(v.literal("user"), v.literal("assistant")),
+    conversationId: v.id("conversations"),
+    userId: v.id("users"),
+    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system")),
     content: v.string(),
-    imageStorageId: v.optional(v.id("_storage")),
-    // New fields for RAG citations
-    citedRegulations: v.optional(v.array(v.id("regulationUrls"))),
-    citedMunicipalities: v.optional(v.array(v.id("municipalities"))),
+    imageId: v.optional(v.id("_storage")),
+    citedRegulations: v.array(v.id("regulationUrls")),
+    citedMunicipalities: v.array(v.id("municipalities")),
     tokenCount: v.optional(v.number()),
     cost: v.optional(v.number()),
+    timestamp: v.number(),
   })
-    .index("by_chat_id", ["chatId"])
-    .index("by_user_id", ["userId"]),
+    .index("by_conversation", ["conversationId"])
+    .index("by_user", ["userId"])
+    .index("by_conversation_and_timestamp", ["conversationId", "timestamp"]),
 
-  // LLM response cache for common queries
+  // LLM response cache
   responseCache: defineTable({
     queryHash: v.string(),
     response: v.string(),
-    citedRegulations: v.optional(v.array(v.id("regulationUrls"))),
+    citedRegulations: v.array(v.id("regulationUrls")),
     hitCount: v.number(),
     createdAt: v.number(),
     lastUsed: v.number(),
@@ -130,9 +117,9 @@ const applicationTables = {
 
   // Usage tracking for billing
   usageLog: defineTable({
-    clerkId: v.string(),
-    chatId: v.string(),
-    messageId: v.optional(v.id("messages")),
+    userId: v.id("users"),
+    conversationId: v.id("conversations"),
+    messageId: v.id("messages"),
     action: v.union(
       v.literal("text_query"),
       v.literal("photo_analysis"),
@@ -142,11 +129,24 @@ const applicationTables = {
     cost: v.number(),
     timestamp: v.number(),
   })
-    .index("by_clerk_id", ["clerkId"])
-    .index("by_clerk_id_and_timestamp", ["clerkId", "timestamp"]),
-};
+    .index("by_user", ["userId"])
+    .index("by_user_and_timestamp", ["userId", "timestamp"]),
 
-export default defineSchema({
-  ...authTables,
-  ...applicationTables,
+  // Stripe subscriptions
+  subscriptions: defineTable({
+    userId: v.id("users"),
+    stripeSubscriptionId: v.string(),
+    stripePriceId: v.string(),
+    status: v.union(
+      v.literal("active"),
+      v.literal("canceled"),
+      v.literal("past_due"),
+      v.literal("trialing")
+    ),
+    currentPeriodStart: v.number(),
+    currentPeriodEnd: v.number(),
+    cancelAtPeriodEnd: v.boolean(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_stripe_subscription_id", ["stripeSubscriptionId"]),
 });

@@ -1,4 +1,4 @@
-import { action, internalMutation, internalQuery } from "./_generated/server";
+import { action, internalAction, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import Stripe from "stripe";
 import { api, internal } from "./_generated/api";
@@ -9,15 +9,14 @@ const stripe = process.env.STRIPE_SECRET_KEY
     })
   : null;
 
-// Theo's pattern: Single function to sync all Stripe data to DB
-export const syncStripeDataToDB = internalMutation({
+// Stripe SDK uses timers internally, so it must run in actions (Node environment).
+export const getStripeSubscriptionStatus = internalAction({
   args: { stripeCustomerId: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     if (!stripe) {
       throw new Error("Stripe not configured");
     }
 
-    // Fetch latest subscription data from Stripe
     const subscriptions = await stripe.subscriptions.list({
       customer: args.stripeCustomerId,
       limit: 1,
@@ -31,26 +30,38 @@ export const syncStripeDataToDB = internalMutation({
     if (subscriptions.data.length > 0) {
       const subscription = subscriptions.data[0] as any;
       subscriptionStatus = subscription.status === "active" ? "active" : "none";
-      
+
       if (subscriptionStatus === "active") {
-        endsAt = subscription.current_period_end * 1000; // Convert to milliseconds
+        endsAt = subscription.current_period_end * 1000;
       }
     }
 
-    // Update user in database
+    return { subscriptionStatus, endsAt };
+  },
+});
+
+export const setSubscriptionStatusByStripeCustomerId = internalMutation({
+  args: {
+    stripeCustomerId: v.string(),
+    subscriptionStatus: v.union(v.literal("active"), v.literal("none")),
+    endsAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
       .withIndex("by_stripe_customer", (q) => q.eq("stripeCustomerId", args.stripeCustomerId))
       .unique();
 
-    if (user) {
-      await ctx.db.patch(user._id, {
-        subscriptionStatus,
-        endsAt,
-      });
+    if (!user) {
+      return { updated: false };
     }
 
-    return { subscriptionStatus, endsAt };
+    await ctx.db.patch(user._id, {
+      subscriptionStatus: args.subscriptionStatus,
+      endsAt: args.endsAt,
+    });
+
+    return { updated: true };
   },
 });
 
@@ -153,8 +164,15 @@ export const syncAfterSuccess = action({
 
     // Sync latest data from Stripe
     try {
-      await ctx.runMutation(internal.stripe.syncStripeDataToDB, {
+      const { subscriptionStatus, endsAt } = await ctx.runAction(
+        internal.stripe.getStripeSubscriptionStatus,
+        { stripeCustomerId: user.stripeCustomerId }
+      );
+
+      await ctx.runMutation(internal.stripe.setSubscriptionStatusByStripeCustomerId, {
         stripeCustomerId: user.stripeCustomerId,
+        subscriptionStatus,
+        endsAt,
       });
       return { success: true };
     } catch (error) {
@@ -186,7 +204,7 @@ const allowedEvents: string[] = [
   "payment_intent.canceled",
 ];
 
-export const handleWebhook = internalMutation({
+export const handleWebhook = internalAction({
   args: {
     type: v.string(),
     data: v.any(),
@@ -208,8 +226,15 @@ export const handleWebhook = internalMutation({
 
     // Use Theo's pattern: Always sync complete state from Stripe
     try {
-      await ctx.runMutation(internal.stripe.syncStripeDataToDB, {
+      const { subscriptionStatus, endsAt } = await ctx.runAction(
+        internal.stripe.getStripeSubscriptionStatus,
+        { stripeCustomerId: customerId }
+      );
+
+      await ctx.runMutation(internal.stripe.setSubscriptionStatusByStripeCustomerId, {
         stripeCustomerId: customerId,
+        subscriptionStatus,
+        endsAt,
       });
     } catch (error) {
       console.error(`[STRIPE WEBHOOK] Error syncing data for customer ${customerId}:`, error);

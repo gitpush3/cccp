@@ -9,6 +9,27 @@ interface ChatProps {
   jurisdiction: string;
 }
 
+function renderContentWithLinks(content: string) {
+  const urlRegex = /(https?:\/\/[^\s)\]}>,"']+)/g;
+  const parts = content.split(urlRegex);
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noreferrer"
+          className="underline break-words text-primary dark:text-primary"
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
 export function Chat({ chatId, jurisdiction }: ChatProps) {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -150,7 +171,9 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
                   className="w-full h-auto rounded mb-2 max-h-48 object-cover border border-gray-200 dark:border-gray-700"
                 />
               )}
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                {renderContentWithLinks(msg.content)}
+              </p>
             </div>
           </div>
         ))}
