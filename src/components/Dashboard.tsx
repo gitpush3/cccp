@@ -58,7 +58,7 @@ export function Dashboard() {
 
       {/* Sidebar - Deep Blue Background */}
       <div
-        className={`fixed top-16 bottom-0 left-0 z-40 bg-primary text-white border-r border-primary/20 flex flex-col transition-all duration-300 shadow-xl md:static md:top-auto md:bottom-auto md:z-auto ${
+        className={`fixed top-16 bottom-0 left-0 z-40 bg-primary text-white border-r border-primary/20 flex flex-col transition-all duration-300 shadow-xl md:fixed md:top-16 md:bottom-0 md:left-0 md:z-40 ${
           isDesktopSidebarCollapsed ? "w-80 md:w-16" : "w-80"
         } ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
@@ -143,7 +143,9 @@ export function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-0 bg-gray-light dark:bg-dark transition-colors duration-300">
+      <div className={`flex-1 flex flex-col min-h-0 bg-gray-light dark:bg-dark transition-colors duration-300 ${
+        isDesktopSidebarCollapsed ? "md:ml-16" : "md:ml-80"
+      }`}>
         <div className="md:hidden flex items-center gap-3 px-3 py-2 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-sm">
           <button
             type="button"
