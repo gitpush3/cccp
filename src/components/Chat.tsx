@@ -140,26 +140,26 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-dark transition-colors duration-300">
+    <div className="flex flex-col h-full min-h-0 bg-gray-50 dark:bg-dark transition-colors duration-300">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-surface shadow-sm">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
+      <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-surface shadow-sm">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
           AI Assistant - {jurisdiction}
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
           Ask questions about municipal codes, building regulations, and receive state-approved guidance.
         </p>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 sm:p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
         {messages?.map((msg) => (
           <div
             key={msg._id}
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-xs lg:max-w-md px-6 py-3 shadow-md ${
+              className={`max-w-[85%] sm:max-w-md lg:max-w-lg px-5 sm:px-6 py-3 shadow-md ${
                 msg.role === "user"
                   ? "bg-primary text-white rounded-3xl rounded-tr-sm"
                   : "bg-white text-primary dark:text-primary rounded-3xl rounded-tl-sm border border-gray-100 dark:border-gray-700"
@@ -193,7 +193,7 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-surface">
+      <div className="sticky bottom-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-surface pt-3 sm:pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] px-3 sm:px-4">
         <form onSubmit={handleSubmit} className="space-y-3">
           {selectedFile && (
             <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
@@ -225,7 +225,7 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="h-11 w-11 inline-flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
               title="Upload Document"
             >
               <Upload className="h-5 w-5" />
@@ -241,14 +241,14 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ask about codes, regulations, or upload blueprints..."
-              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500"
+              className="flex-1 h-11 px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500"
               disabled={isLoading}
             />
             
             <button
               type="submit"
               disabled={(!message.trim() && !selectedFile) || isLoading}
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors shadow-sm"
+              className="h-11 px-5 bg-primary text-white rounded-full hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 transition-colors shadow-sm flex-shrink-0"
             >
               {isLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
