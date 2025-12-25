@@ -2,7 +2,7 @@ import { Authenticated, Unauthenticated, useAction, useQuery, useMutation } from
 import { SignInButton, UserButton } from "@clerk/clerk-react";
 import { api } from "../convex/_generated/api";
 import { UpgradeButton } from "./UpgradeButton";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { Dashboard } from "./components/Dashboard";
 import { Paywall } from "./components/Paywall";
 import { useEffect, useRef } from "react";
@@ -56,7 +56,7 @@ function JoinPage() {
           <div className="w-full max-w-md mx-auto p-8 bg-white dark:bg-dark-surface rounded-container shadow-lg border border-gray-200 dark:border-gray-800">
             <div className="text-center mb-8">
               <div className="flex justify-center mb-6">
-                 <img src={StandardLogo} alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
+                 <img src="/assets/3fav-180x180_360.png" alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
               </div>
               <h1 className="text-4xl font-black text-primary dark:text-white mb-2 tracking-tight">
                 3bids Code
@@ -91,7 +91,7 @@ function Content() {
           <div className="w-full max-w-md mx-auto p-8 bg-white dark:bg-dark-surface rounded-container shadow-lg border border-gray-200 dark:border-gray-800">
             <div className="text-center mb-8">
               <div className="flex justify-center mb-6">
-                 <img src={StandardLogo} alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
+                 <img src="/assets/3fav-180x180_360.png" alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
               </div>
               <h1 className="text-4xl font-black text-primary dark:text-white mb-2 tracking-tight">
                 3bids Code
@@ -118,7 +118,6 @@ function Content() {
 function UserContentPaywall() {
   const user = useQuery(api.users.getCurrentUser);
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
-  const syncAfterSuccess = useAction(api.stripe.syncAfterSuccess);
   const requestedCreateRef = useRef(false);
 
   // Create user on first login
@@ -128,25 +127,6 @@ function UserContentPaywall() {
       void getOrCreateUser();
     }
   }, [user, getOrCreateUser]);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const success = urlParams.get("success");
-
-    if (success === "true" && user && user.clerkId) {
-      syncAfterSuccess({
-        clerkId: user.clerkId,
-      }).then((result) => {
-        if (result.success) {
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.delete("success");
-          window.history.replaceState({}, "", newUrl.toString());
-        } else {
-          console.error("Failed to sync subscription data:", result.error);
-        }
-      });
-    }
-  }, [user, syncAfterSuccess]);
 
   if (user === undefined) {
     return (
@@ -170,8 +150,10 @@ function UserContentPaywall() {
 function UserContent() {
   const user = useQuery(api.users.getCurrentUser);
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  const syncAfterSuccess = useAction(api.stripe.syncAfterSuccess);
   const messageCount = useQuery(api.queries.countMessagesByUserId, { userId: user?.clerkId || "unknown" });
   const requestedCreateRef = useRef(false);
+  const syncAttemptedRef = useRef(false);
 
   // Create user on first login
   useEffect(() => {
@@ -180,6 +162,31 @@ function UserContent() {
       void getOrCreateUser();
     }
   }, [user, getOrCreateUser]);
+
+  // Handle Stripe success redirect
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get("success");
+
+    if (success === "true" && user && user.clerkId && !syncAttemptedRef.current) {
+      syncAttemptedRef.current = true;
+      syncAfterSuccess({
+        clerkId: user.clerkId,
+      }).then((result) => {
+        if (result.success) {
+          toast.success(
+            "Thanks for becoming a Pro member! You have unlocked unlimited messages with our chat app. code.3bids.io is part of app.3bids.io — for anonymous job posting & bidding, free leads and predictable CAC or residual affiliate income, please visit app.3bids.io!",
+            { duration: 10000 }
+          );
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("success");
+          window.history.replaceState({}, "", newUrl.toString());
+        } else {
+          console.error("Failed to sync subscription data:", result.error);
+        }
+      });
+    }
+  }, [user, syncAfterSuccess]);
 
   if (user === undefined) {
     return (
