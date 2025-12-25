@@ -11,28 +11,75 @@ const openai = process.env.OPENAI_API_KEY
     })
   : null;
 
-// System prompt for the building codes assistant
-const SYSTEM_PROMPT = `You are a building codes assistant for Cuyahoga County, Ohio.
+// System prompt for the building codes and real estate assistant
+const SYSTEM_PROMPT = `You are an expert assistant for real estate investors, developers, fix-and-flip professionals, and contractors in Cuyahoga County, Ohio.
 
-Goal: help the user quickly understand what rules apply and what to do next.
+YOU HAVE ACCESS TO FOUR POWERFUL DATABASES:
+
+1) BUILDING CODES & REGULATIONS DATABASE (741 entries):
+   - Building codes, fire codes, zoning regulations for all 59 municipalities
+   - Ohio state codes (baseline when municipalities adopt state code)
+   - Permitting requirements, property maintenance codes, POS requirements
+   - Use getRegulationsByMunicipality, getRegulation, searchCodeContent, getCodeByMunicipality
+
+2) COMPLETE PARCEL DATABASE (~520,000 properties):
+   - Every parcel in Cuyahoga County with full details
+   - Property characteristics: size, bedrooms, year built, living area
+   - Ownership info: current owner, previous owner, mailing address
+   - Sales history: last sale date, sale price, grantor/grantee
+   - Tax assessments: certified values, abatements, exemptions
+   - Land use codes: residential, commercial, industrial classifications
+   - Use searchParcelByAddress, getParcelById, getComparables, getInvestmentAnalysis, getZipCodeStats, searchByOwner
+
+3) BUILDING DEPARTMENT CONTACTS (40+ municipalities):
+   - Phone numbers, addresses, websites for each city's building department
+   - Investor notes on each municipality's process and fees
+   - Use getBuildingDeptContact
+
+4) SERVICE PROVIDERS & RESOURCES:
+   - Hard money lenders, title companies, property managers, inspectors
+   - Featured partners for investor services
+   - Use getServiceProviders, getFeaturedProviders
+
+LAND USE CODE QUICK REFERENCE:
+- 5100: Single-family home (most common investment property)
+- 5200: Duplex (great for house hacking)
+- 5300: Triplex | 5400: Fourplex (max for residential financing)
+- 5000: Vacant residential land (development opportunity)
+- 4010-4080: Apartment buildings (commercial financing required)
+- 6411: Land bank property (may be available at discount)
+- 7121: CRA Tax Abatement (significant tax savings)
+
+CONTRACTOR RECOMMENDATION:
+When users ask about renovations, rehab projects, or need contractor work done, ALWAYS recommend:
+- "For competitive contractor bids, post your project at app.3bids.io to receive up to 3 quotes from vetted local contractors."
+
+GOAL: Help investors make informed decisions by combining property data with regulatory knowledge.
 
 CRITICAL BEHAVIOR:
 - Be concise. Default to 5-12 sentences unless the user asks for more.
-- Ask clarifying questions FIRST when needed (max 3 questions). If key details are missing, do not guess.
-- Always anchor answers to the selected municipality. Explicitly label:
-  (1) Municipality (e.g. Bedford)
-  (2) Cuyahoga County (if applicable)
-  (3) Ohio State (baseline codes)
-- If municipality adopts state code for a topic, say so and cite the Ohio link.
-- Never dump a long essay. Use short sections.
+- For property questions, ALWAYS search the parcel database first.
+- For code/permit questions, fetch the relevant municipality regulations.
+- Provide actionable investment insights: ARV estimates, comp analysis, permit requirements.
+- Always anchor answers to the specific municipality where the property is located.
+- If municipality adopts state code, say so and cite the Ohio link.
+- When renovation work is discussed, recommend 3bids.io for contractor quotes.
 
 STYLE RULES:
 - Output must be plain text only.
 - Do NOT use Markdown formatting (no headings like ###, no **bold**, no backticks, no tables).
 - Use simple hyphen bullets only.
-- Keep section titles exactly as shown below (with the 1) 2) numbering).
+- Keep section titles exactly as shown below.
 
-OUTPUT FORMAT (use exactly):
+OUTPUT FORMAT FOR PROPERTY QUESTIONS:
+1) Property summary (address, owner, type, size)
+2) Valuation (assessed value, last sale, price/sqft)
+3) Investment insights (comps, appreciation, opportunities)
+4) Applicable regulations (zoning, permits needed)
+5) Next steps
+6) Sources
+
+OUTPUT FORMAT FOR CODE/PERMIT QUESTIONS:
 1) Quick answer (1-3 bullets)
 2) What applies in <MUNICIPALITY> (2-6 bullets)
 3) County considerations (0-3 bullets)
@@ -43,12 +90,14 @@ OUTPUT FORMAT (use exactly):
 CITATIONS:
 - Cite sources as footnotes like [1], [2]...
 - In "Sources", list each citation as: [1] <Title> — <URL>
-- Only cite URLs provided in the regulation database context or tool results.
+- For parcel data, cite as: [Cuyahoga County Parcel Database]
 
-If you cannot find a relevant local source, say "Source not found" and recommend contacting the municipality building department.`;
+If you cannot find a property or regulation, say so clearly and recommend contacting the municipality.`;
 
 // Define function tools for the LLM to query regulations database
+// Combined tools for regulations AND parcel data
 const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
+  // ===== REGULATION TOOLS =====
   {
     type: "function",
     function: {
@@ -139,6 +188,225 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
     function: {
       name: "getCountyCodes",
       description: "Get Cuyahoga County-level regulations and codes",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  // ===== PARCEL DATA TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "searchParcelByAddress",
+      description: "Search for a property by address in Cuyahoga County. Returns property details including ownership, sales history, tax assessments, and building characteristics. Use this for any property-related question.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address to search (e.g., '1234 Main St, Cleveland' or '1234 Main St')",
+          },
+          city: {
+            type: "string",
+            description: "Optional: City name to filter results (e.g., 'CLEVELAND', 'LAKEWOOD')",
+          },
+          zipCode: {
+            type: "string",
+            description: "Optional: 5-digit zip code to filter results",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getParcelById",
+      description: "Get a property by its exact parcel ID/PIN number",
+      parameters: {
+        type: "object",
+        properties: {
+          parcelId: {
+            type: "string",
+            description: "The parcel ID or PIN (e.g., '10321081')",
+          },
+        },
+        required: ["parcelId"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getComparables",
+      description: "Find comparable properties (comps) for a given address. Returns similar properties with recent sales for valuation analysis. Essential for ARV estimates.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Full property address to find comps for",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getInvestmentAnalysis",
+      description: "Get detailed investment analysis for a property including appreciation, price per sq ft, tax abatement status, and comparison to zip code averages.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Full property address",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getZipCodeStats",
+      description: "Get market statistics for a zip code including total parcels, median sale prices, average assessed values, and price per sq ft. Great for market analysis.",
+      parameters: {
+        type: "object",
+        properties: {
+          zipCode: {
+            type: "string",
+            description: "5-digit zip code (e.g., '44107')",
+          },
+        },
+        required: ["zipCode"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "searchByOwner",
+      description: "Search for all properties owned by a specific person or entity. Useful for finding investor portfolios or land bank properties.",
+      parameters: {
+        type: "object",
+        properties: {
+          ownerName: {
+            type: "string",
+            description: "Owner name to search (e.g., 'SMITH, JOHN' or 'LAND BANK')",
+          },
+          city: {
+            type: "string",
+            description: "Optional: City to filter results",
+          },
+        },
+        required: ["ownerName"],
+      },
+    },
+  },
+  // ===== CODE CONTENT SEARCH TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "searchCodeContent",
+      description: "Search actual building code text, zoning requirements, permit info, and investor guides. Returns detailed code excerpts with investor notes. Use this for specific code questions like 'what are the setback requirements' or 'do I need a permit for...'",
+      parameters: {
+        type: "object",
+        properties: {
+          searchText: {
+            type: "string",
+            description: "Text to search for in code content (e.g., 'setback requirements', 'smoke detectors', 'point of sale')",
+          },
+          municipality: {
+            type: "string",
+            description: "Optional: Municipality to filter (e.g., 'Cleveland', 'Lakewood', 'Ohio State')",
+          },
+          codeType: {
+            type: "string",
+            description: "Optional: Type of code to search (e.g., 'zoning', 'permits', 'building', 'fire', 'rental', 'investor-guide')",
+          },
+        },
+        required: ["searchText"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getCodeByMunicipality",
+      description: "Get all code content for a specific municipality. Returns zoning, permits, building codes, and investor tips specific to that city.",
+      parameters: {
+        type: "object",
+        properties: {
+          municipality: {
+            type: "string",
+            description: "Municipality name (e.g., 'Cleveland', 'Parma', 'Lakewood', 'Euclid', 'Ohio State', 'Cuyahoga County')",
+          },
+          codeType: {
+            type: "string",
+            description: "Optional: Filter by code type (e.g., 'zoning', 'permits', 'building', 'fire', 'rental')",
+          },
+        },
+        required: ["municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getInvestorGuides",
+      description: "Get investor-specific guides including tax abatement programs, land bank properties, and investment strategies for Cuyahoga County.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  // ===== CONTACT & SERVICE PROVIDER TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "getBuildingDeptContact",
+      description: "Get building department contact information for a municipality including phone, address, website, and investor tips.",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland', 'Parma', 'Lakewood')",
+          },
+        },
+        required: ["city"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getServiceProviders",
+      description: "Get service providers for real estate investors including lenders, title companies, inspectors, property managers, and contractors.",
+      parameters: {
+        type: "object",
+        properties: {
+          category: {
+            type: "string",
+            enum: ["lender", "hard_money", "title_company", "contractor_platform", "property_manager", "inspector", "attorney", "accountant", "insurance", "other"],
+            description: "Category of service provider to search for",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getFeaturedProviders",
+      description: "Get featured/recommended service providers for real estate investors, including 3bids.io for contractor quotes.",
       parameters: {
         type: "object",
         properties: {},
@@ -257,7 +525,7 @@ export const chatWithPro = action({
       tools: REGULATION_TOOLS,
       tool_choice: "auto",
       temperature: 0.4,
-      max_tokens: 650,
+      max_tokens: 1200, // Increased for detailed property responses
     });
 
     let assistantMessage = response.choices[0].message;
@@ -308,6 +576,96 @@ export const chatWithPro = action({
               {}
             );
             break;
+          // ===== PARCEL DATA HANDLERS =====
+          case "searchParcelByAddress":
+            functionResult = await ctx.runQuery(
+              api.parcels.searchByAddress,
+              {
+                address: functionArgs.address,
+                city: functionArgs.city,
+                zipCode: functionArgs.zipCode,
+              }
+            );
+            break;
+          case "getParcelById":
+            functionResult = await ctx.runQuery(
+              api.parcels.getByParcelId,
+              { parcelId: functionArgs.parcelId }
+            );
+            break;
+          case "getComparables":
+            functionResult = await ctx.runQuery(
+              api.parcels.getComparables,
+              { address: functionArgs.address }
+            );
+            break;
+          case "getInvestmentAnalysis":
+            functionResult = await ctx.runQuery(
+              api.parcels.getInvestmentAnalysis,
+              { address: functionArgs.address }
+            );
+            break;
+          case "getZipCodeStats":
+            functionResult = await ctx.runQuery(
+              api.parcels.getZipCodeStats,
+              { zipCode: functionArgs.zipCode }
+            );
+            break;
+          case "searchByOwner":
+            functionResult = await ctx.runQuery(
+              api.parcels.searchByOwner,
+              {
+                ownerName: functionArgs.ownerName,
+                city: functionArgs.city,
+              }
+            );
+            break;
+          // ===== CODE CONTENT HANDLERS =====
+          case "searchCodeContent":
+            functionResult = await ctx.runQuery(
+              api.codeContent.searchContent,
+              {
+                searchText: functionArgs.searchText,
+                municipality: functionArgs.municipality,
+                codeType: functionArgs.codeType,
+                limit: 5,
+              }
+            );
+            break;
+          case "getCodeByMunicipality":
+            functionResult = await ctx.runQuery(
+              api.codeContent.getByMunicipality,
+              {
+                municipality: functionArgs.municipality,
+                codeType: functionArgs.codeType,
+              }
+            );
+            break;
+          case "getInvestorGuides":
+            functionResult = await ctx.runQuery(
+              api.codeContent.getInvestorGuides,
+              {}
+            );
+            break;
+          // ===== CONTACT & SERVICE PROVIDER HANDLERS =====
+          case "getBuildingDeptContact":
+            functionResult = await ctx.runQuery(
+              api.seedContacts.getBuildingDept,
+              { city: functionArgs.city }
+            );
+            break;
+          case "getServiceProviders":
+            functionResult = await ctx.runQuery(
+              api.seedContacts.getServiceProviders,
+              { category: functionArgs.category }
+            );
+            break;
+          case "getFeaturedProviders":
+            functionResult = await ctx.runQuery(
+              api.seedContacts.getFeaturedProviders,
+              {}
+            );
+            break;
           default:
             functionResult = { error: "Unknown function" };
         }
@@ -326,7 +684,7 @@ export const chatWithPro = action({
         tools: REGULATION_TOOLS,
         tool_choice: "auto",
         temperature: 0.4,
-        max_tokens: 650,
+        max_tokens: 1200, // Increased for detailed property responses
       });
 
       assistantMessage = response.choices[0].message;

@@ -6,7 +6,7 @@ import { Toaster, toast } from "sonner";
 import { Dashboard } from "./components/Dashboard";
 import { Paywall } from "./components/Paywall";
 import { useEffect, useRef } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, Link } from "react-router-dom";
 import { ThemeToggle } from "./components/ThemeToggle";
 import LogoOnBlack from "./assets/logo_noall_onblack_dark.png";
 import StandardLogo from "./assets/standard_logo.png";
@@ -19,6 +19,7 @@ export default function App() {
           <div className="flex items-center gap-3">
             <img src={StandardLogo} alt="3bids Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
             <h2 className="text-xl font-bold text-primary dark:text-white tracking-tight">3bids Code</h2>
+            <Link to="/about" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">About</Link>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/chat" element={<Content />} />
             <Route path="/join" element={<JoinPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="*" element={<Navigate to="/chat" replace />} />
           </Routes>
         </main>
@@ -87,30 +89,108 @@ function Content() {
         <UserContent />
       </Authenticated>
       <Unauthenticated>
-        <div className="flex items-center justify-center min-h-[80vh] bg-gray-50 dark:bg-dark">
-          <div className="w-full max-w-md mx-auto p-8 bg-white dark:bg-dark-surface rounded-container shadow-lg border border-gray-200 dark:border-gray-800">
-            <div className="text-center mb-8">
-              <div className="flex justify-center mb-6">
-                 <img src="/assets/3fav-180x180_360.png" alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
-              </div>
-              <h1 className="text-4xl font-black text-primary dark:text-white mb-2 tracking-tight">
-                3bids Code
-              </h1>
-              <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">
-                Municipal Code Assistant
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                AI-powered municipal code search and expert guidance.
-              </p>
-            </div>
-            <SignInButton mode="modal">
-              <button className="w-full px-4 py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-md flex items-center justify-center gap-2">
-                <span>Enter System</span>
-              </button>
-            </SignInButton>
+        <WelcomeScreen />
+      </Unauthenticated>
+    </div>
+  );
+}
+
+function WelcomeScreen() {
+  return (
+    <div className="min-h-[80vh] bg-gray-50 dark:bg-dark py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-6">
+            <img src="/assets/3fav-180x180_360.png" alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
+          </div>
+          <h1 className="text-4xl font-black text-primary dark:text-white mb-2 tracking-tight">
+            3bids Code
+          </h1>
+          <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">
+            Cuyahoga County Real Estate Intelligence
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            AI-powered property research and building code assistant for real estate investors, contractors, and developers.
+          </p>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-4 text-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <div className="text-3xl font-black text-primary dark:text-accent">520K+</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Parcels</div>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-4 text-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <div className="text-3xl font-black text-primary dark:text-accent">741</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Code Entries</div>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-4 text-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <div className="text-3xl font-black text-primary dark:text-accent">59</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Municipalities</div>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-4 text-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <div className="text-3xl font-black text-primary dark:text-accent">40+</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Contacts</div>
           </div>
         </div>
-      </Unauthenticated>
+
+        {/* Features */}
+        <div className="grid md:grid-cols-2 gap-6 mb-12">
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3">Property Research</h3>
+            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <li>- Search any address for owner, sales history, tax values</li>
+              <li>- Find comparable properties and market stats</li>
+              <li>- Identify land bank and tax abatement properties</li>
+              <li>- Get investment analysis and ARV estimates</li>
+            </ul>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3">Building Codes</h3>
+            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <li>- Zoning, permits, Point of Sale requirements</li>
+              <li>- Ohio State and municipal code references</li>
+              <li>- Building department contacts and fees</li>
+              <li>- Investor-specific tips for each city</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* How to Use */}
+        <div className="bg-white dark:bg-dark-surface rounded-lg p-6 border border-gray-200 dark:border-gray-800 shadow-sm mb-12">
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4">How to Use</h3>
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <div className="font-semibold text-primary dark:text-accent mb-1">1. Ask About Properties</div>
+              <p className="text-gray-600 dark:text-gray-400">"Tell me about 1234 Main St Cleveland" or "Who owns properties on Euclid Ave?"</p>
+            </div>
+            <div>
+              <div className="font-semibold text-primary dark:text-accent mb-1">2. Ask About Codes</div>
+              <p className="text-gray-600 dark:text-gray-400">"Do I need a permit for a roof in Lakewood?" or "What's the POS fee in Parma?"</p>
+            </div>
+            <div>
+              <div className="font-semibold text-primary dark:text-accent mb-1">3. Get Recommendations</div>
+              <p className="text-gray-600 dark:text-gray-400">"Find me hard money lenders" or "I need a contractor for a rehab project"</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center">
+          <SignInButton mode="modal">
+            <button className="px-8 py-4 bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-md">
+              Get Started - 5 Free Questions
+            </button>
+          </SignInButton>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+            Pro members get unlimited access for $19/month
+          </p>
+          <Link to="/about" className="text-sm text-primary dark:text-accent hover:underline mt-2 inline-block">
+            Learn more about our data →
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
@@ -220,6 +300,183 @@ function ProfilePage() {
           Profile
         </h1>
         <p className="text-gray-600 dark:text-gray-400">Coming soon.</p>
+      </div>
+    </div>
+  );
+}
+
+function AboutPage() {
+  return (
+    <div className="min-h-[80vh] bg-gray-50 dark:bg-dark py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-black text-primary dark:text-white mb-4">
+            About 3bids Code
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            The most comprehensive real estate intelligence platform for Cuyahoga County, Ohio.
+          </p>
+        </div>
+
+        {/* Data Overview */}
+        <div className="bg-white dark:bg-dark-surface rounded-lg p-8 border border-gray-200 dark:border-gray-800 shadow-sm mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Our Data</h2>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Parcel Database */}
+            <div>
+              <h3 className="font-bold text-lg text-primary dark:text-accent mb-3">Parcel Database</h3>
+              <div className="text-4xl font-black text-gray-900 dark:text-white mb-2">520,673</div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Properties in Cuyahoga County</p>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li>- Owner name and mailing address</li>
+                <li>- Last sale date and price</li>
+                <li>- Tax assessed values (land, building, total)</li>
+                <li>- Property characteristics (sq ft, bedrooms, year built)</li>
+                <li>- Land use codes and zoning</li>
+                <li>- Tax abatement status</li>
+              </ul>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">Source: Cuyahoga County GIS • Updated quarterly</p>
+            </div>
+
+            {/* Code Content */}
+            <div>
+              <h3 className="font-bold text-lg text-primary dark:text-accent mb-3">Building Codes & Regulations</h3>
+              <div className="text-4xl font-black text-gray-900 dark:text-white mb-2">741</div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Searchable code entries</p>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li>- 59 municipalities + Ohio State + County</li>
+                <li>- 12 code types per jurisdiction</li>
+                <li>- Building, residential, fire, electrical codes</li>
+                <li>- Zoning and permit requirements</li>
+                <li>- Point of Sale (POS) requirements</li>
+                <li>- Investor-specific notes and tips</li>
+              </ul>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">Source: Municipal codes • Updated annually</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Data */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3">Building Department Contacts</h3>
+            <div className="text-3xl font-black text-primary dark:text-accent mb-2">40+</div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Municipal contacts with:</p>
+            <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+              <li>- Phone numbers and addresses</li>
+              <li>- Website links</li>
+              <li>- POS fees and process tips</li>
+              <li>- Investor-friendly ratings</li>
+            </ul>
+          </div>
+
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3">Service Providers</h3>
+            <div className="text-3xl font-black text-primary dark:text-accent mb-2">13+</div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Vetted providers including:</p>
+            <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+              <li>- Hard money lenders</li>
+              <li>- Title companies</li>
+              <li>- Property managers</li>
+              <li>- Inspectors and attorneys</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Pro Membership */}
+        <div className="bg-gradient-to-r from-primary to-primary-hover rounded-lg p-8 text-white mb-8">
+          <h2 className="text-2xl font-bold mb-4">Pro Membership - $19/month</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-semibold mb-3">Free Users Get:</h3>
+              <ul className="space-y-2 text-sm opacity-90">
+                <li>✓ 5 AI-powered questions</li>
+                <li>✓ Basic property lookups</li>
+                <li>✓ Code reference links</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-3">Pro Members Get:</h3>
+              <ul className="space-y-2 text-sm">
+                <li>✓ Unlimited AI questions</li>
+                <li>✓ Full parcel database access (520K+ properties)</li>
+                <li>✓ Comparable property analysis</li>
+                <li>✓ Investment analysis and ARV estimates</li>
+                <li>✓ Owner search across all properties</li>
+                <li>✓ Zip code market statistics</li>
+                <li>✓ Building department contacts</li>
+                <li>✓ Contractor recommendations via 3bids.io</li>
+                <li>✓ Priority support</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* 59 Municipalities */}
+        <div className="bg-white dark:bg-dark-surface rounded-lg p-8 border border-gray-200 dark:border-gray-800 shadow-sm mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">59 Municipalities Covered</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Complete building code and parcel data for every city and village in Cuyahoga County:
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600 dark:text-gray-400">
+            {[
+              "Bay Village", "Beachwood", "Bedford", "Bedford Heights", "Berea", "Brecksville",
+              "Broadview Heights", "Brook Park", "Brooklyn", "Brooklyn Heights", "Chagrin Falls",
+              "Cleveland", "Cleveland Heights", "Cuyahoga Heights", "East Cleveland", "Euclid",
+              "Fairview Park", "Garfield Heights", "Gates Mills", "Glenwillow", "Highland Heights",
+              "Highland Hills", "Hunting Valley", "Independence", "Lakewood", "Linndale",
+              "Lyndhurst", "Maple Heights", "Mayfield", "Mayfield Heights", "Middleburg Heights",
+              "Moreland Hills", "Newburgh Heights", "North Olmsted", "North Randall", "North Royalton",
+              "Oakwood", "Olmsted Falls", "Olmsted Township", "Orange", "Parma", "Parma Heights",
+              "Pepper Pike", "Richmond Heights", "Rocky River", "Seven Hills", "Shaker Heights",
+              "Solon", "South Euclid", "Strongsville", "University Heights", "Valley View",
+              "Walton Hills", "Warrensville Heights", "Westlake", "Woodmere"
+            ].map((city) => (
+              <span key={city}>{city}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Data Sources */}
+        <div className="bg-white dark:bg-dark-surface rounded-lg p-6 border border-gray-200 dark:border-gray-800 shadow-sm mb-8">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Data Sources & Updates</h2>
+          <div className="grid md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Parcel Data</h4>
+              <p className="text-gray-600 dark:text-gray-400">Cuyahoga County GIS Portal</p>
+              <p className="text-gray-500 dark:text-gray-500 text-xs">Updated quarterly (Q1 full refresh)</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Building Codes</h4>
+              <p className="text-gray-600 dark:text-gray-400">Municode, American Legal, City websites</p>
+              <p className="text-gray-500 dark:text-gray-500 text-xs">Updated annually</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Ohio State Codes</h4>
+              <p className="text-gray-600 dark:text-gray-400">ICC Safe, Ohio Board of Building Standards</p>
+              <p className="text-gray-500 dark:text-gray-500 text-xs">OBC 2024, ORC 2019</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Contacts</h4>
+              <p className="text-gray-600 dark:text-gray-400">Municipal building departments</p>
+              <p className="text-gray-500 dark:text-gray-500 text-xs">Verified semi-annually</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center">
+          <Link to="/chat">
+            <button className="px-8 py-4 bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-md">
+              Start Using 3bids Code
+            </button>
+          </Link>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+            Part of the <a href="https://app.3bids.io" className="text-primary dark:text-accent hover:underline">3bids.io</a> platform
+          </p>
+        </div>
       </div>
     </div>
   );

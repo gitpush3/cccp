@@ -59,25 +59,25 @@ export const seedData = mutation({
       await ctx.db.insert("architectLore", lore);
     }
 
-    // Add sample contacts
+    // Add sample contacts (updated for new schema)
     const sampleContacts = [
       {
         city: "Los Angeles",
-        type: "gov" as const,
+        type: "building_dept" as const,
         name: "LA Building & Safety",
         phone: "(213) 482-7077",
         notes: "Main permit counter open 7:30-4:30 M-F",
       },
       {
         city: "Los Angeles",
-        type: "commercial" as const,
+        type: "contractor" as const,
         name: "Smith Engineering",
         phone: "(213) 555-0123",
         notes: "Structural engineering, seismic retrofits",
       },
       {
         city: "San Francisco",
-        type: "gov" as const,
+        type: "planning_dept" as const,
         name: "SF Planning Department",
         phone: "(628) 652-7300",
         notes: "Zoning and planning review",

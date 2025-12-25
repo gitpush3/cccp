@@ -1,8 +1,9 @@
 import { useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useQuery } from "convex/react";
-import { Check, Zap } from "lucide-react";
+import { Check, Zap, Building2, MapPin, Phone, Users } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export function Paywall() {
   const user = useQuery(api.users.getCurrentUser);
@@ -39,8 +40,8 @@ export function Paywall() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-8 bg-gray-50 dark:bg-dark transition-colors duration-300">
-      <div className="max-w-md w-full">
+    <div className="min-h-[80vh] flex items-center justify-center p-4 md:p-8 bg-gray-50 dark:bg-dark transition-colors duration-300">
+      <div className="max-w-2xl w-full">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
             <Zap className="h-8 w-8 text-primary dark:text-white" />
@@ -49,8 +50,32 @@ export function Paywall() {
             Upgrade to Pro
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Unlock advanced compliance tools.
+            Unlock full access to Cuyahoga County real estate intelligence
           </p>
+        </div>
+
+        {/* Stats Banner */}
+        <div className="grid grid-cols-4 gap-2 mb-6">
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-3 text-center border border-gray-200 dark:border-gray-800">
+            <MapPin className="h-5 w-5 text-primary dark:text-accent mx-auto mb-1" />
+            <div className="text-lg font-black text-gray-900 dark:text-white">520K+</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Parcels</div>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-3 text-center border border-gray-200 dark:border-gray-800">
+            <Building2 className="h-5 w-5 text-primary dark:text-accent mx-auto mb-1" />
+            <div className="text-lg font-black text-gray-900 dark:text-white">741</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Codes</div>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-3 text-center border border-gray-200 dark:border-gray-800">
+            <Users className="h-5 w-5 text-primary dark:text-accent mx-auto mb-1" />
+            <div className="text-lg font-black text-gray-900 dark:text-white">59</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Cities</div>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-3 text-center border border-gray-200 dark:border-gray-800">
+            <Phone className="h-5 w-5 text-primary dark:text-accent mx-auto mb-1" />
+            <div className="text-lg font-black text-gray-900 dark:text-white">40+</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Contacts</div>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-gray-800 p-6 mb-6 shadow-md">
@@ -59,21 +84,58 @@ export function Paywall() {
             <div className="text-gray-500 dark:text-gray-400">per month</div>
           </div>
 
-          <ul className="space-y-3 mb-6">
-            {[
-              "AI-powered municipal code search",
-              "Expert architect guidance",
-              "Blueprint and photo analysis",
-              "City contact database",
-              "Unlimited questions",
-              "Priority support",
-            ].map((feature) => (
-              <li key={feature} className="flex items-center gap-3">
-                <Check className="h-5 w-5 text-accent flex-shrink-0" />
-                <span className="text-gray-700 dark:text-gray-300">{feature}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">Property Research</h4>
+              <ul className="space-y-2">
+                {[
+                  "Search 520K+ parcels by address",
+                  "Owner info & sales history",
+                  "Tax assessments & abatements",
+                  "Comparable property analysis",
+                  "Investment analysis & ARV",
+                  "Zip code market statistics",
+                ].map((feature) => (
+                  <li key={feature} className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">Building Codes</h4>
+              <ul className="space-y-2">
+                {[
+                  "741 searchable code entries",
+                  "59 municipalities covered",
+                  "Zoning & permit requirements",
+                  "Point of Sale (POS) info",
+                  "Building dept contacts",
+                  "Contractor recommendations",
+                ].map((feature) => (
+                  <li key={feature} className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mb-4">
+            <ul className="space-y-2">
+              {[
+                "Unlimited AI-powered questions",
+                "Priority support",
+              ].map((feature) => (
+                <li key={feature} className="flex items-center gap-2 justify-center">
+                  <Check className="h-4 w-4 text-accent flex-shrink-0" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
@@ -90,8 +152,11 @@ export function Paywall() {
           </button>
         </div>
 
-        <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>Cancel anytime.</p>
+        <div className="text-center text-sm text-gray-500 dark:text-gray-400 space-y-2">
+          <p>Cancel anytime. No long-term commitment.</p>
+          <Link to="/about" className="text-primary dark:text-accent hover:underline">
+            Learn more about our data →
+          </Link>
         </div>
       </div>
     </div>

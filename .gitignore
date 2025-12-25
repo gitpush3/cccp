@@ -25,6 +25,10 @@ dist-ssr
 
 # Ignored for the template, you probably want to remove it:
 package-lock.json
+
+# Large data files (too big for GitHub)
+cuyahoga parcels/
+*.csv
 # Environment files
 .env
 .env.*

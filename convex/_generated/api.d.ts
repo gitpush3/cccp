@@ -10,15 +10,20 @@
 
 import type * as actions from "../actions.js";
 import type * as auth from "../auth.js";
+import type * as codeContent from "../codeContent.js";
 import type * as contacts from "../contacts.js";
 import type * as http from "../http.js";
 import type * as importRegulations from "../importRegulations.js";
 import type * as messages from "../messages.js";
+import type * as parcels from "../parcels.js";
 import type * as queries from "../queries.js";
 import type * as regulations from "../regulations.js";
 import type * as router from "../router.js";
 import type * as sampleData from "../sampleData.js";
 import type * as search from "../search.js";
+import type * as seedAllMunicipalities from "../seedAllMunicipalities.js";
+import type * as seedContacts from "../seedContacts.js";
+import type * as seedData from "../seedData.js";
 import type * as stripe from "../stripe.js";
 import type * as users from "../users.js";
 
@@ -31,15 +36,20 @@ import type {
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   auth: typeof auth;
+  codeContent: typeof codeContent;
   contacts: typeof contacts;
   http: typeof http;
   importRegulations: typeof importRegulations;
   messages: typeof messages;
+  parcels: typeof parcels;
   queries: typeof queries;
   regulations: typeof regulations;
   router: typeof router;
   sampleData: typeof sampleData;
   search: typeof search;
+  seedAllMunicipalities: typeof seedAllMunicipalities;
+  seedContacts: typeof seedContacts;
+  seedData: typeof seedData;
   stripe: typeof stripe;
   users: typeof users;
 }>;
