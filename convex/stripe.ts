@@ -75,6 +75,13 @@ export const createCheckoutSession = action({
       return { error: "Stripe not configured" };
     }
 
+    if (!process.env.STRIPE_PRICE_ID) {
+      return {
+        error:
+          "Stripe price is not configured. Set STRIPE_PRICE_ID in the Convex deployment environment.",
+      };
+    }
+
     const domain = args.domain || process.env.SITE_URL || "http://localhost:5174";
     const user = await ctx.runQuery(api.users.getUserByClerkId, {
       clerkId: args.clerkId,

@@ -11,7 +11,10 @@ export function Paywall() {
   const [error, setError] = useState<string | null>(null);
 
   const handleUpgrade = async () => {
-    if (!user || !user.clerkId) return;
+    if (!user || !user.clerkId) {
+      setError("You're not signed in. Please reload and sign in again, then retry.");
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -40,9 +43,9 @@ export function Paywall() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-            <Zap className="h-8 w-8 text-primary" />
+            <Zap className="h-8 w-8 text-primary dark:text-white" />
           </div>
-          <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-wide">
+          <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-wide">
             Upgrade to Pro
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
@@ -52,7 +55,7 @@ export function Paywall() {
 
         <div className="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-gray-800 p-6 mb-6 shadow-md">
           <div className="text-center mb-6">
-            <div className="text-4xl font-bold text-primary">$19</div>
+            <div className="text-4xl font-bold text-primary dark:text-white">$19</div>
             <div className="text-gray-500 dark:text-gray-400">per month</div>
           </div>
 

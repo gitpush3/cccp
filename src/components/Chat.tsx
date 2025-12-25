@@ -9,7 +9,7 @@ interface ChatProps {
   jurisdiction: string;
 }
 
-function renderContentWithLinks(content: string) {
+function renderContentWithLinks(content: string, isUser: boolean) {
   const urlRegex = /(https?:\/\/[^\s)\]}>,"']+)/g;
   const parts = content.split(urlRegex);
   return parts.map((part, index) => {
@@ -20,7 +20,7 @@ function renderContentWithLinks(content: string) {
           href={part}
           target="_blank"
           rel="noreferrer"
-          className="underline break-words text-primary dark:text-primary"
+          className={`underline break-words ${isUser ? "text-white" : "text-primary dark:text-primary"}`}
         >
           {part}
         </a>

@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ThemeToggle } from "./components/ThemeToggle";
 import LogoOnBlack from "./assets/logo_noall_onblack_dark.png";
-import StandardLogo from "./assets/logo.jpeg";
+import StandardLogo from "./assets/standard_logo.png";
 
 export default function App() {
   return (
@@ -18,7 +18,7 @@ export default function App() {
         <header className="sticky top-0 z-10 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-sm h-16 flex justify-between items-center border-b border-gray-200 dark:border-gray-800 shadow-sm px-4 transition-colors duration-300">
           <div className="flex items-center gap-3">
             <img src={StandardLogo} alt="3bids Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
-            <h2 className="text-xl font-bold text-primary tracking-tight">3bids Code</h2>
+            <h2 className="text-xl font-bold text-primary dark:text-white tracking-tight">3bids Code</h2>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
@@ -58,7 +58,7 @@ function JoinPage() {
               <div className="flex justify-center mb-6">
                  <img src={StandardLogo} alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
               </div>
-              <h1 className="text-4xl font-black text-primary mb-2 tracking-tight">
+              <h1 className="text-4xl font-black text-primary dark:text-white mb-2 tracking-tight">
                 3bids Code
               </h1>
               <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">
@@ -93,7 +93,7 @@ function Content() {
               <div className="flex justify-center mb-6">
                  <img src={StandardLogo} alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
               </div>
-              <h1 className="text-4xl font-black text-primary mb-2 tracking-tight">
+              <h1 className="text-4xl font-black text-primary dark:text-white mb-2 tracking-tight">
                 3bids Code
               </h1>
               <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">
