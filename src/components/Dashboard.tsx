@@ -6,6 +6,7 @@ import { CitySelector } from "./CitySelector";
 import { Chat } from "./Chat";
 import { ContactsList } from "./ContactsList";
 import LogoOnBlack from "../assets/logo_noall_onblack_dark.png";
+import FaviconLogo from "../assets/3fav-180x180_360.png";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 
 export function Dashboard() {
@@ -66,8 +67,8 @@ export function Dashboard() {
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1 flex justify-center">
               <img
-                src={LogoOnBlack}
-                alt="3bids Logo"
+                src={FaviconLogo}
+                alt="Logo"
                 className={`${isDesktopSidebarCollapsed ? "h-10" : "h-16 md:h-20"} w-auto object-contain`}
               />
             </div>

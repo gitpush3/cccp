@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes, Link } from "react-router-dom";
 import { ThemeToggle } from "./components/ThemeToggle";
 import LogoOnBlack from "./assets/logo_noall_onblack_dark.png";
-import StandardLogo from "./assets/standard_logo.png";
+import FaviconLogo from "./assets/3fav-180x180_360.png";
 
 export default function App() {
   return (
@@ -17,8 +17,8 @@ export default function App() {
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-dark text-gray-900 dark:text-gray-100 transition-colors duration-300">
         <header className="sticky top-0 z-10 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-sm h-16 flex justify-between items-center border-b border-gray-200 dark:border-gray-800 shadow-sm px-4 transition-colors duration-300">
           <div className="flex items-center gap-3">
-            <img src={StandardLogo} alt="3bids Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
-            <h2 className="text-xl font-bold text-primary dark:text-white tracking-tight">3bids Code</h2>
+            <img src={FaviconLogo} alt="Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
+            <h2 className="text-lg font-bold text-primary dark:text-white tracking-tight">Cuyahoga Code, Permit & Parcel Chat</h2>
             <Link to="/about" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">About</Link>
           </div>
           <div className="flex items-center gap-4">
@@ -58,13 +58,13 @@ function JoinPage() {
           <div className="w-full max-w-md mx-auto p-8 bg-white dark:bg-dark-surface rounded-container shadow-lg border border-gray-200 dark:border-gray-800">
             <div className="text-center mb-8">
               <div className="flex justify-center mb-6">
-                 <img src="/assets/3fav-180x180_360.png" alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
+                 <img src="/assets/3fav-180x180_360.png" alt="Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
               </div>
-              <h1 className="text-4xl font-black text-primary dark:text-white mb-2 tracking-tight">
-                3bids Code
+              <h1 className="text-3xl font-black text-primary dark:text-white mb-2 tracking-tight">
+                Cuyahoga Code, Permit & Parcel Chat
               </h1>
               <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">
-                Municipal Code Assistant
+                Real Estate Intelligence
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
                 AI-powered municipal code search and expert guidance.
@@ -102,13 +102,13 @@ function WelcomeScreen() {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
-            <img src="/assets/3fav-180x180_360.png" alt="3bids Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
+            <img src="/assets/3fav-180x180_360.png" alt="Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
           </div>
-          <h1 className="text-4xl font-black text-primary dark:text-white mb-2 tracking-tight">
-            3bids Code
+          <h1 className="text-3xl font-black text-primary dark:text-white mb-2 tracking-tight">
+            Cuyahoga Code, Permit & Parcel Chat
           </h1>
           <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">
-            Cuyahoga County Real Estate Intelligence
+            Real Estate Intelligence for Investors & Contractors
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             AI-powered property research and building code assistant for real estate investors, contractors, and developers.
@@ -312,7 +312,7 @@ function AboutPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-black text-primary dark:text-white mb-4">
-            About 3bids Code
+            About Cuyahoga Code, Permit & Parcel Chat
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             The most comprehensive real estate intelligence platform for Cuyahoga County, Ohio.
@@ -470,7 +470,7 @@ function AboutPage() {
         <div className="text-center">
           <Link to="/chat">
             <button className="px-8 py-4 bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-md">
-              Start Using 3bids Code
+              Start Using the Chat
             </button>
           </Link>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
