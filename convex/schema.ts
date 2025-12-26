@@ -294,6 +294,19 @@ const applicationTables = {
     .index("by_category", ["category"])
     .index("by_featured", ["featured"]),
 
+  // Chat sessions for history
+  chats: defineTable({
+    chatId: v.string(),
+    clerkId: v.string(),
+    title: v.string(), // Auto-generated from first message or city
+    city: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_chat_id", ["chatId"])
+    .index("by_clerk_id_and_updated", ["clerkId", "updatedAt"]),
+
   messages: defineTable({
     chatId: v.string(),
     userId: v.string(),

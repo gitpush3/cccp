@@ -18,12 +18,16 @@ export default function App() {
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-dark text-gray-900 dark:text-gray-100 transition-colors duration-300">
         <header className="sticky top-0 z-10 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-sm h-16 flex justify-between items-center border-b border-gray-200 dark:border-gray-800 shadow-sm px-4 transition-colors duration-300">
           <div className="flex items-center gap-3">
-            <img src={StandardLogo} alt="Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent dark:hidden" />
-            <img src={LogoOnBlack} alt="Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent hidden dark:block" />
+            <img src={FaviconLogo} alt="Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
             <h2 className="text-lg font-bold text-primary dark:text-white tracking-tight">Cuyahoga Code, Permit & Parcel Chat</h2>
             <Link to="/about" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">About</Link>
           </div>
           <div className="flex items-center gap-4">
+            <Authenticated>
+              <Link to="/chat" className="px-4 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium text-sm transition-colors">
+                Chat Now
+              </Link>
+            </Authenticated>
             <ThemeToggle />
             <Authenticated>
               <div className="flex items-center gap-2">
@@ -60,7 +64,8 @@ function JoinPage() {
           <div className="w-full max-w-md mx-auto p-8 bg-white dark:bg-dark-surface rounded-container shadow-lg border border-gray-200 dark:border-gray-800">
             <div className="text-center mb-8">
               <div className="flex justify-center mb-6">
-                 <img src="/assets/3fav-180x180_360.png" alt="Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
+                <img src={StandardLogo} alt="Logo" className="h-24 w-auto object-contain dark:hidden" />
+                <img src={LogoOnBlack} alt="Logo" className="h-24 w-auto object-contain hidden dark:block" />
               </div>
               <h1 className="text-3xl font-black text-primary dark:text-white mb-2 tracking-tight">
                 Cuyahoga Code, Permit & Parcel Chat
@@ -104,7 +109,8 @@ function WelcomeScreen() {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
-            <img src="/assets/3fav-180x180_360.png" alt="Logo" className="h-24 w-24 object-cover rounded-full border-4 border-accent shadow-md" />
+            <img src={StandardLogo} alt="Logo" className="h-24 w-auto object-contain dark:hidden" />
+            <img src={LogoOnBlack} alt="Logo" className="h-24 w-auto object-contain hidden dark:block" />
           </div>
           <h1 className="text-3xl font-black text-primary dark:text-white mb-2 tracking-tight">
             Cuyahoga Code, Permit & Parcel Chat

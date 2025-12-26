@@ -1,51 +1,38 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
-import { useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { CitySelector } from "./CitySelector";
 import { Chat } from "./Chat";
 import { ContactsList } from "./ContactsList";
 import LogoOnBlack from "../assets/logo_noall_onblack_dark.png";
-import StandardLogo from "../assets/standard_logo.png";
-import FaviconLogo from "../assets/3fav-180x180_360.png";
-import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Menu, X, Plus, MessageSquare } from "lucide-react";
 
 export function Dashboard() {
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"chat" | "contacts">("chat");
-  const [chatId] = useState(() => `chat-${Date.now()}`);
+  const [chatId, setChatId] = useState(() => `chat-${Date.now()}`);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
+  const [isCitiesExpanded, setIsCitiesExpanded] = useState(true);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(true);
   const user = useQuery(api.users.getCurrentUser);
-  const syncAfterSuccess = useAction(api.stripe.syncAfterSuccess);
-
-  // Handle success redirect from Stripe checkout (THEO'S PATTERN)
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const success = urlParams.get("success");
-
-    if (success === "true" && user && user.clerkId) {
-      // Call syncAfterSuccess to ensure subscription data is up to date
-      syncAfterSuccess({
-        clerkId: user.clerkId,
-      }).then((result) => {
-        if (result.success) {
-          // Clear the success parameter from URL
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.delete("success");
-          window.history.replaceState({}, "", newUrl.toString());
-        } else {
-          console.error("Failed to sync subscription data:", result.error);
-        }
-      });
-    }
-  }, [user, syncAfterSuccess]);
+  const chatHistory = useQuery(api.chats.getUserChats, user?.clerkId ? { clerkId: user.clerkId } : "skip");
 
   useEffect(() => {
     if (selectedCity) {
       setIsMobileSidebarOpen(false);
     }
   }, [selectedCity]);
+
+  const startNewChat = () => {
+    setChatId(`chat-${Date.now()}`);
+    setSelectedCity("");
+  };
+
+  const loadChat = (historyChatId: string, city: string) => {
+    setChatId(historyChatId);
+    setSelectedCity(city);
+  };
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-gray-light dark:bg-dark transition-colors duration-300 overflow-hidden">
@@ -68,14 +55,9 @@ export function Dashboard() {
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1 flex justify-center">
               <img
-                src={StandardLogo}
-                alt="Logo"
-                className={`${isDesktopSidebarCollapsed ? "h-10" : "h-16 md:h-20"} w-auto object-contain hidden dark:block`}
-              />
-              <img
                 src={LogoOnBlack}
                 alt="Logo"
-                className={`${isDesktopSidebarCollapsed ? "h-10" : "h-16 md:h-20"} w-auto object-contain dark:hidden`}
+                className={`${isDesktopSidebarCollapsed ? "h-10" : "h-16 md:h-20"} w-auto object-contain`}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -104,40 +86,103 @@ export function Dashboard() {
         </div>
 
         {!isDesktopSidebarCollapsed && (
-          <div className="p-4 md:p-6 border-b border-white/10">
-            <h3 className="text-lg font-semibold text-white/90 mb-4 tracking-wide">
-              Select Jurisdiction
-            </h3>
-            {/* CitySelector needs to handle the dark background - passing a class or wrapping it might be needed if it has internal styles */}
-            <div className="text-gray-900">
-              <CitySelector selectedCity={selectedCity} onCitySelect={setSelectedCity} />
+          <>
+            {/* New Chat Button */}
+            <div className="p-3 border-b border-white/10">
+              <button
+                onClick={startNewChat}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                New Chat
+              </button>
             </div>
-          </div>
-        )}
 
-        {!isDesktopSidebarCollapsed && (
-          <div className="flex border-b border-white/10 p-2 gap-2">
-            <button
-              onClick={() => setActiveTab("chat")}
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-all rounded-full ${
-                activeTab === "chat"
-                  ? "bg-white text-primary shadow-glow"
-                  : "text-white/70 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              AI Assistant
-            </button>
-            <button
-              onClick={() => setActiveTab("contacts")}
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-all rounded-full ${
-                activeTab === "contacts"
-                  ? "bg-white text-primary shadow-glow"
-                  : "text-white/70 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              Contacts
-            </button>
-          </div>
+            {/* Collapsible Cities Section */}
+            <div className="border-b border-white/10">
+              <button
+                onClick={() => setIsCitiesExpanded(!isCitiesExpanded)}
+                className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+              >
+                <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wide">
+                  Select Jurisdiction
+                </h3>
+                {isCitiesExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-white/60" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-white/60" />
+                )}
+              </button>
+              {isCitiesExpanded && (
+                <div className="px-4 pb-4 text-gray-900">
+                  <CitySelector selectedCity={selectedCity} onCitySelect={setSelectedCity} />
+                </div>
+              )}
+            </div>
+
+            {/* Collapsible Chat History Section */}
+            <div className="border-b border-white/10">
+              <button
+                onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+                className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+              >
+                <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wide">
+                  Chat History
+                </h3>
+                {isHistoryExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-white/60" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-white/60" />
+                )}
+              </button>
+              {isHistoryExpanded && (
+                <div className="px-2 pb-2 max-h-48 overflow-y-auto">
+                  {chatHistory && chatHistory.length > 0 ? (
+                    chatHistory.map((chat) => (
+                      <button
+                        key={chat._id}
+                        onClick={() => loadChat(chat.chatId, chat.city)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
+                          chatId === chat.chatId
+                            ? "bg-white/20 text-white"
+                            : "text-white/70 hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{chat.title}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-white/50 text-sm px-3 py-2">No chat history yet</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Tab Buttons */}
+            <div className="flex border-b border-white/10 p-2 gap-2">
+              <button
+                onClick={() => setActiveTab("chat")}
+                className={`flex-1 px-4 py-2 text-sm font-medium transition-all rounded-full ${
+                  activeTab === "chat"
+                    ? "bg-white text-primary shadow-glow"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                AI Assistant
+              </button>
+              <button
+                onClick={() => setActiveTab("contacts")}
+                className={`flex-1 px-4 py-2 text-sm font-medium transition-all rounded-full ${
+                  activeTab === "contacts"
+                    ? "bg-white text-primary shadow-glow"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                Contacts
+              </button>
+            </div>
+          </>
         )}
 
         <div className="flex-1 overflow-hidden">

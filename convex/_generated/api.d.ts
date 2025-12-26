@@ -10,6 +10,7 @@
 
 import type * as actions from "../actions.js";
 import type * as auth from "../auth.js";
+import type * as chats from "../chats.js";
 import type * as codeContent from "../codeContent.js";
 import type * as contacts from "../contacts.js";
 import type * as http from "../http.js";
@@ -36,6 +37,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   auth: typeof auth;
+  chats: typeof chats;
   codeContent: typeof codeContent;
   contacts: typeof contacts;
   http: typeof http;

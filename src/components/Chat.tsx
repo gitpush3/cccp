@@ -41,6 +41,7 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
   const addMessage = useMutation(api.messages.addMessage);
   const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
   const chatWithPro = useAction(api.actions.chatWithPro);
+  const getOrCreateChat = useMutation(api.chats.getOrCreateChat);
   const user = useQuery(api.users.getCurrentUser);
 
   const scrollToBottom = () => {
@@ -100,6 +101,13 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
       }
 
       const messageContent = currentMessage || "Uploaded image for analysis";
+
+      // Save/update chat in history
+      await getOrCreateChat({
+        chatId,
+        clerkId: userId,
+        city: jurisdiction,
+      });
 
       await addMessage({
         chatId,
@@ -173,7 +181,7 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
                 />
               )}
               <p className="text-sm whitespace-pre-wrap leading-relaxed font-medium">
-                {renderContentWithLinks(msg.content)}
+                {renderContentWithLinks(msg.content, msg.role === "user")}
               </p>
             </div>
           </div>
