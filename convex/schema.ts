@@ -348,6 +348,244 @@ const applicationTables = {
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_clerk_id_and_timestamp", ["clerkId", "timestamp"]),
+
+  // ===== TIER 1: DISTRESSED PROPERTY DATA =====
+  
+  // Sheriff Sales / Foreclosure Data
+  sheriffSales: defineTable({
+    caseNumber: v.string(),
+    parcelId: v.optional(v.string()), // Link to parcels table
+    address: v.string(),
+    city: v.string(),
+    zipCode: v.optional(v.string()),
+    saleDate: v.optional(v.string()),
+    saleTime: v.optional(v.string()),
+    openingBid: v.optional(v.number()),
+    appraisedValue: v.optional(v.number()),
+    plaintiff: v.optional(v.string()), // Lender/bank name
+    defendant: v.optional(v.string()), // Property owner
+    status: v.union(
+      v.literal("scheduled"),
+      v.literal("sold"),
+      v.literal("withdrawn"),
+      v.literal("cancelled"),
+      v.literal("continued"),
+      v.literal("redeemed")
+    ),
+    propertyType: v.optional(v.string()), // Residential, Commercial, etc.
+    caseType: v.optional(v.string()), // Foreclosure, Tax, etc.
+    sourceUrl: v.optional(v.string()),
+    lastUpdated: v.number(),
+  })
+    .index("by_case_number", ["caseNumber"])
+    .index("by_parcel_id", ["parcelId"])
+    .index("by_city", ["city"])
+    .index("by_status", ["status"])
+    .index("by_sale_date", ["saleDate"]),
+
+  // Tax Delinquent Properties
+  taxDelinquent: defineTable({
+    parcelId: v.string(), // Link to parcels table
+    address: v.string(),
+    city: v.string(),
+    zipCode: v.optional(v.string()),
+    ownerName: v.string(),
+    totalAmountOwed: v.number(),
+    yearsDelinquent: v.optional(v.number()),
+    oldestDelinquentYear: v.optional(v.number()),
+    paymentPlanStatus: v.optional(v.union(
+      v.literal("none"),
+      v.literal("active"),
+      v.literal("defaulted")
+    )),
+    certifiedForSale: v.optional(v.boolean()), // Going to tax lien sale
+    lastPaymentDate: v.optional(v.string()),
+    lastUpdated: v.number(),
+  })
+    .index("by_parcel_id", ["parcelId"])
+    .index("by_city", ["city"])
+    .index("by_amount_owed", ["totalAmountOwed"])
+    .index("by_years_delinquent", ["yearsDelinquent"]),
+
+  // Tax Lien Certificates
+  taxLienCertificates: defineTable({
+    parcelId: v.string(),
+    address: v.string(),
+    city: v.string(),
+    certificateNumber: v.optional(v.string()),
+    saleDate: v.optional(v.string()),
+    minimumBid: v.optional(v.number()),
+    faceValue: v.optional(v.number()),
+    interestRate: v.optional(v.number()),
+    redemptionDeadline: v.optional(v.string()),
+    status: v.union(
+      v.literal("available"),
+      v.literal("sold"),
+      v.literal("redeemed"),
+      v.literal("foreclosed")
+    ),
+    purchaser: v.optional(v.string()),
+    lastUpdated: v.number(),
+  })
+    .index("by_parcel_id", ["parcelId"])
+    .index("by_city", ["city"])
+    .index("by_status", ["status"])
+    .index("by_sale_date", ["saleDate"]),
+
+  // ===== TIER 2: NEIGHBORHOOD QUALITY DATA =====
+
+  // Crime Data (Cleveland + other municipalities as available)
+  crimeIncidents: defineTable({
+    incidentNumber: v.string(),
+    crimeType: v.string(), // Assault, Theft, Burglary, etc.
+    crimeCategory: v.optional(v.union(
+      v.literal("violent"),
+      v.literal("property"),
+      v.literal("drug"),
+      v.literal("other")
+    )),
+    address: v.optional(v.string()),
+    city: v.string(),
+    zipCode: v.optional(v.string()),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    occurredDate: v.string(),
+    occurredTime: v.optional(v.string()),
+    reportedDate: v.optional(v.string()),
+    disposition: v.optional(v.string()),
+    lastUpdated: v.number(),
+  })
+    .index("by_city", ["city"])
+    .index("by_zip_code", ["zipCode"])
+    .index("by_crime_type", ["crimeType"])
+    .index("by_date", ["occurredDate"]),
+
+  // School Ratings
+  schools: defineTable({
+    schoolId: v.string(), // GreatSchools or state ID
+    name: v.string(),
+    schoolType: v.union(
+      v.literal("elementary"),
+      v.literal("middle"),
+      v.literal("high"),
+      v.literal("k8"),
+      v.literal("k12"),
+      v.literal("other")
+    ),
+    address: v.string(),
+    city: v.string(),
+    zipCode: v.string(),
+    district: v.optional(v.string()),
+    rating: v.optional(v.number()), // 1-10 scale
+    testScoreRating: v.optional(v.number()),
+    studentTeacherRatio: v.optional(v.number()),
+    totalStudents: v.optional(v.number()),
+    gradeRange: v.optional(v.string()), // "K-5", "6-8", etc.
+    website: v.optional(v.string()),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    lastUpdated: v.number(),
+  })
+    .index("by_city", ["city"])
+    .index("by_zip_code", ["zipCode"])
+    .index("by_rating", ["rating"])
+    .index("by_school_type", ["schoolType"]),
+
+  // Walk/Transit/Bike Scores (cached per address or zip)
+  walkScores: defineTable({
+    address: v.optional(v.string()),
+    zipCode: v.string(),
+    city: v.string(),
+    walkScore: v.optional(v.number()), // 0-100
+    transitScore: v.optional(v.number()), // 0-100
+    bikeScore: v.optional(v.number()), // 0-100
+    walkDescription: v.optional(v.string()), // "Very Walkable", "Car-Dependent", etc.
+    lastUpdated: v.number(),
+  })
+    .index("by_zip_code", ["zipCode"])
+    .index("by_city", ["city"]),
+
+  // ===== TIER 3: MARKET CONTEXT DATA =====
+
+  // Building Permits
+  buildingPermits: defineTable({
+    permitNumber: v.string(),
+    parcelId: v.optional(v.string()),
+    address: v.string(),
+    city: v.string(),
+    zipCode: v.optional(v.string()),
+    permitType: v.union(
+      v.literal("new_construction"),
+      v.literal("renovation"),
+      v.literal("demolition"),
+      v.literal("electrical"),
+      v.literal("plumbing"),
+      v.literal("hvac"),
+      v.literal("roofing"),
+      v.literal("other")
+    ),
+    workDescription: v.optional(v.string()),
+    estimatedValue: v.optional(v.number()),
+    contractor: v.optional(v.string()),
+    issueDate: v.optional(v.string()),
+    expirationDate: v.optional(v.string()),
+    status: v.union(
+      v.literal("applied"),
+      v.literal("approved"),
+      v.literal("issued"),
+      v.literal("completed"),
+      v.literal("expired"),
+      v.literal("denied")
+    ),
+    inspectionStatus: v.optional(v.string()),
+    lastUpdated: v.number(),
+  })
+    .index("by_permit_number", ["permitNumber"])
+    .index("by_parcel_id", ["parcelId"])
+    .index("by_city", ["city"])
+    .index("by_permit_type", ["permitType"])
+    .index("by_issue_date", ["issueDate"]),
+
+  // Census/Demographics by Zip Code
+  demographics: defineTable({
+    zipCode: v.string(),
+    city: v.optional(v.string()),
+    population: v.optional(v.number()),
+    medianHouseholdIncome: v.optional(v.number()),
+    medianAge: v.optional(v.number()),
+    ownerOccupiedPercent: v.optional(v.number()),
+    renterOccupiedPercent: v.optional(v.number()),
+    vacancyRate: v.optional(v.number()),
+    medianHomeValue: v.optional(v.number()),
+    medianRent: v.optional(v.number()),
+    povertyRate: v.optional(v.number()),
+    unemploymentRate: v.optional(v.number()),
+    collegeEducatedPercent: v.optional(v.number()),
+    dataYear: v.number(), // Census year
+    lastUpdated: v.number(),
+  })
+    .index("by_zip_code", ["zipCode"])
+    .index("by_city", ["city"]),
+
+  // Flood Zones
+  floodZones: defineTable({
+    parcelId: v.optional(v.string()),
+    address: v.optional(v.string()),
+    zipCode: v.string(),
+    city: v.string(),
+    floodZone: v.string(), // A, AE, X, etc.
+    floodZoneDescription: v.optional(v.string()),
+    specialFloodHazardArea: v.boolean(),
+    baseFloodElevation: v.optional(v.number()),
+    insuranceRequired: v.optional(v.boolean()),
+    mapPanel: v.optional(v.string()),
+    effectiveDate: v.optional(v.string()),
+    lastUpdated: v.number(),
+  })
+    .index("by_parcel_id", ["parcelId"])
+    .index("by_zip_code", ["zipCode"])
+    .index("by_city", ["city"])
+    .index("by_flood_zone", ["floodZone"]),
 };
 
 export default defineSchema({

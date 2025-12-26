@@ -10,12 +10,17 @@
 
 import type * as actions from "../actions.js";
 import type * as auth from "../auth.js";
+import type * as censusData from "../censusData.js";
 import type * as chats from "../chats.js";
 import type * as codeContent from "../codeContent.js";
 import type * as contacts from "../contacts.js";
+import type * as crons from "../crons.js";
+import type * as distressedData from "../distressedData.js";
 import type * as http from "../http.js";
 import type * as importRegulations from "../importRegulations.js";
+import type * as marketData from "../marketData.js";
 import type * as messages from "../messages.js";
+import type * as neighborhoodData from "../neighborhoodData.js";
 import type * as parcels from "../parcels.js";
 import type * as queries from "../queries.js";
 import type * as regulations from "../regulations.js";
@@ -25,6 +30,7 @@ import type * as search from "../search.js";
 import type * as seedAllMunicipalities from "../seedAllMunicipalities.js";
 import type * as seedContacts from "../seedContacts.js";
 import type * as seedData from "../seedData.js";
+import type * as seedInvestorData from "../seedInvestorData.js";
 import type * as stripe from "../stripe.js";
 import type * as users from "../users.js";
 
@@ -37,12 +43,17 @@ import type {
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   auth: typeof auth;
+  censusData: typeof censusData;
   chats: typeof chats;
   codeContent: typeof codeContent;
   contacts: typeof contacts;
+  crons: typeof crons;
+  distressedData: typeof distressedData;
   http: typeof http;
   importRegulations: typeof importRegulations;
+  marketData: typeof marketData;
   messages: typeof messages;
+  neighborhoodData: typeof neighborhoodData;
   parcels: typeof parcels;
   queries: typeof queries;
   regulations: typeof regulations;
@@ -52,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   seedAllMunicipalities: typeof seedAllMunicipalities;
   seedContacts: typeof seedContacts;
   seedData: typeof seedData;
+  seedInvestorData: typeof seedInvestorData;
   stripe: typeof stripe;
   users: typeof users;
 }>;

@@ -9,6 +9,14 @@ This document outlines the recommended schedule for updating data in the Cuyahog
 | Data Type | Update Frequency | Source | Priority |
 |-----------|------------------|--------|----------|
 | Parcel Data | Quarterly | County Auditor/GIS | High |
+| Sheriff Sales | Daily | Sheriff website scraping | Critical |
+| Tax Delinquent | Quarterly | County Treasurer PDF | Critical |
+| Crime Data | Weekly | Cleveland Open Data API | High |
+| School Ratings | Annually | GreatSchools API | Medium |
+| Walk Scores | Annually | Walk Score API (paid) | Medium |
+| Demographics | Annually | Census Bureau API | Medium |
+| Building Permits | Monthly | Municipal websites | Medium |
+| Flood Zones | Annually | FEMA Map Service | Low |
 | Code Content | Annually | Municipal websites | Medium |
 | Building Dept Contacts | Semi-annually | Municipal websites | Medium |
 | Service Providers | Quarterly | Manual verification | Low |
@@ -263,6 +271,118 @@ dataMetadata: defineTable({
 10. **Flood Zone Maps**
 11. **Environmental Hazards**
 12. **Transit Routes**
+
+---
+
+## Investor Data Sources (NEW)
+
+### Sheriff Sales / Foreclosures (Daily)
+
+**Source:** Cuyahoga County Sheriff's Office
+- Website: https://cuyahoga.sheriffsaleauction.ohio.gov/
+- Search Portal: https://cpdocket.cp.cuyahogacounty.gov/sheriffsearch/search.aspx
+
+**Update Process:**
+```bash
+# Web scraping required - use Puppeteer or similar
+# Import via mutation:
+npx convex run distressedData:insertSheriffSale '{"caseNumber":"CV-24-123456","address":"123 Main St","city":"CLEVELAND","status":"scheduled"}'
+```
+
+**Schema Fields:** caseNumber, parcelId, address, city, saleDate, openingBid, appraisedValue, plaintiff, defendant, status
+
+---
+
+### Tax Delinquent Properties (Quarterly)
+
+**Source:** Cuyahoga County Treasurer
+- Delinquent List: https://cuyahogacounty.gov/fiscal-officer/departments/real-property/delinquent-publication
+- Tax Lien Sales: https://cuyahogacounty.gov/treasury/delinquency/tax-lien-certificate-sales
+
+**Update Process:**
+```bash
+# PDF parsing required - published quarterly
+# Import via mutation:
+npx convex run distressedData:insertTaxDelinquent '{"parcelId":"12345678","address":"123 Main St","city":"CLEVELAND","ownerName":"SMITH, JOHN","totalAmountOwed":12500}'
+```
+
+**Schema Fields:** parcelId, address, city, ownerName, totalAmountOwed, yearsDelinquent, paymentPlanStatus, certifiedForSale
+
+---
+
+### Crime Data (Weekly)
+
+**Source:** City of Cleveland Open Data
+- URL: https://data.clevelandohio.gov/datasets/crime-incidents
+- Format: CSV, GeoJSON, API available
+
+**Update Process:**
+```bash
+# Download CSV or use API
+# Import via mutation:
+npx convex run neighborhoodData:insertCrimeIncident '{"incidentNumber":"2024-123456","crimeType":"Burglary","city":"CLEVELAND","occurredDate":"2024-12-25"}'
+```
+
+**Note:** Cleveland only initially. Other municipalities may have separate data sources.
+
+---
+
+### School Ratings (Annually)
+
+**Source:** GreatSchools API + Ohio School Report Cards
+- GreatSchools: https://www.greatschools.org/api
+- Ohio Official: https://reportcard.education.ohio.gov/
+
+**Update Process:**
+```bash
+# API integration required
+# Import via mutation:
+npx convex run neighborhoodData:insertSchool '{"schoolId":"OH-001","name":"Lincoln Elementary","schoolType":"elementary","city":"CLEVELAND","zipCode":"44115","rating":7}'
+```
+
+---
+
+### Walk Score (Annually)
+
+**Source:** Walk Score API (Paid)
+- URL: https://www.walkscore.com/professional/api.php
+- Cost: ~$0.05/call or $250/month unlimited
+
+**Update Process:**
+```bash
+# API integration required
+# Import via mutation:
+npx convex run neighborhoodData:insertWalkScore '{"zipCode":"44107","city":"LAKEWOOD","walkScore":78,"transitScore":48,"bikeScore":72}'
+```
+
+---
+
+### Demographics (Annually)
+
+**Source:** U.S. Census Bureau
+- URL: https://data.census.gov/
+- API: https://api.census.gov/
+
+**Update Process:**
+```bash
+# Census API integration
+# Import via mutation:
+npx convex run marketData:insertDemographics '{"zipCode":"44107","city":"LAKEWOOD","medianHouseholdIncome":52000,"medianHomeValue":165000,"dataYear":2023}'
+```
+
+---
+
+### Flood Zones (Annually)
+
+**Source:** FEMA Map Service Center
+- URL: https://msc.fema.gov/portal/home
+
+**Update Process:**
+```bash
+# FEMA data download
+# Import via mutation:
+npx convex run marketData:insertFloodZone '{"zipCode":"44107","city":"LAKEWOOD","floodZone":"X","specialFloodHazardArea":false}'
+```
 
 ---
 

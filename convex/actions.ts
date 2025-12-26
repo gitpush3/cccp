@@ -14,7 +14,7 @@ const openai = process.env.OPENAI_API_KEY
 // System prompt for the building codes and real estate assistant
 const SYSTEM_PROMPT = `You are an expert assistant for real estate investors, developers, fix-and-flip professionals, and contractors in Cuyahoga County, Ohio.
 
-YOU HAVE ACCESS TO FOUR POWERFUL DATABASES:
+YOU HAVE ACCESS TO NINE POWERFUL DATABASES:
 
 1) BUILDING CODES & REGULATIONS DATABASE (741 entries):
    - Building codes, fire codes, zoning regulations for all 59 municipalities
@@ -40,6 +40,37 @@ YOU HAVE ACCESS TO FOUR POWERFUL DATABASES:
    - Hard money lenders, title companies, property managers, inspectors
    - Featured partners for investor services
    - Use getServiceProviders, getFeaturedProviders
+
+5) SHERIFF SALES / FORECLOSURE INFO:
+   - Cuyahoga County Sheriff Sales happen regularly
+   - AUCTION CALENDAR: https://cuyahoga.sheriffsaleauction.ohio.gov/index.cfm?zaction=USER&zmethod=CALENDAR
+   - TO BID/REGISTER: https://cuyahoga.sheriffsaleauction.ohio.gov/index.cfm?zaction=HOME&zmethod=START
+   - Users must create an account on RealForeclose to see property addresses and bid
+   - When users ask about sheriff sales, foreclosures, or auctions, ALWAYS provide these URLs
+
+6) TAX DELINQUENT PROPERTIES:
+   - Properties with unpaid property taxes
+   - Amount owed, years delinquent, payment plan status
+   - Certified for tax lien sale status
+   - PERFECT for Subject-To deals and motivated seller outreach
+   - Use getTaxDelinquentByCity, getTaxDelinquentByParcel, getHighValueDelinquent
+
+7) NEIGHBORHOOD QUALITY DATA:
+   - School ratings (1-10 scale) for all schools in county
+   - Walk Score, Transit Score, Bike Score by zip code
+   - Crime statistics by city and zip code
+   - Use getSchoolsByZipCode, getWalkScoreByZip, getCrimeStats
+
+8) DEMOGRAPHICS & CENSUS DATA:
+   - Median income, home values, rent prices by zip code
+   - Population, vacancy rates, owner vs renter percentages
+   - Poverty rates, unemployment, education levels
+   - Use getDemographicsByZip, getNeighborhoodAnalysis
+
+9) FLOOD ZONE DATA:
+   - FEMA flood zone designations by parcel
+   - Special flood hazard areas requiring insurance
+   - Use getFloodZoneByParcel, getHighRiskFloodZones
 
 LAND USE CODE QUICK REFERENCE:
 - 5100: Single-family home (most common investment property)
@@ -413,6 +444,144 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
       },
     },
   },
+  // ===== DISTRESSED PROPERTY TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "getTaxDelinquentByCity",
+      description: "Get tax delinquent properties for a city. These are motivated sellers - perfect for Subject-To deals.",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "City name (e.g., 'CLEVELAND', 'PARMA')",
+          },
+        },
+        required: ["city"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getHighValueDelinquent",
+      description: "Get properties with high tax delinquency amounts - highly motivated sellers.",
+      parameters: {
+        type: "object",
+        properties: {
+          minAmount: {
+            type: "number",
+            description: "Minimum amount owed (default $5000)",
+          },
+        },
+      },
+    },
+  },
+  // ===== NEIGHBORHOOD QUALITY TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "getSchoolsByZipCode",
+      description: "Get schools and their ratings for a zip code. School quality affects property values.",
+      parameters: {
+        type: "object",
+        properties: {
+          zipCode: {
+            type: "string",
+            description: "5-digit zip code",
+          },
+        },
+        required: ["zipCode"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getWalkScoreByZip",
+      description: "Get Walk Score, Transit Score, and Bike Score for a zip code.",
+      parameters: {
+        type: "object",
+        properties: {
+          zipCode: {
+            type: "string",
+            description: "5-digit zip code",
+          },
+        },
+        required: ["zipCode"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getCrimeStats",
+      description: "Get crime statistics for a zip code including violent and property crime counts.",
+      parameters: {
+        type: "object",
+        properties: {
+          zipCode: {
+            type: "string",
+            description: "5-digit zip code",
+          },
+        },
+        required: ["zipCode"],
+      },
+    },
+  },
+  // ===== DEMOGRAPHICS & MARKET TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "getDemographicsByZip",
+      description: "Get census demographics for a zip code: income, home values, vacancy rates, etc.",
+      parameters: {
+        type: "object",
+        properties: {
+          zipCode: {
+            type: "string",
+            description: "5-digit zip code",
+          },
+        },
+        required: ["zipCode"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getNeighborhoodAnalysis",
+      description: "Get comprehensive neighborhood analysis combining demographics, schools, and walk scores.",
+      parameters: {
+        type: "object",
+        properties: {
+          zipCode: {
+            type: "string",
+            description: "5-digit zip code",
+          },
+        },
+        required: ["zipCode"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getFloodZoneByParcel",
+      description: "Get FEMA flood zone designation for a parcel. Important for insurance costs.",
+      parameters: {
+        type: "object",
+        properties: {
+          parcelId: {
+            type: "string",
+            description: "Parcel ID number",
+          },
+        },
+        required: ["parcelId"],
+      },
+    },
+  },
 ];
 
 export const chatWithPro = action({
@@ -664,6 +833,57 @@ export const chatWithPro = action({
             functionResult = await ctx.runQuery(
               api.seedContacts.getFeaturedProviders,
               {}
+            );
+            break;
+          // ===== DISTRESSED PROPERTY HANDLERS =====
+          case "getTaxDelinquentByCity":
+            functionResult = await ctx.runQuery(
+              api.distressedData.getTaxDelinquentByCity,
+              { city: functionArgs.city }
+            );
+            break;
+          case "getHighValueDelinquent":
+            functionResult = await ctx.runQuery(
+              api.distressedData.getHighValueDelinquent,
+              { minAmount: functionArgs.minAmount }
+            );
+            break;
+          // ===== NEIGHBORHOOD QUALITY HANDLERS =====
+          case "getSchoolsByZipCode":
+            functionResult = await ctx.runQuery(
+              api.neighborhoodData.getSchoolsByZipCode,
+              { zipCode: functionArgs.zipCode }
+            );
+            break;
+          case "getWalkScoreByZip":
+            functionResult = await ctx.runQuery(
+              api.neighborhoodData.getWalkScoreByZip,
+              { zipCode: functionArgs.zipCode }
+            );
+            break;
+          case "getCrimeStats":
+            functionResult = await ctx.runQuery(
+              api.neighborhoodData.getCrimeStats,
+              { zipCode: functionArgs.zipCode }
+            );
+            break;
+          // ===== DEMOGRAPHICS & MARKET HANDLERS =====
+          case "getDemographicsByZip":
+            functionResult = await ctx.runQuery(
+              api.marketData.getDemographicsByZip,
+              { zipCode: functionArgs.zipCode }
+            );
+            break;
+          case "getNeighborhoodAnalysis":
+            functionResult = await ctx.runQuery(
+              api.marketData.getNeighborhoodAnalysis,
+              { zipCode: functionArgs.zipCode }
+            );
+            break;
+          case "getFloodZoneByParcel":
+            functionResult = await ctx.runQuery(
+              api.marketData.getFloodZoneByParcel,
+              { parcelId: functionArgs.parcelId }
             );
             break;
           default:

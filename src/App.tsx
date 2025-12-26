@@ -39,12 +39,13 @@ export default function App() {
         </header>
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<Navigate to="/chat" replace />} />
-            <Route path="/chat" element={<Content />} />
+            <Route path="/" element={<Navigate to="/welcome" replace />} />
+            <Route path="/welcome" element={<WelcomeScreen />} />
+            <Route path="/chat" element={<ChatPage />} />
             <Route path="/join" element={<JoinPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="*" element={<Navigate to="/chat" replace />} />
+            <Route path="*" element={<Navigate to="/welcome" replace />} />
           </Routes>
         </main>
         <Toaster />
@@ -89,14 +90,14 @@ function JoinPage() {
   );
 }
 
-function Content() {
+function ChatPage() {
   return (
     <div className="flex flex-col">
       <Authenticated>
         <UserContent />
       </Authenticated>
       <Unauthenticated>
-        <WelcomeScreen />
+        <Navigate to="/join" replace />
       </Unauthenticated>
     </div>
   );
@@ -118,9 +119,14 @@ function WelcomeScreen() {
           <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">
             Real Estate Intelligence for Investors & Contractors
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8">
             AI-powered property research and building code assistant for real estate investors, contractors, and developers.
           </p>
+          <Link to="/chat">
+            <button className="px-8 py-4 bg-accent hover:bg-accent/90 text-white rounded-lg font-bold text-lg transition-colors shadow-lg">
+              Try It Now!
+            </button>
+          </Link>
         </div>
 
         {/* Stats Grid */}
