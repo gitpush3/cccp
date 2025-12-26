@@ -9,7 +9,6 @@ import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Menu, X, Plus, Messa
 
 export function Dashboard() {
   const [selectedCity, setSelectedCity] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"chat" | "contacts">("chat");
   const [chatId, setChatId] = useState(() => `chat-${Date.now()}`);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
@@ -158,39 +157,10 @@ export function Dashboard() {
                 </div>
               )}
             </div>
-
-            {/* Tab Buttons */}
-            <div className="flex border-b border-white/10 p-2 gap-2">
-              <button
-                onClick={() => setActiveTab("chat")}
-                className={`flex-1 px-4 py-2 text-sm font-medium transition-all rounded-full ${
-                  activeTab === "chat"
-                    ? "bg-white text-primary shadow-glow"
-                    : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                AI Assistant
-              </button>
-              <button
-                onClick={() => setActiveTab("contacts")}
-                className={`flex-1 px-4 py-2 text-sm font-medium transition-all rounded-full ${
-                  activeTab === "contacts"
-                    ? "bg-white text-primary shadow-glow"
-                    : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                Contacts
-              </button>
-            </div>
           </>
         )}
 
         <div className="flex-1 overflow-hidden">
-          {!isDesktopSidebarCollapsed && activeTab === "contacts" && selectedCity && (
-            <div className="h-full overflow-y-auto">
-              <ContactsList city={selectedCity} />
-            </div>
-          )}
         </div>
       </div>
 
@@ -212,43 +182,28 @@ export function Dashboard() {
               {selectedCity || "Select Jurisdiction"}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {activeTab === "chat" ? "AI Assistant" : "Contacts"}
+              AI Assistant
             </div>
           </div>
         </div>
 
         <div className="flex-1 min-h-0 flex flex-col">
-          {activeTab === "chat" ? (
-            selectedCity ? (
-              <div className="flex-1 min-h-0 flex justify-center">
-                <div className="w-full min-h-0 flex flex-col md:px-6 lg:px-10">
-                  <div className="w-full flex-1 min-h-0 mx-auto md:max-w-3xl lg:max-w-4xl">
-                    <Chat chatId={chatId} jurisdiction={selectedCity} />
-                  </div>
+          {selectedCity ? (
+            <div className="flex-1 min-h-0 flex justify-center">
+              <div className="w-full min-h-0 flex flex-col md:px-6 lg:px-10">
+                <div className="w-full flex-1 min-h-0 mx-auto md:max-w-3xl lg:max-w-4xl">
+                  <Chat chatId={chatId} jurisdiction={selectedCity} />
                 </div>
               </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center p-6">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 uppercase tracking-wide">
-                    Select a Jurisdiction
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Choose a city to start getting AI assistance with municipal codes
-                  </p>
-                </div>
-              </div>
-            )
+            </div>
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 uppercase tracking-wide">
-                  City Contacts
+                  Select a Jurisdiction
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {selectedCity
-                    ? `Viewing contacts for ${selectedCity}`
-                    : "Select a city to view contacts"}
+                  Choose a city to start getting AI assistance with municipal codes
                 </p>
               </div>
             </div>
