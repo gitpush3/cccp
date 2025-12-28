@@ -132,6 +132,8 @@ const applicationTables = {
     // Usage tracking for billing
     questionsUsed: v.optional(v.number()),
     questionsLimit: v.optional(v.number()),
+    // Track anonymous messages before signup
+    anonymousMessageCount: v.optional(v.number()),
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_google_id", ["googleId"])
@@ -309,7 +311,8 @@ const applicationTables = {
 
   messages: defineTable({
     chatId: v.string(),
-    userId: v.string(),
+    userId: v.optional(v.string()), // Make optional for anonymous users
+    sessionId: v.optional(v.string()), // For anonymous sessions
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
     imageStorageId: v.optional(v.id("_storage")),
@@ -318,9 +321,11 @@ const applicationTables = {
     citedMunicipalities: v.optional(v.array(v.id("municipalities"))),
     tokenCount: v.optional(v.number()),
     cost: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()), // Track if message was sent anonymously
   })
     .index("by_chat_id", ["chatId"])
-    .index("by_user_id", ["userId"]),
+    .index("by_user_id", ["userId"])
+    .index("by_session_id", ["sessionId"]),
 
   // LLM response cache for common queries
   responseCache: defineTable({

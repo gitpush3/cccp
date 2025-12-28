@@ -4,6 +4,7 @@ import { api } from "../convex/_generated/api";
 import { UpgradeButton } from "./UpgradeButton";
 import { Toaster, toast } from "sonner";
 import { Dashboard } from "./components/Dashboard";
+import { AnonymousDashboard } from "./components/AnonymousDashboard";
 import { Paywall } from "./components/Paywall";
 import { useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes, Link } from "react-router-dom";
@@ -23,11 +24,9 @@ export default function App() {
             <Link to="/about" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">About</Link>
           </div>
           <div className="flex items-center gap-4">
-            <Authenticated>
-              <Link to="/chat" className="px-4 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium text-sm transition-colors">
-                Chat Now
-              </Link>
-            </Authenticated>
+            <Link to="/chat" className="px-4 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium text-sm transition-colors">
+              Chat Now
+            </Link>
             <ThemeToggle />
             <Authenticated>
               <div className="flex items-center gap-2">
@@ -35,6 +34,13 @@ export default function App() {
                 <UserButton />
               </div>
             </Authenticated>
+            <Unauthenticated>
+              <SignInButton mode="modal">
+                <button className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-medium text-sm transition-colors">
+                  Sign In
+                </button>
+              </SignInButton>
+            </Unauthenticated>
           </div>
         </header>
         <main className="flex-1">
@@ -97,7 +103,7 @@ function ChatPage() {
         <UserContent />
       </Authenticated>
       <Unauthenticated>
-        <Navigate to="/join" replace />
+        <AnonymousDashboard />
       </Unauthenticated>
     </div>
   );
@@ -192,13 +198,13 @@ function WelcomeScreen() {
 
         {/* CTA */}
         <div className="text-center">
-          <SignInButton mode="modal">
+          <Link to="/chat">
             <button className="px-8 py-4 bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-md">
-              Get Started - 5 Free Questions
+              Try 5 Free Messages Now
             </button>
-          </SignInButton>
+          </Link>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-            Pro members get unlimited access for $19/month
+            No signup required • Sign up for 5 more • Pro members get unlimited access for $19/month
           </p>
           <Link to="/about" className="text-sm text-primary dark:text-accent hover:underline mt-2 inline-block">
             Learn more about our data →

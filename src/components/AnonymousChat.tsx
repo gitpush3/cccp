@@ -3,8 +3,10 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Upload, Send, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { SignInButton } from "@clerk/clerk-react";
+import { getOrCreateSessionId, incrementSessionMessageCount, getSessionMessageCount } from "../utils/sessionUtils";
 
-interface ChatProps {
+interface AnonymousChatProps {
   chatId: string;
   jurisdiction: string;
 }
@@ -30,10 +32,12 @@ function renderContentWithLinks(content: string, isUser: boolean) {
   });
 }
 
-export function Chat({ chatId, jurisdiction }: ChatProps) {
+export function AnonymousChat({ chatId, jurisdiction }: AnonymousChatProps) {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [sessionId] = useState(() => getOrCreateSessionId());
+  const [messageCount, setMessageCount] = useState(() => getSessionMessageCount());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -41,8 +45,6 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
   const addMessage = useMutation(api.messages.addMessage);
   const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
   const chatWithPro = useAction(api.actions.chatWithPro);
-  const getOrCreateChat = useMutation(api.chats.getOrCreateChat);
-  const user = useQuery(api.users.getCurrentUser);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -78,13 +80,16 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!message.trim() && !selectedFile) || !user || isLoading) return;
+    if ((!message.trim() && !selectedFile) || isLoading) return;
+
+    // Check message limit
+    if (messageCount >= 5) {
+      toast.error("You've reached your 5 free messages. Sign up to continue!");
+      return;
+    }
 
     const currentMessage = message.trim();
     const currentFile = selectedFile;
-    const userId = user.clerkId;
-
-    if (!userId) return;
 
     // Clear input immediately for better UX
     setMessage("");
@@ -102,25 +107,22 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
 
       const messageContent = currentMessage || "Uploaded image for analysis";
 
-      // Save/update chat in history
-      await getOrCreateChat({
-        chatId,
-        clerkId: userId,
-        city: jurisdiction,
-      });
-
       await addMessage({
         chatId,
-        userId: userId,
+        sessionId,
         role: "user",
         content: messageContent,
         imageStorageId,
-        isAnonymous: false,
+        isAnonymous: true,
       });
 
-      if (currentMessage && userId) {
+      // Increment message count
+      const newCount = incrementSessionMessageCount();
+      setMessageCount(newCount);
+
+      if (currentMessage) {
         const response = await chatWithPro({
-          clerkId: userId,
+          sessionId,
           question: currentMessage,
           jurisdiction,
           chatId,
@@ -129,18 +131,18 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
         if (response.error === "signup_required") {
           await addMessage({
             chatId,
-            userId: userId,
+            sessionId,
             role: "assistant",
             content: "🎉 You've used your 5 free messages! Sign up to get 5 more messages and unlock additional features.",
-            isAnonymous: false,
+            isAnonymous: true,
           });
         } else if (response.error === "payment_required") {
           await addMessage({
             chatId,
-            userId: userId,
+            sessionId,
             role: "assistant",
-            content: "⚠️ You've used your 5 authenticated messages. Upgrade to Pro for unlimited access!",
-            isAnonymous: false,
+            content: "⚠️ Pro subscription required for AI assistance. Please upgrade to continue.",
+            isAnonymous: true,
           });
         } else if (response.error) {
           toast.error(response.message ?? "We couldn't complete that request. Please try again.");
@@ -157,16 +159,32 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
     }
   };
 
+  const remainingMessages = Math.max(0, 5 - messageCount);
+
   return (
     <div className="flex flex-col h-full min-h-0 bg-gray-50 dark:bg-dark transition-colors duration-300">
       {/* Header */}
       <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-surface shadow-sm">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
-          AI Assistant - {jurisdiction}
-        </h2>
-        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-          Ask questions about municipal codes, building regulations, and receive state-approved guidance.
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
+              AI Assistant - {jurisdiction}
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              Ask questions about municipal codes, building regulations, and receive state-approved guidance.
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              {remainingMessages} free messages left
+            </div>
+            <SignInButton mode="modal">
+              <button className="text-xs text-primary dark:text-accent hover:underline">
+                Sign up for 5 more →
+              </button>
+            </SignInButton>
+          </div>
+        </div>
       </div>
 
       {/* Messages */}
@@ -212,6 +230,19 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
 
       {/* Input */}
       <div className="sticky bottom-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-surface pt-3 sm:pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] px-3 sm:px-4">
+        {remainingMessages === 0 && (
+          <div className="mb-3 p-3 bg-accent/10 border border-accent/20 rounded-lg text-center">
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+              🎉 You've used all 5 free messages!
+            </p>
+            <SignInButton mode="modal">
+              <button className="px-4 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium text-sm transition-colors">
+                Sign Up for 5 More Messages
+              </button>
+            </SignInButton>
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-3">
           {selectedFile && (
             <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
@@ -243,7 +274,8 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="h-11 w-11 inline-flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
+              disabled={remainingMessages === 0}
+              className="h-11 w-11 inline-flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Upload Document"
             >
               <Upload className="h-5 w-5" />
@@ -258,14 +290,14 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
               spellCheck={false}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Ask about codes, regulations, or upload blueprints..."
-              className="flex-1 h-11 px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500"
-              disabled={isLoading}
+              placeholder={remainingMessages > 0 ? "Ask about codes, regulations, or upload blueprints..." : "Sign up to continue chatting..."}
+              className="flex-1 h-11 px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading || remainingMessages === 0}
             />
             
             <button
               type="submit"
-              disabled={(!message.trim() && !selectedFile) || isLoading}
+              disabled={(!message.trim() && !selectedFile) || isLoading || remainingMessages === 0}
               className="h-11 px-5 bg-primary text-white rounded-full hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 transition-colors shadow-sm flex-shrink-0"
             >
               {isLoading ? (
