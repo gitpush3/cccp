@@ -97,6 +97,36 @@ export const searchByOwner = query({
   },
 });
 
+// Get most recent sales by city (for "most recent sale" queries)
+export const getMostRecentSalesByCity = query({
+  args: { 
+    city: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 10;
+    
+    // Get all parcels in the city with sales data
+    const parcels = await ctx.db
+      .query("parcels")
+      .withIndex("by_city", (q) => q.eq("city", args.city.toUpperCase()))
+      .collect();
+    
+    // Filter for properties with sales data and sort by date
+    const withSales = parcels
+      .filter(p => p.lastSaleDate && p.lastSalePrice && p.lastSalePrice > 0)
+      .sort((a, b) => {
+        // Sort by most recent sale date first
+        const dateA = a.lastSaleDate || "0";
+        const dateB = b.lastSaleDate || "0";
+        return dateB.localeCompare(dateA);
+      })
+      .slice(0, limit);
+    
+    return withSales;
+  },
+});
+
 // Get zip code market statistics (investor-critical)
 // Uses sampling to avoid memory limits on large zip codes
 export const getZipCodeStats = query({

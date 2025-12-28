@@ -161,6 +161,24 @@ export function AnonymousChat({ chatId, jurisdiction }: AnonymousChatProps) {
 
   const remainingMessages = Math.max(0, 5 - messageCount);
 
+  // Quick action prompts to showcase app capabilities
+  const quickActions = [
+    { emoji: "🏠", text: "What's the most recent sale?" },
+    { emoji: "📋", text: "Do I need a Point of Sale inspection?" },
+    { emoji: "💰", text: "Show me tax delinquent properties" },
+    { emoji: "📊", text: "Best zip codes for rentals?" },
+  ];
+
+  const handleQuickAction = (prompt: string) => {
+    if (remainingMessages === 0 || isLoading) return;
+    setMessage(prompt);
+    // Auto-submit after a brief delay so user sees what's being sent
+    setTimeout(() => {
+      const form = document.querySelector('form');
+      if (form) form.requestSubmit();
+    }, 100);
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0 bg-gray-50 dark:bg-dark transition-colors duration-300">
       {/* Header */}
@@ -189,6 +207,33 @@ export function AnonymousChat({ chatId, jurisdiction }: AnonymousChatProps) {
 
       {/* Messages */}
       <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 sm:p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+        {/* Quick Actions - show when no messages */}
+        {(!messages || messages.length === 0) && !isLoading && (
+          <div className="flex flex-col items-center justify-center h-full py-8">
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                👋 Welcome! Try asking:
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Click a question or type your own
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
+              {quickActions.map((action, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickAction(action.text)}
+                  disabled={remainingMessages === 0}
+                  className="flex items-center gap-3 p-4 bg-white dark:bg-dark-surface border border-gray-200 dark:border-gray-700 rounded-xl hover:border-primary dark:hover:border-accent hover:shadow-md transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="text-2xl">{action.emoji}</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{action.text}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {messages?.map((msg) => (
           <div
             key={msg._id}

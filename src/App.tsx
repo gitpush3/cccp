@@ -218,7 +218,9 @@ function WelcomeScreen() {
 function UserContentPaywall() {
   const user = useQuery(api.users.getCurrentUser);
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  const syncAfterSuccess = useAction(api.stripe.syncAfterSuccess);
   const requestedCreateRef = useRef(false);
+  const syncAttemptedRef = useRef(false);
 
   // Create user on first login
   useEffect(() => {
@@ -227,6 +229,30 @@ function UserContentPaywall() {
       void getOrCreateUser();
     }
   }, [user, getOrCreateUser]);
+
+  // Handle Stripe success redirect - redirect to /chat after successful payment
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get("success");
+
+    if (success === "true" && user && user.clerkId && !syncAttemptedRef.current) {
+      syncAttemptedRef.current = true;
+      syncAfterSuccess({
+        clerkId: user.clerkId,
+      }).then((result) => {
+        if (result.success) {
+          toast.success(
+            "Thanks for becoming a Pro member! You have unlocked unlimited messages with our chat app. code.3bids.io is part of app.3bids.io — for anonymous job posting & bidding, free leads and predictable CAC or residual affiliate income, please visit app.3bids.io!",
+            { duration: 10000 }
+          );
+          // Redirect to chat after successful payment
+          window.location.href = "/chat";
+        } else {
+          console.error("Failed to sync subscription data:", result.error);
+        }
+      });
+    }
+  }, [user, syncAfterSuccess]);
 
   if (user === undefined) {
     return (
@@ -489,8 +515,8 @@ function AboutPage() {
         {/* CTA */}
         <div className="text-center">
           <Link to="/chat">
-            <button className="px-8 py-4 bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-md">
-              Start Using the Chat
+            <button className="px-8 py-4 bg-accent hover:bg-accent/90 text-white rounded-lg font-bold text-lg transition-colors shadow-lg">
+              Chat Now
             </button>
           </Link>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
