@@ -139,6 +139,19 @@ const applicationTables = {
     .index("by_google_id", ["googleId"])
     .index("by_stripe_customer", ["stripeCustomerId"]),
 
+  // Form submissions for alternative to payment
+  formSubmissions: defineTable({
+    email: v.string(),
+    jobType: v.string(),
+    useCase: v.string(), // What they plan to use it for / what features they need
+    submittedAt: v.number(),
+    clerkId: v.optional(v.string()), // Link to user if they're logged in
+    status: v.union(v.literal("pending"), v.literal("processed"), v.literal("granted_access")),
+  })
+    .index("by_email", ["email"])
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_status", ["status"]),
+
   // Municipalities table - 59 Cuyahoga County cities/villages/townships + Ohio State + County
   municipalities: defineTable({
     name: v.string(),

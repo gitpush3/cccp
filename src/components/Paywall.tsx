@@ -1,15 +1,17 @@
 import { useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useQuery } from "convex/react";
-import { Check, Zap, Building2, MapPin, Phone, Users } from "lucide-react";
+import { Check, Zap, Building2, MapPin, Phone, Users, CreditCard, FileText } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { FormSubmission } from "./FormSubmission";
 
 export function Paywall() {
   const user = useQuery(api.users.getCurrentUser);
   const createCheckoutSession = useAction(api.stripe.createCheckoutSession);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<"payment" | "form">("payment");
 
   const handleUpgrade = async () => {
     if (!user || !user.clerkId) {
@@ -41,7 +43,7 @@ export function Paywall() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4 md:p-8 bg-gray-50 dark:bg-dark transition-colors duration-300">
-      <div className="max-w-2xl w-full">
+      <div className="max-w-4xl w-full">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
             <Zap className="h-8 w-8 text-primary dark:text-white" />
@@ -78,11 +80,39 @@ export function Paywall() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-gray-800 p-6 mb-6 shadow-md">
-          <div className="text-center mb-6">
-            <div className="text-4xl font-bold text-primary dark:text-white">$19</div>
-            <div className="text-gray-500 dark:text-gray-400">per month</div>
-          </div>
+        {/* Option Selector */}
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setSelectedOption("payment")}
+            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+              selectedOption === "payment"
+                ? "bg-primary text-white shadow-lg scale-[1.02]"
+                : "bg-white dark:bg-dark-surface text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 hover:border-primary dark:hover:border-accent"
+            }`}
+          >
+            <CreditCard className="h-5 w-5 inline mr-2" />
+            Pay $20
+          </button>
+          <button
+            onClick={() => setSelectedOption("form")}
+            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+              selectedOption === "form"
+                ? "bg-accent text-white shadow-lg scale-[1.02]"
+                : "bg-white dark:bg-dark-surface text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 hover:border-accent"
+            }`}
+          >
+            <FileText className="h-5 w-5 inline mr-2" />
+            Fill Out Form
+          </button>
+        </div>
+
+        {/* Payment Option */}
+        {selectedOption === "payment" && (
+          <div className="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-gray-800 p-6 mb-6 shadow-md">
+            <div className="text-center mb-6">
+              <div className="text-4xl font-bold text-primary dark:text-white">$20</div>
+              <div className="text-gray-500 dark:text-gray-400">one-time payment</div>
+            </div>
 
           <div className="grid md:grid-cols-2 gap-4 mb-6">
             <div>
@@ -137,23 +167,29 @@ export function Paywall() {
             </ul>
           </div>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            </div>
-          )}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              </div>
+            )}
 
-          <button
-            onClick={handleUpgrade}
-            disabled={isLoading}
-            className="w-full bg-primary text-white py-4 px-6 rounded-full font-bold hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-md hover:shadow-lg transform active:scale-[0.98] transition-all"
-          >
-            {isLoading ? "Processing Request..." : "Subscribe Now"}
-          </button>
-        </div>
+            <button
+              onClick={handleUpgrade}
+              disabled={isLoading}
+              className="w-full bg-primary text-white py-4 px-6 rounded-full font-bold hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-md hover:shadow-lg transform active:scale-[0.98] transition-all"
+            >
+              {isLoading ? "Processing Request..." : "Pay $20 Now"}
+            </button>
+          </div>
+        )}
 
-        <div className="text-center text-sm text-gray-500 dark:text-gray-400 space-y-2">
-          <p>Cancel anytime. No long-term commitment.</p>
+        {/* Form Option */}
+        {selectedOption === "form" && (
+          <FormSubmission clerkId={user?.clerkId} />
+        )}
+
+        <div className="text-center text-sm text-gray-500 dark:text-gray-400 space-y-2 mt-6">
+          <p>Choose the option that works best for you</p>
           <Link to="/about" className="text-primary dark:text-accent hover:underline">
             Learn more about our data →
           </Link>

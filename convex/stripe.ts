@@ -117,10 +117,10 @@ export const createCheckoutSession = action({
       }
     }
 
-    // Create checkout session with existing customer
+    // Create checkout session for one-time $20 payment
     try {
       const session = await stripe.checkout.sessions.create({
-        customer: stripeCustomerId, // Always use existing customer
+        customer: stripeCustomerId,
         payment_method_types: ["card"],
         line_items: [
           {
@@ -128,9 +128,10 @@ export const createCheckoutSession = action({
             quantity: 1,
           },
         ],
-        mode: "subscription",
+        mode: "payment", // Changed to one-time payment instead of subscription
         success_url: `${domain}/chat?success=true`,
         cancel_url: `${domain}/join?canceled=true`,
+        allow_promotion_codes: true, // Enable promo code input in Stripe checkout
         metadata: {
           clerkId: args.clerkId,
         },
@@ -144,37 +145,116 @@ export const createCheckoutSession = action({
   },
 });
 
-// Action for frontend to call after successful checkout (THEO'S PATTERN)
+// Action for frontend to call after successful checkout
+// For one-time payments, grant access immediately
 export const syncAfterSuccess = action({
   args: {
     clerkId: v.string(),
   },
   handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
-    // Get user and their stripeCustomerId
+    // Get user
     const user = await ctx.runQuery(api.users.getUserByClerkId, {
       clerkId: args.clerkId,
     });
 
-    if (!user || !user.stripeCustomerId) {
-      return { success: false, error: "User or customer not found" };
+    if (!user) {
+      return { success: false, error: "User not found" };
     }
 
-    // Sync latest data from Stripe
+    // For one-time payments, grant access directly by clerkId
+    // This sets subscriptionStatus to "active" for lifetime access
+    // You can modify endsAt if you want time-limited access instead
     try {
-      const { subscriptionStatus, endsAt } = await ctx.runAction(
-        internal.stripe.getStripeSubscriptionStatus,
-        { stripeCustomerId: user.stripeCustomerId }
-      );
-
-      await ctx.runMutation(internal.stripe.setSubscriptionStatusByStripeCustomerId, {
-        stripeCustomerId: user.stripeCustomerId,
-        subscriptionStatus,
-        endsAt,
+      await ctx.runMutation(internal.users.grantAccessByClerkId, {
+        clerkId: args.clerkId,
       });
       return { success: true };
     } catch (error) {
-      console.error("Error syncing after success:", error);
-      return { success: false, error: "Failed to sync subscription data" };
+      console.error("Error granting access after payment:", error);
+      return { success: false, error: "Failed to grant access" };
+    }
+  },
+});
+
+// Create promo codes for $1 first month (run this once to set up codes)
+export const createPromoCodes = action({
+  args: {},
+  handler: async (ctx, args) => {
+    if (!stripe) {
+      throw new Error("Stripe not configured");
+    }
+
+    if (!process.env.STRIPE_PRICE_ID) {
+      throw new Error("Stripe price not configured");
+    }
+
+    const promoCodes = [
+      "LINKEDIN12",
+      "SLACK12", 
+      "REDDIT12",
+      "TWITTER12",
+      "FACEBOOK12",
+      "DISCORD12",
+      "YOUTUBE12",
+      "PODCAST12",
+      "BLOG12",
+      "EMAIL12"
+    ];
+
+    const results = [];
+
+    try {
+      // First create a coupon for $18 off (making $19 subscription $1)
+      const coupon = await stripe.coupons.create({
+        id: "first-month-dollar",
+        amount_off: 1800, // $18 off in cents
+        currency: "usd",
+        duration: "once",
+        name: "$1 First Month",
+        metadata: {
+          description: "First month for $1 instead of $19"
+        }
+      });
+
+      // Create promotion codes for each channel
+      for (const code of promoCodes) {
+        try {
+          const promoCode = await stripe.promotionCodes.create({
+            coupon: coupon.id,
+            code: code,
+            active: true,
+            metadata: {
+              channel: code.replace("12", ""),
+              created_by: "system"
+            }
+          });
+          
+          results.push({
+            code: code,
+            id: promoCode.id,
+            status: "created"
+          });
+        } catch (error: any) {
+          results.push({
+            code: code,
+            status: "error",
+            error: error.message
+          });
+        }
+      }
+
+      return {
+        success: true,
+        coupon: coupon.id,
+        promoCodes: results
+      };
+
+    } catch (error: any) {
+      console.error("Error creating promo codes:", error);
+      return {
+        success: false,
+        error: error.message
+      };
     }
   },
 });

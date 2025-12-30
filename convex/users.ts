@@ -148,3 +148,29 @@ export const updateStripeCustomerId = internalMutation({
     });
   },
 });
+
+// Grant access directly by clerkId (for one-time payments)
+export const grantAccessByClerkId = internalMutation({
+  args: {
+    clerkId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+
+    if (!user) {
+      return { updated: false };
+    }
+
+    await ctx.db.patch(user._id, {
+      subscriptionStatus: "active",
+      // For one-time payments, you can set endsAt to undefined for lifetime access
+      // or set a specific date if you want time-limited access
+      endsAt: undefined,
+    });
+
+    return { updated: true };
+  },
+});
