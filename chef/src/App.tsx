@@ -9,7 +9,8 @@ import {
 import { Toaster } from "sonner";
 import { Dashboard } from "./components/Dashboard";
 import { BookingDetail } from "./components/BookingDetail";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { About } from "./components/About";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { Plane, Sparkles } from "lucide-react";
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Routes>
           <Route path="/" element={<Content />} />
+          <Route path="/about" element={<About />} />
           <Route path="/booking/:bookingId" element={
             <SignedIn>
               <BookingDetail />
@@ -108,9 +110,12 @@ function Content() {
             <p className="text-gray-300 text-xl mb-2">
               Your exclusive VIP portal for private charter flights
             </p>
-            <p className="text-gray-500 mb-8">
+            <p className="text-gray-500 mb-6">
               Sign in to manage your bookings and payments
             </p>
+            <Link to="/about" className="text-brand-cyan hover:text-brand-purple transition-colors text-sm mb-6 inline-block">
+              Learn more about LatitudeGo →
+            </Link>
             <div className="flex flex-col gap-4">
               <SignInButton mode="modal">
                 <button className="btn-brand w-full text-lg">
