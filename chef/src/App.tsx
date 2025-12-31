@@ -7,13 +7,17 @@ import {
   useUser,
 } from "@clerk/clerk-react";
 import { Toaster } from "sonner";
+import { useState } from "react";
 import { Dashboard } from "./components/Dashboard";
 import { BookingDetail } from "./components/BookingDetail";
 import { About } from "./components/About";
+import { Sidebar } from "./components/Sidebar";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { Plane, Sparkles } from "lucide-react";
 
 export default function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <Router>
       <div className="min-h-screen">
@@ -30,7 +34,7 @@ export default function App() {
                 <h1 className="text-2xl font-bold text-gradient-brand">
                   LatitudeGo
                 </h1>
-                <p className="text-xs text-gray-400 -mt-0.5 tracking-wider uppercase">VIP Portal</p>
+                <p className="text-xs text-gray-400 -mt-0.5 tracking-wider uppercase">Bookings Portal</p>
               </div>
             </div>
             <SignedIn>
@@ -50,7 +54,12 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <SignedIn>
+        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      </SignedIn>
+
+      <main className={`transition-all duration-300 px-4 sm:px-6 lg:px-8 py-8 ${sidebarOpen ? "lg:ml-64" : "lg:ml-16"}`}>
+        <div className="max-w-6xl mx-auto">
         <Routes>
           <Route path="/" element={<Content />} />
           <Route path="/about" element={<About />} />
@@ -60,6 +69,7 @@ export default function App() {
             </SignedIn>
           } />
         </Routes>
+        </div>
       </main>
       
       <Toaster 

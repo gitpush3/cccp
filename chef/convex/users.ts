@@ -225,6 +225,24 @@ export const isCurrentUserAdmin = query({
   },
 });
 
+// Set admin by Clerk ID - for initial setup via dashboard
+export const setAdminByClerkId = mutation({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found with that Clerk ID");
+    }
+
+    await ctx.db.patch(user._id, { isAdmin: true });
+    return user._id;
+  },
+});
+
 // Legacy setAdmin - kept for backward compatibility but now protected
 export const setAdmin = mutation({
   args: { email: v.string(), isAdmin: v.boolean() },
