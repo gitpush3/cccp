@@ -10,11 +10,4 @@ crons.daily(
   internal.payments.processDueInstallments
 );
 
-// Check for retries every minute
-crons.interval(
-  "process-retries",
-  { minutes: 1 },
-  internal.payments.processRetries
-);
-
 export default crons;

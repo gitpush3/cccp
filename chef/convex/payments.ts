@@ -129,12 +129,12 @@ export const payOffEarlyAction = internalAction({
 
 export const createStripePortalSession = internalAction({
   args: { bookingId: v.id("bookings") },
-  handler: async (ctx, args) => {
-    const booking = await ctx.runQuery(api.bookings.getBookingById, { bookingId: args.bookingId });
+  handler: async (ctx, args): Promise<string> => {
+    const booking: any = await ctx.runQuery(api.bookings.getBookingById, { bookingId: args.bookingId });
     if (!booking) throw new Error("Booking not found");
 
     const stripe = getStripe();
-    const session = await stripe.billingPortal.sessions.create({
+    const session: any = await stripe.billingPortal.sessions.create({
       customer: booking.stripeCustomerId,
       return_url: `${process.env.VITE_APP_URL || "http://localhost:5173"}/booking/${args.bookingId}`,
     });
