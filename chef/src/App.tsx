@@ -1,7 +1,11 @@
-import { Authenticated, Unauthenticated, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
-import { SignInForm } from "./SignInForm";
-import { SignOutButton } from "./SignOutButton";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  useUser,
+} from "@clerk/clerk-react";
 import { Toaster } from "sonner";
 import { Dashboard } from "./components/Dashboard";
 import { BookingDetail } from "./components/BookingDetail";
@@ -27,9 +31,15 @@ export default function App() {
                 <p className="text-xs text-gray-400 -mt-1">VIP Portal</p>
               </div>
             </div>
-            <Authenticated>
-              <SignOutButton />
-            </Authenticated>
+            <SignedIn>
+              <UserButton 
+                appearance={{
+                  elements: {
+                    avatarBox: "w-10 h-10"
+                  }
+                }}
+              />
+            </SignedIn>
           </div>
         </div>
       </header>
@@ -38,9 +48,9 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Content />} />
           <Route path="/booking/:bookingId" element={
-            <Authenticated>
+            <SignedIn>
               <BookingDetail />
-            </Authenticated>
+            </SignedIn>
           } />
         </Routes>
       </main>
@@ -62,9 +72,9 @@ export default function App() {
 }
 
 function Content() {
-  const loggedInUser = useQuery(api.auth.loggedInUser);
+  const { user, isLoaded } = useUser();
 
-  if (loggedInUser === undefined) {
+  if (!isLoaded) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="relative">
@@ -77,7 +87,7 @@ function Content() {
 
   return (
     <div className="space-y-8">
-      <Unauthenticated>
+      <SignedOut>
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -96,21 +106,32 @@ function Content() {
               Sign in to manage your bookings and payments
             </p>
           </div>
-          <SignInForm />
+          <div className="flex flex-col gap-4">
+            <SignInButton mode="modal">
+              <button className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all shadow-lg">
+                Sign In
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button className="w-full px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-all border border-gray-600">
+                Create Account
+              </button>
+            </SignUpButton>
+          </div>
         </div>
-      </Unauthenticated>
+      </SignedOut>
 
-      <Authenticated>
+      <SignedIn>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">
-            Welcome back, {loggedInUser?.name || loggedInUser?.email}
+            Welcome back, {user?.firstName || user?.emailAddresses[0]?.emailAddress}
           </h1>
           <p className="text-gray-400">
             Manage your private charter bookings and payment schedules
           </p>
         </div>
         <Dashboard />
-      </Authenticated>
+      </SignedIn>
     </div>
   );
 }
