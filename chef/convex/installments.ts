@@ -20,8 +20,8 @@ export const createInstallmentSchedule = internalMutation({
     const msPerWeek = 7 * 24 * 60 * 60 * 1000;
     const weeksUntilCutoff = Math.floor((cutoffDate.getTime() - now.getTime()) / msPerWeek);
     
-    let paymentInterval: number;
-    let numberOfPayments: number;
+    let paymentInterval = 1;
+    let numberOfPayments = 1;
     
     switch (args.paymentFrequency) {
       case "weekly":
@@ -69,6 +69,23 @@ export const getUpcomingInstallments = query({
       .query("installments")
       .withIndex("by_due_date", (q) => q.lte("dueDate", today))
       .filter((q) => q.eq(q.field("status"), "pending"))
+      .collect();
+  },
+});
+
+export const getInstallmentsForRetry = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = new Date().toISOString();
+    return await ctx.db
+      .query("installments")
+      .withIndex("by_status", (q) => q.eq("status", "failed"))
+      .filter((q) => 
+        q.and(
+          q.neq(q.field("nextRetryAt"), undefined),
+          q.lte(q.field("nextRetryAt"), now)
+        )
+      )
       .collect();
   },
 });

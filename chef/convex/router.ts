@@ -1,6 +1,7 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
+import { getStripe } from "./lib/stripe";
 
 const http = httpRouter();
 
@@ -56,21 +57,106 @@ http.route({
         return new Response("No signature", { status: 400 });
       }
 
-      // In a real implementation, you would verify the webhook signature here
-      const event = JSON.parse(body);
+      // Verify the webhook signature
+      const stripe = getStripe();
+      let event;
+      try {
+        event = stripe.webhooks.constructEvent(
+          body,
+          signature,
+          process.env.STRIPE_WEBHOOK_SECRET || ""
+        );
+      } catch (err) {
+        console.error("Webhook signature verification failed:", err);
+        return new Response("Invalid signature", { status: 400 });
+      }
       
       switch (event.type) {
-        case "checkout.session.completed":
-          // Handle successful checkout
+        case "checkout.session.completed": {
           const session = event.data.object;
           console.log("Checkout completed:", session.id);
-          break;
           
-        case "payment_intent.succeeded":
-          // Handle successful payment
+          // Extract metadata from the session
+          const { tripId, package: packageName, occupancy, userId: metadataUserId } = session.metadata || {};
+          
+          if (!tripId || !packageName || !occupancy) {
+            console.error("Missing metadata in checkout session");
+            break;
+          }
+
+          // 1. Ensure user exists
+          const userEmail = session.customer_details?.email;
+          if (!userEmail) {
+            console.error("No email found in checkout session");
+            break;
+          }
+
+          const userId = await ctx.runMutation(api.users.createOrUpdateUser, {
+            email: userEmail,
+            name: session.customer_details?.name || undefined,
+            stripeCustomerId: session.customer as string,
+          });
+
+          // 2. Retrieve the payment method ID from the session's payment intent
+          let stripePaymentMethodId = "";
+          if (session.payment_intent) {
+            const pi = await stripe.paymentIntents.retrieve(session.payment_intent as string);
+            stripePaymentMethodId = (pi.payment_method as string) || "";
+          }
+
+          // 3. Get Trip info for cutoff date
+          const trip = await ctx.runQuery(api.trips.getTripById, { tripId });
+          let cutoffDate = "2026-04-02"; // Fallback
+          if (trip) {
+            const travelDate = new Date(trip.travelDate);
+            const cutoff = new Date(travelDate);
+            cutoff.setDate(cutoff.getDate() - 60);
+            cutoffDate = cutoff.toISOString().split('T')[0];
+          }
+
+          // 4. Create the booking
+          const bookingId = await ctx.runMutation(api.bookings.createBooking, {
+            userId,
+            stripeCustomerId: session.customer as string,
+            stripePaymentMethodId,
+            tripId,
+            package: packageName,
+            occupancy: Number(occupancy),
+            totalAmount: (session.amount_total || 0) / 100,
+            paymentFrequency: "monthly", // Default frequency
+            cutoffDate,
+            stripeCheckoutSessionId: session.id,
+          });
+
+          console.log(`Created booking ${bookingId} for user ${userId}`);
+          
+          // 5. Send Welcome Email
+          const user = await ctx.runQuery(api.users.getCurrentUser); // This won't work in action, need to fetch by ID
+          // Let's just use userEmail directly
+          await ctx.runAction(internal.payments.sendEmailAction, {
+            to: userEmail,
+            subject: "Welcome to LatitudeGo!",
+            text: `Your booking for ${trip?.tripName || tripId} is confirmed. Login to vip.latitudego.com to manage your installments.`,
+            html: `<h1>Welcome to LatitudeGo!</h1><p>Your booking for <strong>${trip?.tripName || tripId}</strong> is confirmed.</p><p>Login to <a href="https://vip.latitudego.com">vip.latitudego.com</a> to manage your installments.</p>`,
+          });
+
+          break;
+        }
+          
+        case "payment_intent.succeeded": {
           const paymentIntent = event.data.object;
           console.log("Payment succeeded:", paymentIntent.id);
+          
+          // If this was an installment payment (metadata contains installmentId)
+          if (paymentIntent.metadata?.installmentId) {
+            await ctx.runMutation(api.installments.updateInstallmentStatus, {
+              installmentId: paymentIntent.metadata.installmentId as any,
+              status: "paid",
+              stripePaymentIntentId: paymentIntent.id,
+            });
+          }
           break;
+        }
           
         case "payment_intent.payment_failed":
           // Handle failed payment

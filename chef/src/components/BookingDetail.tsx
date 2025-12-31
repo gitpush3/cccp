@@ -1,6 +1,7 @@
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useParams } from "react-router-dom";
+import { useState } from "react";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -10,7 +11,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 import { PaymentFrequencySelector } from "./PaymentFrequencySelector";
 import { TravelerManager } from "./TravelerManager";
@@ -18,9 +20,15 @@ import { InstallmentTimeline } from "./InstallmentTimeline";
 
 export function BookingDetail() {
   const { bookingId } = useParams();
+  const [isPaying, setIsPaying] = useState(false);
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+
   const booking = useQuery(api.bookings.getBookingById, 
     bookingId ? { bookingId: bookingId as any } : "skip"
   );
+
+  const payOffEarly = useAction(api.payments.payOffEarlyAction);
+  const createPortalSession = useAction(api.payments.createStripePortalSession);
 
   if (booking === undefined) {
     return (
@@ -49,6 +57,35 @@ export function BookingDetail() {
   const isCompleted = booking.status === "completed";
   const cutoffDate = new Date(booking.cutoffDate);
   const daysUntilCutoff = Math.ceil((cutoffDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+  const handlePayOffEarly = async () => {
+    if (!window.confirm(`Are you sure you want to pay off the remaining balance of $${remainingAmount.toLocaleString()}?`)) {
+      return;
+    }
+    
+    setIsPaying(true);
+    try {
+      await payOffEarly({ bookingId: booking._id });
+      alert("Payment successful! Your booking is now fully paid.");
+      window.location.reload();
+    } catch (error: any) {
+      alert(`Payment failed: ${error.message}`);
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  const handleStripePortal = async () => {
+    setIsOpeningPortal(true);
+    try {
+      const url = await createPortalSession({ bookingId: booking._id });
+      window.location.href = url;
+    } catch (error: any) {
+      alert(`Failed to open Stripe Portal: ${error.message}`);
+    } finally {
+      setIsOpeningPortal(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -140,8 +177,13 @@ export function BookingDetail() {
                     <h3 className="text-white font-medium">Pay Remaining Balance</h3>
                     <p className="text-gray-400 text-sm">Pay off your booking early and cancel future installments</p>
                   </div>
-                  <button className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-200">
-                    Pay ${remainingAmount.toLocaleString()}
+                  <button 
+                    onClick={handlePayOffEarly}
+                    disabled={isPaying}
+                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-200 disabled:opacity-50 flex items-center space-x-2"
+                  >
+                    {isPaying && <Loader2 className="h-4 w-4 animate-spin" />}
+                    <span>Pay ${remainingAmount.toLocaleString()}</span>
                   </button>
                 </div>
               </div>
@@ -171,8 +213,13 @@ export function BookingDetail() {
               <p className="text-gray-400 text-sm">Update your card or billing information</p>
             </div>
           </div>
-          <button className="px-4 py-2 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors">
-            Stripe Portal
+          <button 
+            onClick={handleStripePortal}
+            disabled={isOpeningPortal}
+            className="px-4 py-2 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center space-x-2"
+          >
+            {isOpeningPortal && <Loader2 className="h-4 w-4 animate-spin" />}
+            <span>Stripe Portal</span>
           </button>
         </div>
       </div>

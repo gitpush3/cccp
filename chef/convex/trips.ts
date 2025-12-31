@@ -27,12 +27,7 @@ export const upsertTrip = mutation({
     tripName: v.string(),
     travelDate: v.string(),
     stripeProductId: v.string(),
-    packages: v.array(v.object({
-      name: v.string(),
-      price: v.number(),
-      description: v.string(),
-      maxOccupancy: v.number(),
-    })),
+    packages: v.any(),
   },
   handler: async (ctx, args) => {
     const existingTrip = await ctx.db

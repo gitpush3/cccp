@@ -3,6 +3,19 @@ import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
 const applicationTables = {
+  // Travel Agents table
+  agents: defineTable({
+    name: v.string(),
+    email: v.string(),
+    phone: v.optional(v.string()),
+    agencyName: v.string(),
+    referralCode: v.string(), // Unique code like "AGENT-ABC123"
+    commissionRate: v.optional(v.number()), // Percentage, e.g., 10 for 10%
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_email", ["email"])
+    .index("by_referral_code", ["referralCode"]),
+
   users: defineTable({
     email: v.string(),
     clerkId: v.optional(v.string()),
@@ -17,18 +30,16 @@ const applicationTables = {
     tripName: v.string(),
     travelDate: v.string(),
     stripeProductId: v.string(),
-    packages: v.array(v.object({
-      name: v.string(),
-      price: v.number(),
-      description: v.string(),
-      maxOccupancy: v.number(),
-    })),
+    packages: v.any(), // JSON object mapping package names to prices/links
     isActive: v.optional(v.boolean()),
   }).index("by_trip_id", ["tripId"]),
 
   bookings: defineTable({
     userId: v.id("users"),
+    agentId: v.optional(v.id("agents")), // Links booking to travel agent
+    referralCode: v.optional(v.string()), // Store the code used at booking time
     stripeCustomerId: v.string(),
+    stripePaymentMethodId: v.string(),
     tripId: v.string(),
     package: v.string(),
     occupancy: v.number(),
