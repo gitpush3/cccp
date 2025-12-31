@@ -1,18 +1,26 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const getTravelersByBooking = query({
   args: { bookingId: v.id("bookings") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .unique();
+
+    if (!user) {
       return [];
     }
 
     // Verify user owns this booking
     const booking = await ctx.db.get(args.bookingId);
-    if (!booking || booking.userId !== userId) {
+    if (!booking || booking.userId !== user._id) {
       return [];
     }
 
@@ -33,14 +41,23 @@ export const addTraveler = mutation({
     dateOfBirth: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
       throw new Error("Not authenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found");
     }
 
     // Verify user owns this booking
     const booking = await ctx.db.get(args.bookingId);
-    if (!booking || booking.userId !== userId) {
+    if (!booking || booking.userId !== user._id) {
       throw new Error("Booking not found");
     }
 
@@ -75,9 +92,18 @@ export const updateTraveler = mutation({
     dateOfBirth: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
       throw new Error("Not authenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found");
     }
 
     const traveler = await ctx.db.get(args.travelerId);
@@ -87,7 +113,7 @@ export const updateTraveler = mutation({
 
     // Verify user owns the booking
     const booking = await ctx.db.get(traveler.bookingId);
-    if (!booking || booking.userId !== userId) {
+    if (!booking || booking.userId !== user._id) {
       throw new Error("Not authorized");
     }
 
@@ -104,9 +130,18 @@ export const updateTraveler = mutation({
 export const deleteTraveler = mutation({
   args: { travelerId: v.id("travelers") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
       throw new Error("Not authenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found");
     }
 
     const traveler = await ctx.db.get(args.travelerId);
@@ -116,7 +151,7 @@ export const deleteTraveler = mutation({
 
     // Verify user owns the booking
     const booking = await ctx.db.get(traveler.bookingId);
-    if (!booking || booking.userId !== userId) {
+    if (!booking || booking.userId !== user._id) {
       throw new Error("Not authorized");
     }
 

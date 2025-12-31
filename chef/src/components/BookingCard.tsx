@@ -42,51 +42,51 @@ export function BookingCard({ booking }: BookingCardProps) {
   const isOverdue = booking.status === "overdue";
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 hover:border-cyan-400/50 transition-all duration-200">
-      <div className="flex justify-between items-start mb-4">
+    <div className="glass-card p-6 group">
+      <div className="flex justify-between items-start mb-5">
         <div>
-          <h3 className="text-lg font-semibold text-white mb-1">
+          <h3 className="text-xl font-semibold text-white mb-2">
             {booking.trip?.tripName || `Trip ${booking.tripId}`}
           </h3>
           <div className="flex items-center text-gray-400 text-sm space-x-4">
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4" />
+            <div className="flex items-center space-x-1.5">
+              <Calendar className="h-4 w-4 text-brand-cyan" />
               <span>{booking.trip?.travelDate}</span>
             </div>
-            <div className="flex items-center space-x-1">
-              <Users className="h-4 w-4" />
+            <div className="flex items-center space-x-1.5">
+              <Users className="h-4 w-4 text-brand-purple" />
               <span>{booking.occupancy} travelers</span>
             </div>
           </div>
         </div>
-        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+        <div className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
           isCompleted 
-            ? "bg-green-400/20 text-green-400" 
+            ? "bg-green-400/20 text-green-400 border border-green-400/30" 
             : isOverdue
-            ? "bg-red-400/20 text-red-400"
-            : "bg-cyan-400/20 text-cyan-400"
+            ? "bg-red-400/20 text-red-400 border border-red-400/30"
+            : "bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30"
         }`}>
           {booking.status}
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-5">
         <div className="flex justify-between items-center mb-2">
           <span className="text-gray-400 text-sm">Payment Progress</span>
-          <span className="text-white font-medium">
-            ${booking.amountPaid.toLocaleString()} / ${booking.totalAmount.toLocaleString()}
+          <span className="text-white font-semibold">
+            ${booking.amountPaid.toLocaleString()} <span className="text-gray-500">/</span> ${booking.totalAmount.toLocaleString()}
           </span>
         </div>
-        <div className="w-full bg-gray-700 rounded-full h-2">
+        <div className="w-full bg-gray-700/50 rounded-full h-2.5 overflow-hidden">
           <div 
-            className="bg-gradient-to-r from-cyan-400 to-purple-400 h-2 rounded-full transition-all duration-300"
+            className="progress-gradient h-2.5 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${Math.min(progressPercentage, 100)}%` }}
           />
         </div>
         <div className="flex justify-between items-center mt-2 text-sm">
-          <span className="text-gray-400">{progressPercentage.toFixed(1)}% complete</span>
+          <span className="text-gray-500">{progressPercentage.toFixed(1)}% complete</span>
           {!isCompleted && (
-            <span className="text-gray-300">
+            <span className="text-gray-400">
               ${remainingAmount.toLocaleString()} remaining
             </span>
           )}
@@ -94,15 +94,17 @@ export function BookingCard({ booking }: BookingCardProps) {
       </div>
 
       {!isCompleted && nextPaymentDate && (
-        <div className="mb-4 p-3 bg-gray-700/50 rounded-lg">
+        <div className="mb-5 p-4 bg-white/5 rounded-xl border border-white/5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <CreditCard className="h-4 w-4 text-cyan-400" />
-              <span className="text-gray-300 text-sm">Next Payment</span>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 rounded-lg bg-brand-cyan/10">
+                <CreditCard className="h-4 w-4 text-brand-cyan" />
+              </div>
+              <span className="text-gray-300 text-sm font-medium">Next Payment</span>
             </div>
             <div className="text-right">
-              <div className="text-white font-medium">${nextPayment?.amount.toLocaleString()}</div>
-              <div className="text-gray-400 text-xs">
+              <div className="text-white font-semibold">${nextPayment?.amount.toLocaleString()}</div>
+              <div className="text-gray-500 text-xs">
                 {nextPaymentDate.toLocaleDateString()}
               </div>
             </div>
@@ -110,13 +112,13 @@ export function BookingCard({ booking }: BookingCardProps) {
         </div>
       )}
 
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-400">
+      <div className="flex justify-between items-center pt-2">
+        <div className="text-sm text-gray-500">
           <span className="capitalize">{booking.paymentFrequency.replace('-', ' ')}</span> payments
         </div>
         <button
           onClick={() => window.location.href = `/booking/${booking._id}`}
-          className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-200"
+          className="btn-brand px-5 py-2.5 text-sm"
         >
           View Details
         </button>

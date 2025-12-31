@@ -136,7 +136,7 @@ export const createStripePortalSession = internalAction({
     const stripe = getStripe();
     const session = await stripe.billingPortal.sessions.create({
       customer: booking.stripeCustomerId,
-      return_url: `${process.env.VITE_SITE_URL || "http://localhost:5173"}/booking/${args.bookingId}`,
+      return_url: `${process.env.VITE_APP_URL || "http://localhost:5173"}/booking/${args.bookingId}`,
     });
 
     return session.url;

@@ -1,12 +1,30 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 
+async function checkAdmin(ctx: any) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Not authenticated");
+  }
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_email", (q: any) => q.eq("email", identity.email!))
+    .unique();
+
+  if (!user || !user.isAdmin) {
+    throw new Error("Unauthorized: Admin access required");
+  }
+  return user;
+}
+
 // ============ ADMIN DASHBOARD QUERIES ============
 
 // Master financial overview
 export const getFinancialOverview = query({
   args: {},
   handler: async (ctx) => {
+    await checkAdmin(ctx);
     const bookings = await ctx.db.query("bookings").collect();
     const installments = await ctx.db.query("installments").collect();
 
@@ -51,6 +69,7 @@ export const getBookingsPaginated = query({
     agentId: v.optional(v.id("agents")),
   },
   handler: async (ctx, args) => {
+    await checkAdmin(ctx);
     let bookingsQuery = ctx.db.query("bookings");
 
     // Get all bookings first (Convex doesn't support complex filtering in queries)
@@ -122,6 +141,7 @@ export const getAgentsPaginated = query({
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await checkAdmin(ctx);
     let agents = await ctx.db.query("agents").collect();
 
     // Apply active filter
@@ -191,6 +211,7 @@ export const getInstallmentsPaginated = query({
     bookingId: v.optional(v.id("bookings")),
   },
   handler: async (ctx, args) => {
+    await checkAdmin(ctx);
     let installments = await ctx.db.query("installments").collect();
 
     // Apply filters
@@ -232,6 +253,7 @@ export const getInstallmentsPaginated = query({
 export const getAllTripsForFilter = query({
   args: {},
   handler: async (ctx) => {
+    await checkAdmin(ctx);
     return await ctx.db.query("trips").collect();
   },
 });
@@ -240,6 +262,7 @@ export const getAllTripsForFilter = query({
 export const getRevenueByTrip = query({
   args: {},
   handler: async (ctx) => {
+    await checkAdmin(ctx);
     const trips = await ctx.db.query("trips").collect();
     const bookings = await ctx.db.query("bookings").collect();
 
@@ -265,6 +288,7 @@ export const getRevenueByTrip = query({
 export const getRevenueByAgent = query({
   args: {},
   handler: async (ctx) => {
+    await checkAdmin(ctx);
     const agents = await ctx.db.query("agents").collect();
     const bookings = await ctx.db.query("bookings").collect();
 

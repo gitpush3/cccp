@@ -75,9 +75,9 @@ export function PaymentFrequencySelector({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium text-white">Payment Schedule</h3>
+      <h3 className="text-lg font-semibold text-white">Payment Schedule</h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {frequencies.map((freq) => {
           const payments = calculatePayments(freq.value);
           const isSelected = selectedFrequency === freq.value;
@@ -86,22 +86,22 @@ export function PaymentFrequencySelector({
             <button
               key={freq.value}
               onClick={() => setSelectedFrequency(freq.value)}
-              className={`p-4 rounded-lg border text-left transition-all duration-200 ${
+              className={`p-5 rounded-xl border text-left transition-all duration-300 ${
                 isSelected
-                  ? "border-cyan-400 bg-cyan-400/10"
-                  : "border-gray-600 bg-gray-700/30 hover:border-gray-500"
+                  ? "border-brand-cyan bg-brand-cyan/10 shadow-glow-cyan"
+                  : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
               }`}
             >
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="font-medium text-white">{freq.label}</h4>
-                <div className={`w-4 h-4 rounded-full border-2 ${
-                  isSelected ? "border-cyan-400 bg-cyan-400" : "border-gray-400"
+              <div className="flex justify-between items-start mb-3">
+                <h4 className="font-semibold text-white text-lg">{freq.label}</h4>
+                <div className={`w-5 h-5 rounded-full border-2 transition-all ${
+                  isSelected ? "border-brand-cyan bg-brand-cyan" : "border-gray-500"
                 }`} />
               </div>
-              <p className="text-gray-400 text-sm mb-2">{freq.description}</p>
+              <p className="text-gray-500 text-sm mb-3">{freq.description}</p>
               <div className="text-sm">
                 <span className="text-white font-medium">
-                  {payments.count} payment{payments.count > 1 ? 's' : ''} of ${payments.amount.toLocaleString()}
+                  {payments.count} payment{payments.count > 1 ? 's' : ''} of <span className="text-brand-cyan">${payments.amount.toLocaleString()}</span>
                 </span>
               </div>
             </button>
@@ -110,17 +110,17 @@ export function PaymentFrequencySelector({
       </div>
 
       {selectedFrequency !== currentFrequency && (
-        <div className="flex justify-end space-x-3">
+        <div className="flex justify-end space-x-3 pt-2">
           <button
             onClick={() => setSelectedFrequency(currentFrequency)}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+            className="px-4 py-2.5 text-gray-400 hover:text-white transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleUpdate}
             disabled={isUpdating}
-            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-200 disabled:opacity-50"
+            className="btn-brand px-5 py-2.5 disabled:opacity-50"
           >
             {isUpdating ? "Updating..." : "Update Schedule"}
           </button>

@@ -36,30 +36,36 @@ export function InstallmentTimeline({ installments }: InstallmentTimelineProps) 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "paid":
-        return "text-green-400 bg-green-400/10 border-green-400/20";
+        return "text-green-400 bg-green-400/10 border-green-400/30";
       case "failed":
-        return "text-red-400 bg-red-400/10 border-red-400/20";
+        return "text-red-400 bg-red-400/10 border-red-400/30";
       case "processing":
-        return "text-yellow-400 bg-yellow-400/10 border-yellow-400/20";
+        return "text-yellow-400 bg-yellow-400/10 border-yellow-400/30";
       case "cancelled":
-        return "text-gray-400 bg-gray-400/10 border-gray-400/20";
+        return "text-gray-400 bg-gray-400/10 border-gray-400/30";
       default:
-        return "text-gray-400 bg-gray-700/30 border-gray-600";
+        return "text-gray-400 bg-white/5 border-white/10";
     }
   };
 
   if (installments.length === 0) {
     return (
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Payment Timeline</h2>
-        <p className="text-gray-400">No installments scheduled. This booking uses lump sum payment.</p>
+      <div className="glass-card p-6">
+        <h2 className="text-2xl font-semibold text-white mb-4 flex items-center gap-3">
+          <span className="w-1 h-6 bg-gradient-to-b from-brand-cyan to-brand-purple rounded-full"></span>
+          Payment Timeline
+        </h2>
+        <p className="text-gray-500">No installments scheduled. This booking uses lump sum payment.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
-      <h2 className="text-xl font-semibold text-white mb-6">Payment Timeline</h2>
+    <div className="glass-card p-6">
+      <h2 className="text-2xl font-semibold text-white mb-6 flex items-center gap-3">
+        <span className="w-1 h-6 bg-gradient-to-b from-brand-cyan to-brand-purple rounded-full"></span>
+        Payment Timeline
+      </h2>
       
       <div className="space-y-4">
         {sortedInstallments.map((installment, index) => {

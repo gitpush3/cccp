@@ -1,19 +1,27 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "./_generated/api";
 
 export const getUserBookings = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .unique();
+
+    if (!user) {
       return [];
     }
 
     const bookings = await ctx.db
       .query("bookings")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .withIndex("by_user_id", (q) => q.eq("userId", user._id))
       .collect();
 
     // Get trip details for each booking
@@ -44,13 +52,22 @@ export const getUserBookings = query({
 export const getBookingById = query({
   args: { bookingId: v.id("bookings") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .unique();
+
+    if (!user) {
       return null;
     }
 
     const booking = await ctx.db.get(args.bookingId);
-    if (!booking || booking.userId !== userId) {
+    if (!booking || booking.userId !== user._id) {
       return null;
     }
 
@@ -145,13 +162,22 @@ export const updatePaymentFrequency = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
       throw new Error("Not authenticated");
     }
 
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
     const booking = await ctx.db.get(args.bookingId);
-    if (!booking || booking.userId !== userId) {
+    if (!booking || booking.userId !== user._id) {
       throw new Error("Booking not found");
     }
 
@@ -187,13 +213,22 @@ export const updatePaymentFrequency = mutation({
 export const payOffEarly = mutation({
   args: { bookingId: v.id("bookings") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
       throw new Error("Not authenticated");
     }
 
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
     const booking = await ctx.db.get(args.bookingId);
-    if (!booking || booking.userId !== userId) {
+    if (!booking || booking.userId !== user._id) {
       throw new Error("Booking not found");
     }
 

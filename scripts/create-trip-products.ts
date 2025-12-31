@@ -206,7 +206,7 @@ async function createPriceWithLink(
     after_completion: {
       type: 'redirect',
       redirect: {
-        url: `https://latitudego.com/booking-success?trip=${tripConfig.tripId}&package=${pkg.name.toLowerCase()}&occupancy=${occupancy}`,
+        url: `https://mybooking.latitudego.com/booking-success?trip=${tripConfig.tripId}&package=${pkg.name.toLowerCase()}&occupancy=${occupancy}`,
       },
     },
   });

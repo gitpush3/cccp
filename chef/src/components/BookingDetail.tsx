@@ -33,18 +33,18 @@ export function BookingDetail() {
   if (booking === undefined) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-cyan-400/20 border-t-cyan-400"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand-cyan/20 border-t-brand-cyan"></div>
       </div>
     );
   }
 
   if (!booking) {
     return (
-      <div className="text-center py-12">
-        <h3 className="text-xl font-semibold text-gray-300 mb-2">Booking not found</h3>
+      <div className="glass-card p-12 text-center max-w-md mx-auto">
+        <h3 className="text-2xl font-semibold text-gray-300 mb-4">Booking not found</h3>
         <button 
           onClick={() => window.location.href = "/"}
-          className="text-cyan-400 hover:text-cyan-300 transition-colors"
+          className="text-brand-cyan hover:text-brand-cyan-light transition-colors font-medium"
         >
           Return to dashboard
         </button>
@@ -93,40 +93,46 @@ export function BookingDetail() {
       <div className="flex items-center space-x-4">
         <button 
           onClick={() => window.location.href = "/"}
-          className="p-2 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:border-cyan-400/50 transition-colors"
+          className="p-3 rounded-xl glass-card hover:border-brand-cyan/30 transition-all group"
         >
-          <ArrowLeft className="h-5 w-5 text-gray-400" />
+          <ArrowLeft className="h-5 w-5 text-gray-400 group-hover:text-brand-cyan transition-colors" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-3xl font-bold text-white">
             {booking.trip?.tripName || `Trip ${booking.tripId}`}
           </h1>
-          <p className="text-gray-400">Booking Details & Payment Management</p>
+          <p className="text-gray-500">Booking Details & Payment Management</p>
         </div>
       </div>
 
       {/* Trip Info Card */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
+      <div className="glass-card p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex items-center space-x-3">
-            <Calendar className="h-8 w-8 text-cyan-400" />
+          <div className="flex items-center space-x-4">
+            <div className="p-3 rounded-xl bg-brand-cyan/10">
+              <Calendar className="h-7 w-7 text-brand-cyan" />
+            </div>
             <div>
-              <p className="text-gray-400 text-sm">Travel Date</p>
-              <p className="text-white font-medium">{booking.trip?.travelDate}</p>
+              <p className="text-gray-500 text-sm uppercase tracking-wider">Travel Date</p>
+              <p className="text-white font-semibold text-lg">{booking.trip?.travelDate}</p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <Users className="h-8 w-8 text-purple-400" />
+          <div className="flex items-center space-x-4">
+            <div className="p-3 rounded-xl bg-brand-purple/10">
+              <Users className="h-7 w-7 text-brand-purple" />
+            </div>
             <div>
-              <p className="text-gray-400 text-sm">Package & Occupancy</p>
-              <p className="text-white font-medium">{booking.package} • {booking.occupancy} travelers</p>
+              <p className="text-gray-500 text-sm uppercase tracking-wider">Package & Occupancy</p>
+              <p className="text-white font-semibold text-lg">{booking.package} • {booking.occupancy} travelers</p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <Clock className="h-8 w-8 text-yellow-400" />
+          <div className="flex items-center space-x-4">
+            <div className={`p-3 rounded-xl ${daysUntilCutoff > 0 ? 'bg-yellow-400/10' : 'bg-red-400/10'}`}>
+              <Clock className={`h-7 w-7 ${daysUntilCutoff > 0 ? 'text-yellow-400' : 'text-red-400'}`} />
+            </div>
             <div>
-              <p className="text-gray-400 text-sm">Payment Deadline</p>
-              <p className="text-white font-medium">
+              <p className="text-gray-500 text-sm uppercase tracking-wider">Payment Deadline</p>
+              <p className={`font-semibold text-lg ${daysUntilCutoff > 0 ? 'text-white' : 'text-red-400'}`}>
                 {daysUntilCutoff > 0 ? `${daysUntilCutoff} days` : "Overdue"}
               </p>
             </div>
@@ -135,26 +141,29 @@ export function BookingDetail() {
       </div>
 
       {/* Payment Progress */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Payment Progress</h2>
+      <div className="glass-card p-6">
+        <h2 className="text-2xl font-semibold text-white mb-6 flex items-center gap-3">
+          <span className="w-1 h-6 bg-gradient-to-b from-brand-cyan to-brand-purple rounded-full"></span>
+          Payment Progress
+        </h2>
         
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mb-3">
             <span className="text-gray-400">Total Progress</span>
-            <span className="text-white font-medium text-lg">
-              ${booking.amountPaid.toLocaleString()} / ${booking.totalAmount.toLocaleString()}
+            <span className="text-white font-semibold text-xl">
+              ${booking.amountPaid.toLocaleString()} <span className="text-gray-500">/</span> ${booking.totalAmount.toLocaleString()}
             </span>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-3">
+          <div className="w-full bg-gray-700/50 rounded-full h-4 overflow-hidden">
             <div 
-              className="bg-gradient-to-r from-cyan-400 to-purple-400 h-3 rounded-full transition-all duration-300"
+              className="progress-gradient h-4 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${Math.min(progressPercentage, 100)}%` }}
             />
           </div>
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-gray-400 text-sm">{progressPercentage.toFixed(1)}% complete</span>
+          <div className="flex justify-between items-center mt-3">
+            <span className="text-gray-500 text-sm">{progressPercentage.toFixed(1)}% complete</span>
             {!isCompleted && (
-              <span className="text-gray-300 font-medium">
+              <span className="text-gray-400 font-medium">
                 ${remainingAmount.toLocaleString()} remaining
               </span>
             )}
@@ -171,16 +180,16 @@ export function BookingDetail() {
             />
             
             {remainingAmount > 0 && (
-              <div className="mt-4 p-4 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-400/20 rounded-lg">
+              <div className="mt-6 p-5 bg-gradient-to-r from-brand-cyan/10 to-brand-purple/10 border border-brand-cyan/20 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-white font-medium">Pay Remaining Balance</h3>
-                    <p className="text-gray-400 text-sm">Pay off your booking early and cancel future installments</p>
+                    <h3 className="text-white font-semibold text-lg">Pay Remaining Balance</h3>
+                    <p className="text-gray-400 text-sm mt-1">Pay off your booking early and cancel future installments</p>
                   </div>
                   <button 
                     onClick={handlePayOffEarly}
                     disabled={isPaying}
-                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-200 disabled:opacity-50 flex items-center space-x-2"
+                    className="btn-brand px-5 py-3 flex items-center space-x-2 disabled:opacity-50"
                   >
                     {isPaying && <Loader2 className="h-4 w-4 animate-spin" />}
                     <span>Pay ${remainingAmount.toLocaleString()}</span>
@@ -203,20 +212,25 @@ export function BookingDetail() {
       />
 
       {/* Payment Method */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Payment Method</h2>
+      <div className="glass-card p-6">
+        <h2 className="text-2xl font-semibold text-white mb-6 flex items-center gap-3">
+          <span className="w-1 h-6 bg-gradient-to-b from-gray-400 to-gray-600 rounded-full"></span>
+          Payment Method
+        </h2>
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <CreditCard className="h-8 w-8 text-gray-400" />
+          <div className="flex items-center space-x-4">
+            <div className="p-3 rounded-xl bg-white/5">
+              <CreditCard className="h-7 w-7 text-gray-400" />
+            </div>
             <div>
-              <p className="text-white font-medium">Manage Payment Methods</p>
-              <p className="text-gray-400 text-sm">Update your card or billing information</p>
+              <p className="text-white font-semibold text-lg">Manage Payment Methods</p>
+              <p className="text-gray-500 text-sm mt-0.5">Update your card or billing information</p>
             </div>
           </div>
           <button 
             onClick={handleStripePortal}
             disabled={isOpeningPortal}
-            className="px-4 py-2 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center space-x-2"
+            className="px-5 py-3 bg-white/5 text-white font-medium rounded-xl hover:bg-white/10 transition-all border border-white/10 hover:border-brand-cyan/30 disabled:opacity-50 flex items-center space-x-2"
           >
             {isOpeningPortal && <Loader2 className="h-4 w-4 animate-spin" />}
             <span>Stripe Portal</span>

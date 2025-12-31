@@ -1,6 +1,5 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
 const applicationTables = {
   // Travel Agents table
@@ -22,6 +21,7 @@ const applicationTables = {
     name: v.optional(v.string()),
     phone: v.optional(v.string()),
     stripeCustomerId: v.optional(v.string()),
+    isAdmin: v.optional(v.boolean()),
   }).index("by_email", ["email"])
     .index("by_clerk_id", ["clerkId"]),
 
@@ -95,6 +95,5 @@ const applicationTables = {
 };
 
 export default defineSchema({
-  ...authTables,
   ...applicationTables,
 });

@@ -77,7 +77,7 @@ http.route({
           console.log("Checkout completed:", session.id);
           
           // Extract metadata from the session
-          const { tripId, package: packageName, occupancy, userId: metadataUserId } = session.metadata || {};
+          const { tripId, package: packageName, occupancy, userId: metadataUserId, referralCode } = session.metadata || {};
           
           if (!tripId || !packageName || !occupancy) {
             console.error("Missing metadata in checkout session");
@@ -126,6 +126,7 @@ http.route({
             paymentFrequency: "monthly", // Default frequency
             cutoffDate,
             stripeCheckoutSessionId: session.id,
+            referralCode: referralCode || undefined,
           });
 
           console.log(`Created booking ${bookingId} for user ${userId}`);
@@ -136,8 +137,8 @@ http.route({
           await ctx.runAction(internal.payments.sendEmailAction, {
             to: userEmail,
             subject: "Welcome to LatitudeGo!",
-            text: `Your booking for ${trip?.tripName || tripId} is confirmed. Login to vip.latitudego.com to manage your installments.`,
-            html: `<h1>Welcome to LatitudeGo!</h1><p>Your booking for <strong>${trip?.tripName || tripId}</strong> is confirmed.</p><p>Login to <a href="https://vip.latitudego.com">vip.latitudego.com</a> to manage your installments.</p>`,
+            text: `Your booking for ${trip?.tripName || tripId} is confirmed. Login to mybooking.latitudego.com to manage your installments.`,
+            html: `<h1>Welcome to LatitudeGo!</h1><p>Your booking for <strong>${trip?.tripName || tripId}</strong> is confirmed.</p><p>Login to <a href="https://mybooking.latitudego.com">mybooking.latitudego.com</a> to manage your installments.</p>`,
           });
 
           break;

@@ -1,6 +1,23 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+async function checkAdmin(ctx: any) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Not authenticated");
+  }
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_email", (q: any) => q.eq("email", identity.email!))
+    .unique();
+
+  if (!user || !user.isAdmin) {
+    throw new Error("Unauthorized: Admin access required");
+  }
+  return user;
+}
+
 // Generate a unique referral code
 function generateReferralCode(agencyName: string): string {
   const prefix = agencyName
@@ -120,6 +137,7 @@ export const createAgent = mutation({
     commissionRate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await checkAdmin(ctx);
     // Check if email already exists
     const existing = await ctx.db
       .query("agents")
@@ -171,6 +189,7 @@ export const updateAgent = mutation({
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await checkAdmin(ctx);
     const { agentId, ...updates } = args;
     
     // Filter out undefined values
@@ -188,6 +207,7 @@ export const updateAgent = mutation({
 export const deactivateAgent = mutation({
   args: { agentId: v.id("agents") },
   handler: async (ctx, args) => {
+    await checkAdmin(ctx);
     await ctx.db.patch(args.agentId, { isActive: false });
   },
 });
@@ -195,6 +215,7 @@ export const deactivateAgent = mutation({
 export const regenerateReferralCode = mutation({
   args: { agentId: v.id("agents") },
   handler: async (ctx, args) => {
+    await checkAdmin(ctx);
     const agent = await ctx.db.get(args.agentId);
     if (!agent) throw new Error("Agent not found");
 

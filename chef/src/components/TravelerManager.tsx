@@ -73,11 +73,14 @@ export function TravelerManager({ bookingId, maxOccupancy, travelers }: Traveler
   };
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
+    <div className="glass-card p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-white">Travelers</h2>
-          <p className="text-gray-400 text-sm">
+          <h2 className="text-2xl font-semibold text-white flex items-center gap-3">
+            <span className="w-1 h-6 bg-gradient-to-b from-brand-cyan to-brand-purple rounded-full"></span>
+            Travelers
+          </h2>
+          <p className="text-gray-500 text-sm mt-1 ml-4">
             {travelers.length} of {maxOccupancy} travelers added
           </p>
         </div>
@@ -85,7 +88,7 @@ export function TravelerManager({ bookingId, maxOccupancy, travelers }: Traveler
         {travelers.length < maxOccupancy && (
           <button
             onClick={() => setIsAddingTraveler(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-200"
+            className="btn-brand px-4 py-2.5 flex items-center space-x-2"
           >
             <Plus className="h-4 w-4" />
             <span>Add Traveler</span>
@@ -95,7 +98,7 @@ export function TravelerManager({ bookingId, maxOccupancy, travelers }: Traveler
 
       <div className="space-y-4">
         {travelers.map((traveler) => (
-          <div key={traveler._id} className="p-4 bg-gray-700/30 rounded-lg">
+          <div key={traveler._id} className="p-4 bg-white/5 rounded-xl border border-white/5">
             {editingTraveler === traveler._id ? (
               <TravelerForm
                 traveler={traveler}
@@ -104,25 +107,27 @@ export function TravelerManager({ bookingId, maxOccupancy, travelers }: Traveler
               />
             ) : (
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <User className="h-8 w-8 text-gray-400" />
+                <div className="flex items-center space-x-4">
+                  <div className="p-2.5 rounded-xl bg-brand-purple/10">
+                    <User className="h-6 w-6 text-brand-purple" />
+                  </div>
                   <div>
-                    <h3 className="text-white font-medium">{traveler.name}</h3>
-                    <p className="text-gray-400 text-sm">{traveler.email}</p>
-                    <p className="text-gray-400 text-sm">{traveler.phone}</p>
+                    <h3 className="text-white font-semibold">{traveler.name}</h3>
+                    <p className="text-gray-500 text-sm">{traveler.email}</p>
+                    <p className="text-gray-500 text-sm">{traveler.phone}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
                   <button
                     onClick={() => setEditingTraveler(traveler._id)}
-                    className="p-2 text-gray-400 hover:text-cyan-400 transition-colors"
+                    className="p-2.5 rounded-lg text-gray-400 hover:text-brand-cyan hover:bg-brand-cyan/10 transition-all"
                   >
                     <Edit2 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteTraveler(traveler._id)}
-                    className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                    className="p-2.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-400/10 transition-all"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -133,7 +138,7 @@ export function TravelerManager({ bookingId, maxOccupancy, travelers }: Traveler
         ))}
 
         {isAddingTraveler && (
-          <div className="p-4 bg-gray-700/30 rounded-lg">
+          <div className="p-4 bg-white/5 rounded-xl border border-brand-cyan/20">
             <TravelerForm
               onSubmit={handleAddTraveler}
               onCancel={() => setIsAddingTraveler(false)}
@@ -170,7 +175,7 @@ function TravelerForm({ traveler, onSubmit, onCancel }: TravelerFormProps) {
             name="name"
             defaultValue={traveler?.name}
             required
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-colors"
+            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 outline-none transition-all placeholder-gray-500"
           />
         </div>
         
@@ -183,7 +188,7 @@ function TravelerForm({ traveler, onSubmit, onCancel }: TravelerFormProps) {
             name="email"
             defaultValue={traveler?.email}
             required
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-colors"
+            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 outline-none transition-all placeholder-gray-500"
           />
         </div>
         
@@ -196,7 +201,7 @@ function TravelerForm({ traveler, onSubmit, onCancel }: TravelerFormProps) {
             name="phone"
             defaultValue={traveler?.phone}
             required
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-colors"
+            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 outline-none transition-all placeholder-gray-500"
           />
         </div>
         
@@ -208,7 +213,7 @@ function TravelerForm({ traveler, onSubmit, onCancel }: TravelerFormProps) {
             type="date"
             name="dateOfBirth"
             defaultValue={traveler?.dateOfBirth}
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-colors"
+            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 outline-none transition-all"
           />
         </div>
         
@@ -220,7 +225,7 @@ function TravelerForm({ traveler, onSubmit, onCancel }: TravelerFormProps) {
             type="text"
             name="passport"
             defaultValue={traveler?.passport}
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-colors"
+            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/20 outline-none transition-all placeholder-gray-500"
           />
         </div>
       </div>
@@ -235,7 +240,7 @@ function TravelerForm({ traveler, onSubmit, onCancel }: TravelerFormProps) {
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-200"
+          className="btn-brand px-5 py-2.5"
         >
           {traveler ? "Update" : "Add"} Traveler
         </button>
