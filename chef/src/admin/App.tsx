@@ -229,7 +229,7 @@ function RevenueByTrip() {
         <h3 className="text-xl font-semibold text-white">Revenue by Trip</h3>
       </div>
       <div className="space-y-4 max-h-80 overflow-y-auto">
-        {data.map((trip) => (
+        {data.map((trip: any) => (
           <div key={trip.tripId} className="p-4 bg-white/5 rounded-xl border border-white/5 hover:border-brand-cyan/20 transition-colors">
             <div className="flex justify-between items-start mb-3">
               <div>
@@ -277,7 +277,7 @@ function RevenueByAgent() {
         <h3 className="text-xl font-semibold text-white">Revenue by Agent</h3>
       </div>
       <div className="space-y-4 max-h-80 overflow-y-auto">
-        {data.map((agent) => (
+        {data.map((agent: any) => (
           <div key={agent.agentId} className="p-4 bg-white/5 rounded-xl border border-white/5 hover:border-brand-purple/20 transition-colors">
             <div className="flex justify-between items-start mb-3">
               <div>
