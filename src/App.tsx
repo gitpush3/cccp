@@ -6,6 +6,7 @@ import { Toaster, toast } from "sonner";
 import { Dashboard } from "./components/Dashboard";
 import { AnonymousDashboard } from "./components/AnonymousDashboard";
 import { Paywall } from "./components/Paywall";
+import ReferralPage from "./components/ReferralPage";
 import { useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes, Link } from "react-router-dom";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -22,6 +23,9 @@ export default function App() {
             <img src={FaviconLogo} alt="Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
             <h2 className="text-lg font-bold text-primary dark:text-white tracking-tight">Cuyahoga Code, Permit & Parcel Chat</h2>
             <Link to="/about" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">About</Link>
+            <Authenticated>
+              <Link to="/referrals" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">Referrals</Link>
+            </Authenticated>
           </div>
           <div className="flex items-center gap-4">
             <Link to="/chat" className="px-4 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium text-sm transition-colors">
@@ -29,6 +33,7 @@ export default function App() {
             </Link>
             <ThemeToggle />
             <Authenticated>
+              <ReferralTracker />
               <div className="flex items-center gap-2">
                 <UpgradeButton />
                 <UserButton />
@@ -49,6 +54,7 @@ export default function App() {
             <Route path="/welcome" element={<WelcomeScreen />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/join" element={<JoinPage />} />
+            <Route path="/referrals" element={<ReferralPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="*" element={<Navigate to="/welcome" replace />} />
@@ -61,6 +67,14 @@ export default function App() {
 }
 
 function JoinPage() {
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get("ref");
+    if (ref) {
+      localStorage.setItem("referral_code", ref);
+    }
+  }, []);
+
   return (
     <div className="flex flex-col">
       <Authenticated>
@@ -271,6 +285,29 @@ function UserContentPaywall() {
   }
 
   return <Paywall />;
+}
+
+function ReferralTracker() {
+  const user = useQuery(api.users.getCurrentUser);
+  const updateReferralCode = useMutation(api.users.updateReferralCode);
+  const referralProcessedRef = useRef(false);
+
+  useEffect(() => {
+    if (user && !user.referredBy && !referralProcessedRef.current) {
+      const storedRef = localStorage.getItem("referral_code");
+      if (storedRef) {
+        referralProcessedRef.current = true;
+        updateReferralCode({ referralCode: storedRef })
+          .then(() => {
+            localStorage.removeItem("referral_code");
+            toast.success("Referral applied! You're now supporting your friend.");
+          })
+          .catch(console.error);
+      }
+    }
+  }, [user, updateReferralCode]);
+
+  return null;
 }
 
 function UserContent() {

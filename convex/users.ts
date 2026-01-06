@@ -16,10 +16,15 @@ export const createUser = mutation({
       return existing._id;
     }
 
+    // Generate a unique referral code
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
     return await ctx.db.insert("users", {
       clerkId: args.clerkId,
       email: args.email,
       subscriptionStatus: "none",
+      referralCode,
+      totalReferralEarnings: 0,
     });
   },
 });
@@ -48,12 +53,15 @@ export const createOrUpdateGoogleUser = mutation({
     }
 
     // Create new user
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     return await ctx.db.insert("users", {
       googleId: args.googleId,
       email: args.email,
       name: args.name,
       picture: args.picture,
       subscriptionStatus: "none",
+      referralCode,
+      totalReferralEarnings: 0,
     });
   },
 });
@@ -87,11 +95,14 @@ export const getOrCreateUser = mutation({
     
     // Auto-create user if doesn't exist
     if (!user) {
+      const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       const userId = await ctx.db.insert("users", {
         clerkId: identity.subject,
         email: identity.email || "",
         name: identity.name,
         subscriptionStatus: "none",
+        referralCode,
+        totalReferralEarnings: 0,
       });
       user = await ctx.db.get(userId);
     }
@@ -172,5 +183,59 @@ export const grantAccessByClerkId = internalMutation({
     });
 
     return { updated: true };
+  },
+});
+
+export const updateReferralCode = mutation({
+  args: { referralCode: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) throw new Error("User not found");
+    if (user.referredBy) return; // Already referred
+
+    // Don't allow self-referral
+    if (user.referralCode === args.referralCode) return;
+
+    // Verify code exists
+    const referrer = await ctx.db
+      .query("users")
+      .withIndex("by_referral_code", (q) => q.eq("referralCode", args.referralCode))
+      .unique();
+
+    if (!referrer) return;
+
+    await ctx.db.patch(user._id, {
+      referredBy: args.referralCode,
+    });
+  },
+});
+
+export const updateStripeAccountId = internalMutation({
+  args: {
+    userId: v.id("users"),
+    stripeAccountId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, {
+      stripeAccountId: args.stripeAccountId,
+    });
+  },
+});
+
+export const getReferralCount = query({
+  args: { referralCode: v.string() },
+  handler: async (ctx, args) => {
+    const referrals = await ctx.db
+      .query("users")
+      .withIndex("by_referred_by", (q) => q.eq("referredBy", args.referralCode))
+      .collect();
+    return referrals.length;
   },
 });

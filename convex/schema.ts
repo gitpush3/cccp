@@ -129,6 +129,11 @@ const applicationTables = {
     stripeCustomerId: v.optional(v.string()),
     subscriptionStatus: v.optional(v.union(v.literal("active"), v.literal("none"))),
     endsAt: v.optional(v.number()),
+    // Referral tracking
+    referralCode: v.optional(v.string()),
+    referredBy: v.optional(v.string()), // referralCode of the referrer
+    stripeAccountId: v.optional(v.string()), // For Stripe Connect payouts
+    totalReferralEarnings: v.optional(v.number()), // Total earned in cents
     // Usage tracking for billing
     questionsUsed: v.optional(v.number()),
     questionsLimit: v.optional(v.number()),
@@ -137,7 +142,21 @@ const applicationTables = {
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_google_id", ["googleId"])
-    .index("by_stripe_customer", ["stripeCustomerId"]),
+    .index("by_stripe_customer", ["stripeCustomerId"])
+    .index("by_referral_code", ["referralCode"])
+    .index("by_referred_by", ["referredBy"]),
+
+  referralCommissions: defineTable({
+    referrerId: v.id("users"),
+    refereeId: v.id("users"),
+    amount: v.number(), // Commission amount in cents (1% of gross)
+    paymentIntentId: v.string(), // Stripe payment intent ID
+    status: v.union(v.literal("pending"), v.literal("paid"), v.literal("failed")),
+    createdAt: v.number(),
+  })
+    .index("by_referrer", ["referrerId"])
+    .index("by_status", ["status"]),
+
 
   // Form submissions for alternative to payment
   formSubmissions: defineTable({
