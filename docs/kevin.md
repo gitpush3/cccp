@@ -1,6 +1,6 @@
 Trip Package Booking with Travel Advisor Attribution, Deposit + Dynamic Monthly Payments
 Stack: WordPress + ACF + Trips CPT + WooCommerce + Stripe + Fluent Forms Pro + WP Fusion (+ FluentCRM or other CRM)
-
+ooo
 1) Purpose
 Enable customers and travel advisors to book trip packages from Trip (CPT) landing pages while supporting:
 Advisor attribution capture (for commissions later)
