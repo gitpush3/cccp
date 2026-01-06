@@ -1,4 +1,3 @@
-Functional Specification (Revised)
 Trip Package Booking with Travel Advisor Attribution, Deposit + Dynamic Monthly Payments
 Stack: WordPress + ACF + Trips CPT + WooCommerce + Stripe + Fluent Forms Pro + WP Fusion (+ FluentCRM or other CRM)
 
