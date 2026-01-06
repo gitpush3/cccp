@@ -1,29 +1,36 @@
-# Veteran Architect Application
-  
-This is a project built with [Chef](https://chef.convex.dev) using [Convex](https://convex.dev) as its backend.
- You can find docs about Chef with useful information like how to deploy to production [here](https://docs.convex.dev/chef).
-  
-This project is connected to the Convex deployment named [`frugal-ocelot-297`](https://dashboard.convex.dev/d/frugal-ocelot-297).
-  
-## Project structure
-  
-The frontend code is in the `app` directory and is built with [Vite](https://vitejs.dev/).
-  
-The backend code is in the `convex` directory.
-  
-`npm run dev` will start the frontend and backend servers.
+# LatitudeGo Booking System
 
-## App authentication
+This is a comprehensive trip booking system built with Convex, React, and Stripe.
 
-Chef apps use [Convex Auth](https://auth.convex.dev/) with Anonymous auth for easy sign in. You may wish to change this before deploying your app.
+## Features
 
-## Developing and deploying your app
+- **Trip Page Templates**: 3 distinct layouts for trip details.
+- **Booking Flow**: Multi-step booking form with Stripe Checkout integration.
+- **Installment Plans**: Automated calculation of monthly payments until trip cutoff date.
+- **Referral System**: Unique referral codes and QR codes for advisors/influencers.
+- **Stripe Connect**: Automatic payouts for referral commissions.
+- **Admin Dashboard**: God mode visibility of all bookings, users, and payments.
+- **User Dashboard**: Manage your own bookings and upcoming payments.
 
-Check out the [Convex docs](https://docs.convex.dev/) for more information on how to develop with Convex.
-* If you're new to Convex, the [Overview](https://docs.convex.dev/understanding/) is a good place to start
-* Check out the [Hosting and Deployment](https://docs.convex.dev/production/) docs for how to deploy your app
-* Read the [Best Practices](https://docs.convex.dev/understanding/best-practices/) guide for tips on how to improve you app further
+## Tech Stack
 
-## HTTP API
+- **Frontend**: React, Tailwind CSS, Lucide Icons, Vite
+- **Backend**: Convex
+- **Payments**: Stripe (Checkout & Connect)
+- **Auth**: Clerk
 
-User-defined http routes are defined in the `convex/router.ts` file. We split these routes into a separate file from `convex/http.ts` to allow us to prevent the LLM from modifying the authentication routes.
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up your environment variables in `.env.local`
+4. Run the development server: `npm run dev`
+
+## Environment Variables
+
+- `CONVEX_DEPLOYMENT`: Your Convex deployment URL
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk publishable key
+- `CLERK_SECRET_KEY`: Clerk secret key
+- `STRIPE_SECRET_KEY`: Stripe API key
+- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret
+- `SITE_URL`: Base URL for redirects (e.g., http://localhost:5173)
