@@ -1,0 +1,358 @@
+{
+  "trips": [
+    {
+      "title": "Costa Rica Adventure",
+      "slug": "costa-rica-adventure",
+      "template": "1",
+      "description": "Experience the magic of Costa Rica with our all-inclusive adventure package. From lush rainforests to pristine beaches, this trip has it all.",
+      "startDate": "2026-03-15",
+      "endDate": "2026-03-22",
+      "cutoffDate": "2026-02-15",
+      "destination": "Costa Rica",
+      "meetingPoint": "San José International Airport",
+      "heroImageUrl": "https://images.unsplash.com/photo-1518259102261-b40117eabbc9?w=1920",
+      "heroTagline": "7 days of adventure, wildlife, and unforgettable memories",
+      "galleryImages": [
+        "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?w=800",
+        "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800",
+        "https://images.unsplash.com/photo-1605217613423-0aea4fb32906?w=800",
+        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800"
+      ],
+      "highlights": [
+        "Zip-lining through cloud forests",
+        "Wildlife spotting in Manuel Antonio",
+        "Sunset beach dinners",
+        "Volcano hiking at Arenal",
+        "White water rafting",
+        "Local cooking class"
+      ],
+      "itinerary": [
+        {
+          "day": 1,
+          "title": "Arrival & Welcome",
+          "description": "Arrive at San José airport where our team will greet you. Transfer to your boutique hotel and enjoy a welcome dinner with the group.",
+          "imageUrl": "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=600"
+        },
+        {
+          "day": 2,
+          "title": "Arenal Volcano",
+          "description": "Travel to Arenal Volcano. Hike through lava fields and relax in natural hot springs.",
+          "imageUrl": "https://images.unsplash.com/photo-1605217613423-0aea4fb32906?w=600"
+        },
+        {
+          "day": 3,
+          "title": "Adventure Day",
+          "description": "Zip-lining through the cloud forest canopy and white water rafting on the Pacuare River.",
+          "imageUrl": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600"
+        },
+        {
+          "day": 4,
+          "title": "Monteverde Cloud Forest",
+          "description": "Explore the mystical Monteverde Cloud Forest. Night walk to spot nocturnal wildlife.",
+          "imageUrl": "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?w=600"
+        },
+        {
+          "day": 5,
+          "title": "Manuel Antonio",
+          "description": "Travel to Manuel Antonio. Afternoon at the beach with optional surfing lessons.",
+          "imageUrl": "https://images.unsplash.com/photo-1518259102261-b40117eabbc9?w=600"
+        },
+        {
+          "day": 6,
+          "title": "National Park & Cooking",
+          "description": "Morning hike in Manuel Antonio National Park. Afternoon cooking class with local chef.",
+          "imageUrl": "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=600"
+        },
+        {
+          "day": 7,
+          "title": "Departure",
+          "description": "Farewell breakfast and transfer to San José airport for your flight home.",
+          "imageUrl": "https://images.unsplash.com/photo-1605217613423-0aea4fb32906?w=600"
+        }
+      ],
+      "included": [
+        "All accommodations (6 nights)",
+        "Daily breakfast, 4 lunches, 5 dinners",
+        "All ground transportation",
+        "English-speaking guide",
+        "All activities mentioned in itinerary",
+        "National park entrance fees",
+        "Airport transfers"
+      ],
+      "excluded": [
+        "International flights",
+        "Travel insurance",
+        "Personal expenses",
+        "Alcoholic beverages",
+        "Tips for guides and drivers"
+      ],
+      "packages": [
+        {
+          "title": "Standard",
+          "price": 249900,
+          "depositAmount": 50000,
+          "description": "Shared room accommodation with all activities included",
+          "inventory": 12
+        },
+        {
+          "title": "Premium",
+          "price": 329900,
+          "depositAmount": 75000,
+          "description": "Private room with upgraded accommodations and spa access",
+          "inventory": 8
+        },
+        {
+          "title": "VIP",
+          "price": 449900,
+          "depositAmount": 100000,
+          "description": "Luxury suite, private guide, and exclusive experiences",
+          "inventory": 4
+        }
+      ]
+    },
+    {
+      "title": "Greek Islands Escape",
+      "slug": "greek-islands-escape",
+      "template": "2",
+      "description": "Sail through the stunning Greek Islands, exploring ancient ruins, pristine beaches, and charming villages. A perfect blend of history, culture, and relaxation.",
+      "startDate": "2026-06-10",
+      "endDate": "2026-06-18",
+      "cutoffDate": "2026-05-01",
+      "destination": "Greece",
+      "meetingPoint": "Athens International Airport",
+      "heroImageUrl": "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1920",
+      "heroTagline": "Island hopping through paradise",
+      "galleryImages": [
+        "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800",
+        "https://images.unsplash.com/photo-1555993539-1732b0258235?w=800",
+        "https://images.unsplash.com/photo-1504512485720-7d83a16ee930?w=800",
+        "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=800"
+      ],
+      "highlights": [
+        "Santorini sunset views",
+        "Mykonos nightlife",
+        "Ancient Delos ruins",
+        "Traditional Greek cooking class",
+        "Sailing on a private yacht",
+        "Wine tasting in Santorini",
+        "Swimming in hidden coves",
+        "Authentic taverna experiences"
+      ],
+      "itinerary": [
+        {
+          "day": 1,
+          "title": "Athens Arrival",
+          "description": "Welcome to Greece! Explore the Acropolis and enjoy dinner with views of the Parthenon.",
+          "imageUrl": "https://images.unsplash.com/photo-1555993539-1732b0258235?w=600"
+        },
+        {
+          "day": 2,
+          "title": "Ferry to Mykonos",
+          "description": "Morning ferry to Mykonos. Explore the iconic windmills and Little Venice.",
+          "imageUrl": "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600"
+        },
+        {
+          "day": 3,
+          "title": "Delos & Beach Day",
+          "description": "Day trip to ancient Delos. Afternoon at Paradise Beach.",
+          "imageUrl": "https://images.unsplash.com/photo-1504512485720-7d83a16ee930?w=600"
+        },
+        {
+          "day": 4,
+          "title": "Sail to Santorini",
+          "description": "Private yacht sail to Santorini with swimming stops along the way.",
+          "imageUrl": "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=600"
+        },
+        {
+          "day": 5,
+          "title": "Santorini Exploration",
+          "description": "Visit Oia, wine tasting, and the famous Santorini sunset.",
+          "imageUrl": "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=600"
+        },
+        {
+          "day": 6,
+          "title": "Cooking & Culture",
+          "description": "Morning cooking class. Afternoon at Red Beach and Akrotiri ruins.",
+          "imageUrl": "https://images.unsplash.com/photo-1555993539-1732b0258235?w=600"
+        },
+        {
+          "day": 7,
+          "title": "Free Day",
+          "description": "Explore at your own pace. Optional catamaran cruise available.",
+          "imageUrl": "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600"
+        },
+        {
+          "day": 8,
+          "title": "Departure",
+          "description": "Morning flight back to Athens for international connections.",
+          "imageUrl": "https://images.unsplash.com/photo-1504512485720-7d83a16ee930?w=600"
+        }
+      ],
+      "included": [
+        "7 nights boutique hotel accommodation",
+        "Daily breakfast, 3 lunches, 4 dinners",
+        "Ferry and yacht transfers",
+        "All activities in itinerary",
+        "Expert local guides",
+        "Airport transfers"
+      ],
+      "excluded": [
+        "International flights",
+        "Travel insurance",
+        "Meals not mentioned",
+        "Personal expenses",
+        "Optional activities"
+      ],
+      "packages": [
+        {
+          "title": "Explorer",
+          "price": 349900,
+          "depositAmount": 75000,
+          "description": "Shared accommodation in boutique hotels",
+          "inventory": 10
+        },
+        {
+          "title": "Deluxe",
+          "price": 449900,
+          "depositAmount": 100000,
+          "description": "Private room with sea views and upgraded experiences",
+          "inventory": 6
+        }
+      ]
+    },
+    {
+      "title": "Japan Cultural Immersion",
+      "slug": "japan-cultural-immersion",
+      "template": "3",
+      "description": "Dive deep into Japanese culture with this immersive 10-day journey. From ancient temples to modern Tokyo, experience the best of Japan.",
+      "startDate": "2026-04-01",
+      "endDate": "2026-04-10",
+      "cutoffDate": "2026-02-28",
+      "destination": "Japan",
+      "meetingPoint": "Tokyo Narita Airport",
+      "heroImageUrl": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1920",
+      "heroTagline": "Where ancient traditions meet modern innovation",
+      "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "galleryImages": [
+        "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800",
+        "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800",
+        "https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=800",
+        "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=800",
+        "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800"
+      ],
+      "highlights": [
+        "Cherry blossom viewing (seasonal)",
+        "Traditional tea ceremony",
+        "Geisha district walking tour",
+        "Bullet train experience",
+        "Sushi making class",
+        "Temple stay experience",
+        "Robot restaurant in Tokyo",
+        "Mount Fuji views",
+        "Samurai sword experience",
+        "Sake brewery tour"
+      ],
+      "itinerary": [
+        {
+          "day": 1,
+          "title": "Tokyo Arrival",
+          "description": "Welcome to Japan! Check into your hotel in Shinjuku and explore the neon-lit streets.",
+          "imageUrl": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600"
+        },
+        {
+          "day": 2,
+          "title": "Tokyo Highlights",
+          "description": "Visit Senso-ji Temple, Harajuku, and Shibuya Crossing. Evening at Robot Restaurant.",
+          "imageUrl": "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600"
+        },
+        {
+          "day": 3,
+          "title": "Hakone & Mt. Fuji",
+          "description": "Day trip to Hakone. Cable car, pirate ship cruise, and Mt. Fuji views.",
+          "imageUrl": "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=600"
+        },
+        {
+          "day": 4,
+          "title": "Bullet Train to Kyoto",
+          "description": "Experience the Shinkansen to Kyoto. Afternoon at Fushimi Inari Shrine.",
+          "imageUrl": "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600"
+        },
+        {
+          "day": 5,
+          "title": "Kyoto Temples",
+          "description": "Visit Kinkaku-ji, Arashiyama bamboo grove, and traditional tea ceremony.",
+          "imageUrl": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600"
+        },
+        {
+          "day": 6,
+          "title": "Geisha District",
+          "description": "Morning at Gion. Afternoon sushi making class. Evening geisha performance.",
+          "imageUrl": "https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=600"
+        },
+        {
+          "day": 7,
+          "title": "Nara Day Trip",
+          "description": "Visit Nara's friendly deer and the giant Buddha at Todai-ji Temple.",
+          "imageUrl": "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600"
+        },
+        {
+          "day": 8,
+          "title": "Osaka",
+          "description": "Travel to Osaka. Street food tour in Dotonbori and Osaka Castle.",
+          "imageUrl": "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600"
+        },
+        {
+          "day": 9,
+          "title": "Free Day",
+          "description": "Explore on your own or join optional activities. Farewell dinner.",
+          "imageUrl": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600"
+        },
+        {
+          "day": 10,
+          "title": "Departure",
+          "description": "Transfer to Osaka Kansai Airport for your flight home.",
+          "imageUrl": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600"
+        }
+      ],
+      "included": [
+        "9 nights accommodation",
+        "Daily breakfast, 5 lunches, 6 dinners",
+        "All transportation including bullet train",
+        "All activities and entrance fees",
+        "English-speaking guide",
+        "Airport transfers",
+        "Pocket WiFi device"
+      ],
+      "excluded": [
+        "International flights",
+        "Travel insurance",
+        "Meals not mentioned",
+        "Personal expenses",
+        "Optional activities"
+      ],
+      "packages": [
+        {
+          "title": "Essential",
+          "price": 399900,
+          "depositAmount": 80000,
+          "description": "Comfortable 3-star hotels with all core experiences",
+          "inventory": 14
+        },
+        {
+          "title": "Premium",
+          "price": 549900,
+          "depositAmount": 110000,
+          "description": "4-star hotels with ryokan stay and extra experiences",
+          "inventory": 8
+        },
+        {
+          "title": "Luxury",
+          "price": 749900,
+          "depositAmount": 150000,
+          "description": "5-star hotels, private guide, and exclusive access",
+          "inventory": 4
+        }
+      ]
+    }
+  ]
+}

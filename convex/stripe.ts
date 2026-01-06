@@ -281,6 +281,43 @@ const allowedEvents: string[] = [
   "payment_intent.canceled",
 ];
 
+export const createReferralCommission = internalMutation({
+  args: {
+    referrerId: v.id("users"),
+    refereeId: v.id("users"),
+    amount: v.number(),
+    paymentIntentId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Check if commission already exists for this payment
+    const existing = await ctx.db
+      .query("referralCommissions")
+      .filter((q) => q.eq(q.field("paymentIntentId"), args.paymentIntentId))
+      .first();
+
+    if (existing) return { commissionId: existing._id, alreadyExists: true };
+
+    const commissionId = await ctx.db.insert("referralCommissions", {
+      referrerId: args.referrerId,
+      refereeId: args.refereeId,
+      amount: args.amount,
+      paymentIntentId: args.paymentIntentId,
+      status: "pending",
+      createdAt: Date.now(),
+    });
+
+    // Update referrer's total earnings
+    const referrer = await ctx.db.get(args.referrerId);
+    if (referrer) {
+      await ctx.db.patch(args.referrerId, {
+        totalReferralEarnings: (referrer.totalReferralEarnings || 0) + args.amount,
+      });
+    }
+
+    return { commissionId, alreadyExists: false };
+  },
+});
+
 // Grant access directly by clerkId (for one-time payments)
 export const grantAccessByClerkId = internalMutation({
   args: {
@@ -317,7 +354,78 @@ export const handleWebhook = internalAction({
 
     const eventData = args.data as any;
     const customerId = eventData.customer;
+    const metadata = eventData.metadata || {};
 
+    // Handle trip booking deposit payments
+    if (metadata.type === "trip_deposit" && args.type === "checkout.session.completed") {
+      const bookingId = metadata.bookingId;
+      const advisorId = metadata.advisorId;
+      const amount = eventData.amount_total || 0;
+
+      if (bookingId) {
+        // Confirm the booking deposit
+        await ctx.runMutation(internal.bookings.confirmBookingDeposit, {
+          bookingId,
+          depositAmount: amount,
+          stripeSessionId: eventData.id,
+        });
+
+        // Process advisor commission if applicable
+        if (advisorId && amount > 0) {
+          const commissionAmount = Math.floor(amount * 0.01); // 1% commission
+          
+          // Get the booking to find the user
+          const booking = await ctx.runQuery(api.bookings.getBookingById, { bookingId });
+          if (booking) {
+            await ctx.runMutation(internal.stripe.createReferralCommission, {
+              referrerId: advisorId,
+              refereeId: booking.userId,
+              amount: commissionAmount,
+              paymentIntentId: eventData.payment_intent || eventData.id,
+            });
+          }
+        }
+      }
+      return;
+    }
+
+    // Handle trip installment payments
+    if (metadata.type === "trip_installment" && args.type === "checkout.session.completed") {
+      const installmentId = metadata.installmentId;
+      const bookingId = metadata.bookingId;
+      const amount = eventData.amount_total || 0;
+
+      if (installmentId) {
+        // Mark installment as paid
+        await ctx.runMutation(internal.bookings.markInstallmentPaid, {
+          installmentId,
+          amount,
+          stripeSessionId: eventData.id,
+        });
+
+        // Check if booking is now fully paid
+        if (bookingId) {
+          await ctx.runMutation(internal.bookings.checkAndUpdateBookingStatus, {
+            bookingId,
+          });
+
+          // Get booking to check for advisor commission
+          const booking = await ctx.runQuery(api.bookings.getBookingById, { bookingId });
+          if (booking && booking.advisorId && amount > 0) {
+            const commissionAmount = Math.floor(amount * 0.01); // 1% commission
+            await ctx.runMutation(internal.stripe.createReferralCommission, {
+              referrerId: booking.advisorId,
+              refereeId: booking.userId,
+              amount: commissionAmount,
+              paymentIntentId: eventData.payment_intent || eventData.id,
+            });
+          }
+        }
+      }
+      return;
+    }
+
+    // Handle regular subscription payments
     if (typeof customerId !== "string") {
       console.error(`[STRIPE WEBHOOK] No customer ID in event: ${args.type}`);
       return;
@@ -342,20 +450,11 @@ export const handleWebhook = internalAction({
         const paymentIntentId = eventData.payment_intent || eventData.id;
 
         if (amount > 0 && paymentIntentId) {
-          const result = await ctx.runMutation(internal.stripe.processReferralCommission, {
+          await ctx.runMutation(internal.stripe.processReferralCommission, {
             stripeCustomerId: customerId,
             paymentIntentId,
             amount,
           });
-
-          // Trigger auto-payout if commission was created
-          if (result && result.commissionAmount > 0) {
-            // In a real app, you might want to wait for funds to clear (e.g. 7 days)
-            // For now, we'll queue it or let an admin trigger it.
-            // But user asked for "auto ach out", so we'll attempt it if they have an account.
-            // Note: Actual payout logic should probably be in a separate scheduled job 
-            // to handle Stripe's "available balance" constraints.
-          }
         }
       }
     } catch (error) {

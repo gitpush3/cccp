@@ -1,8 +1,9 @@
 import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useState } from "react";
-import { Copy, Check, ExternalLink, DollarSign, Users, Award, Landmark } from "lucide-react";
+import { Copy, Check, ExternalLink, DollarSign, Users, Award, Landmark, Download } from "lucide-react";
 import { toast } from "sonner";
+import { QRCode } from "./QRCode";
 
 export default function ReferralPage() {
   const user = useQuery(api.users.getCurrentUser);
@@ -110,23 +111,35 @@ export default function ReferralPage() {
       <div className="space-y-6">
         {/* Referral Link Section */}
         <div className="bg-primary text-white p-8 rounded-2xl shadow-lg relative overflow-hidden">
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold mb-4">Your Referral Link</h2>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-4 py-3 font-mono text-sm truncate">
-                {referralLink}
+          <div className="relative z-10 flex flex-col md:flex-row gap-8">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-4">Your Referral Link</h2>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-4 py-3 font-mono text-sm truncate">
+                  {referralLink}
+                </div>
+                <button
+                  onClick={handleCopy}
+                  className="bg-accent hover:bg-accent/90 text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+                >
+                  {isCopying ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {isCopying ? "Copied!" : "Copy Link"}
+                </button>
               </div>
-              <button
-                onClick={handleCopy}
-                className="bg-accent hover:bg-accent/90 text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
-              >
-                {isCopying ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {isCopying ? "Copied!" : "Copy Link"}
-              </button>
+              <p className="mt-4 text-sm opacity-80">
+                When someone signs up using this link, you'll earn 1% of everything they spend on the platform.
+              </p>
             </div>
-            <p className="mt-4 text-sm opacity-80">
-              When someone signs up using this link, you'll earn 1% of everything they spend on the platform.
-            </p>
+            
+            {/* QR Code */}
+            {referralLink && (
+              <div className="flex flex-col items-center gap-3">
+                <div className="bg-white p-3 rounded-xl shadow-lg">
+                  <QRCode value={referralLink} size={150} />
+                </div>
+                <p className="text-xs opacity-70">Scan to share</p>
+              </div>
+            )}
           </div>
           {/* Background decoration */}
           <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-accent/20 rounded-full blur-3xl"></div>
