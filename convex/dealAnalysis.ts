@@ -703,6 +703,320 @@ export const getRentalAnalysis = query({
   },
 });
 
+// ===== HOT LEADS AGGREGATOR =====
+// The ultimate deal-finding tool - aggregates ALL distress signals
+
+export const getHotLeads = query({
+  args: {
+    city: v.optional(v.string()),
+    zipCode: v.optional(v.string()),
+    maxPrice: v.optional(v.number()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 50;
+    const city = args.city?.toUpperCase();
+
+    // Master lead list
+    const leads: Map<string, {
+      parcelId: string;
+      address: string;
+      city: string;
+      zipCode: string;
+      signals: string[];
+      signalCount: number;
+      urgencyScore: number;
+      taxDelinquent?: any;
+      sheriffSale?: any;
+      violations?: any[];
+      ownerInfo?: any;
+    }> = new Map();
+
+    // 1. Get all tax delinquent properties (HIGH motivation)
+    let taxDelinquent;
+    if (city) {
+      taxDelinquent = await ctx.db
+        .query("taxDelinquent")
+        .withIndex("by_city", (q) => q.eq("city", city))
+        .take(200);
+    } else {
+      taxDelinquent = await ctx.db.query("taxDelinquent").take(500);
+    }
+
+    // Filter by amount if needed (higher = more motivated)
+    const highValueDelinquent = taxDelinquent
+      .filter(t => t.totalAmountOwed >= 2000)
+      .sort((a, b) => b.totalAmountOwed - a.totalAmountOwed);
+
+    for (const td of highValueDelinquent.slice(0, 100)) {
+      const key = td.parcelId;
+      const existing = leads.get(key) || {
+        parcelId: td.parcelId,
+        address: td.address,
+        city: td.city,
+        zipCode: td.zipCode || "",
+        signals: [],
+        signalCount: 0,
+        urgencyScore: 0,
+      };
+
+      existing.signals.push(`Tax delinquent: $${td.totalAmountOwed.toLocaleString()}`);
+      existing.signalCount++;
+      existing.urgencyScore += td.totalAmountOwed >= 10000 ? 30 : td.totalAmountOwed >= 5000 ? 20 : 10;
+      existing.taxDelinquent = td;
+
+      if (td.certifiedForSale) {
+        existing.signals.push("Certified for tax sale");
+        existing.urgencyScore += 25;
+      }
+      if (td.yearsDelinquent && td.yearsDelinquent >= 3) {
+        existing.signals.push(`${td.yearsDelinquent} years delinquent`);
+        existing.urgencyScore += 15;
+      }
+
+      leads.set(key, existing);
+    }
+
+    // 2. Get all sheriff sales (HIGHEST urgency - foreclosures)
+    let sheriffSales;
+    if (city) {
+      sheriffSales = await ctx.db
+        .query("sheriffSales")
+        .withIndex("by_city", (q) => q.eq("city", city))
+        .take(100);
+    } else {
+      sheriffSales = await ctx.db.query("sheriffSales").take(300);
+    }
+
+    const activeSales = sheriffSales.filter(s =>
+      s.status === "scheduled" || s.status === "continued"
+    );
+
+    for (const sale of activeSales) {
+      if (!sale.parcelId) continue;
+      const key = sale.parcelId;
+      const existing = leads.get(key) || {
+        parcelId: sale.parcelId,
+        address: sale.address,
+        city: sale.city,
+        zipCode: sale.zipCode || "",
+        signals: [],
+        signalCount: 0,
+        urgencyScore: 0,
+      };
+
+      existing.signals.push(`Sheriff sale: ${sale.status}`);
+      existing.signalCount++;
+      existing.urgencyScore += 40; // Highest urgency
+      existing.sheriffSale = sale;
+
+      if (sale.saleDate) {
+        existing.signals.push(`Sale date: ${sale.saleDate}`);
+      }
+
+      leads.set(key, existing);
+    }
+
+    // 3. Get properties with critical violations
+    let violations;
+    if (city) {
+      violations = await ctx.db
+        .query("codeViolations")
+        .withIndex("by_city", (q) => q.eq("city", city))
+        .take(300);
+    } else {
+      violations = await ctx.db.query("codeViolations").take(500);
+    }
+
+    const openViolations = violations.filter(v =>
+      v.status === "open" || v.status === "in_progress" || v.status === "lien_placed"
+    );
+
+    // Group violations by parcel
+    const violationsByParcel = new Map<string, any[]>();
+    for (const v of openViolations) {
+      if (!v.parcelId) continue;
+      const existing = violationsByParcel.get(v.parcelId) || [];
+      existing.push(v);
+      violationsByParcel.set(v.parcelId, existing);
+    }
+
+    // Add to leads
+    for (const [parcelId, vios] of violationsByParcel.entries()) {
+      if (vios.length < 2) continue; // Only properties with 2+ violations
+
+      const firstVio = vios[0];
+      const existing = leads.get(parcelId) || {
+        parcelId,
+        address: firstVio.address,
+        city: firstVio.city,
+        zipCode: firstVio.zipCode || "",
+        signals: [],
+        signalCount: 0,
+        urgencyScore: 0,
+      };
+
+      const criticalCount = vios.filter(v => v.severity === "critical").length;
+      const lienCount = vios.filter(v => v.status === "lien_placed").length;
+
+      existing.signals.push(`${vios.length} open violations`);
+      existing.signalCount++;
+      existing.urgencyScore += vios.length * 3;
+      existing.violations = vios;
+
+      if (criticalCount > 0) {
+        existing.signals.push(`${criticalCount} critical violations`);
+        existing.urgencyScore += criticalCount * 10;
+      }
+      if (lienCount > 0) {
+        existing.signals.push(`${lienCount} violation liens`);
+        existing.urgencyScore += lienCount * 15;
+      }
+
+      leads.set(parcelId, existing);
+    }
+
+    // 4. Enrich leads with parcel data and owner analysis
+    const enrichedLeads: any[] = [];
+
+    for (const lead of leads.values()) {
+      if (lead.signalCount < 1) continue;
+
+      // Get parcel info
+      const parcel = await ctx.db
+        .query("parcels")
+        .withIndex("by_parcel_id", (q) => q.eq("parcelId", lead.parcelId))
+        .first();
+
+      if (!parcel) continue;
+
+      // Filter by max price if specified
+      if (args.maxPrice && parcel.certifiedTaxTotal && parcel.certifiedTaxTotal > args.maxPrice) {
+        continue;
+      }
+
+      // Owner motivation signals
+      const ownerSignals: string[] = [];
+
+      if (parcel.mailState && parcel.mailState !== "OH") {
+        ownerSignals.push(`Out-of-state owner (${parcel.mailState})`);
+        lead.urgencyScore += 15;
+      }
+
+      if (parcel.lastSaleDate) {
+        const yearsOwned = new Date().getFullYear() - parseInt(parcel.lastSaleDate.substring(0, 4));
+        if (yearsOwned >= 15) {
+          ownerSignals.push(`Long-term owner (${yearsOwned} years)`);
+          lead.urgencyScore += 10;
+        }
+      }
+
+      const owner = parcel.currentOwner?.toUpperCase() || "";
+      if (owner.includes("ESTATE") || owner.includes("HEIR")) {
+        ownerSignals.push("Estate/Heir ownership");
+        lead.urgencyScore += 20;
+      }
+
+      enrichedLeads.push({
+        ...lead,
+        signals: [...lead.signals, ...ownerSignals],
+        parcel: {
+          address: parcel.fullAddress,
+          owner: parcel.currentOwner,
+          ownerAddress: parcel.mailAddress,
+          ownerCity: parcel.mailCity,
+          ownerState: parcel.mailState,
+          propertyType: parcel.taxLucDescription,
+          sqft: parcel.totalResLivingArea,
+          assessedValue: parcel.certifiedTaxTotal,
+          lastSalePrice: parcel.lastSalePrice,
+          lastSaleDate: parcel.lastSaleDate,
+        },
+        estimatedValue: parcel.certifiedTaxTotal ? Math.round(parcel.certifiedTaxTotal * 2.5) : null,
+      });
+    }
+
+    // Sort by urgency score (highest first) and limit
+    enrichedLeads.sort((a, b) => b.urgencyScore - a.urgencyScore);
+    const topLeads = enrichedLeads.slice(0, limit);
+
+    // Categorize results
+    const foreclosures = topLeads.filter(l => l.sheriffSale);
+    const taxDistressed = topLeads.filter(l => l.taxDelinquent && !l.sheriffSale);
+    const codeDistressed = topLeads.filter(l => l.violations && l.violations.length >= 3 && !l.taxDelinquent && !l.sheriffSale);
+
+    return {
+      summary: {
+        totalLeads: topLeads.length,
+        foreclosures: foreclosures.length,
+        taxDistressed: taxDistressed.length,
+        codeDistressed: codeDistressed.length,
+        averageUrgencyScore: topLeads.length > 0
+          ? Math.round(topLeads.reduce((sum, l) => sum + l.urgencyScore, 0) / topLeads.length)
+          : 0,
+      },
+      topForeclosures: foreclosures.slice(0, 10).map(l => ({
+        address: l.parcel.address,
+        owner: l.parcel.owner,
+        signals: l.signals,
+        urgencyScore: l.urgencyScore,
+        sheriffSale: l.sheriffSale ? {
+          status: l.sheriffSale.status,
+          saleDate: l.sheriffSale.saleDate,
+          openingBid: l.sheriffSale.openingBid,
+        } : null,
+        estimatedValue: l.estimatedValue,
+        contactStrategy: l.parcel.ownerState !== "OH"
+          ? "Skip trace for phone, send letter to mail address"
+          : "Door knock + letter",
+      })),
+      topTaxDistressed: taxDistressed.slice(0, 10).map(l => ({
+        address: l.parcel.address,
+        owner: l.parcel.owner,
+        signals: l.signals,
+        urgencyScore: l.urgencyScore,
+        taxDelinquent: l.taxDelinquent ? {
+          amountOwed: l.taxDelinquent.totalAmountOwed,
+          yearsDelinquent: l.taxDelinquent.yearsDelinquent,
+          certifiedForSale: l.taxDelinquent.certifiedForSale,
+        } : null,
+        estimatedValue: l.estimatedValue,
+        contactStrategy: l.taxDelinquent?.certifiedForSale
+          ? "URGENT: Contact before tax sale"
+          : "Direct mail campaign + door knock",
+      })),
+      topCodeDistressed: codeDistressed.slice(0, 10).map(l => ({
+        address: l.parcel.address,
+        owner: l.parcel.owner,
+        signals: l.signals,
+        urgencyScore: l.urgencyScore,
+        violationCount: l.violations?.length || 0,
+        estimatedValue: l.estimatedValue,
+        contactStrategy: "Offer to solve their code problem - buy as-is",
+      })),
+      allLeads: topLeads.map(l => ({
+        address: l.parcel.address,
+        city: l.city,
+        owner: l.parcel.owner,
+        signals: l.signals,
+        signalCount: l.signalCount,
+        urgencyScore: l.urgencyScore,
+        estimatedValue: l.estimatedValue,
+        propertyType: l.parcel.propertyType,
+        assessedValue: l.parcel.assessedValue,
+      })),
+      actionPlan: [
+        "1. Start with foreclosures - highest urgency, owners desperate",
+        "2. Target tax delinquent certified for sale - deadline approaching",
+        "3. High tax delinquency ($10K+) often indicates financial distress",
+        "4. Multiple code violations = tired landlord, expensive to fix",
+        "5. Out-of-state owners are 3x more likely to sell",
+        "6. Long-term owners (15+ years) often have high equity, may be tired",
+      ],
+    };
+  },
+});
+
 // ===== MUTATIONS FOR DATA IMPORT =====
 
 export const insertDealScore = mutation({

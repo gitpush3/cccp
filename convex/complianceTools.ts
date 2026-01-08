@@ -575,6 +575,444 @@ export const insertPOSRequirement = mutation({
   },
 });
 
+// ===== PRE-INSPECTION CHECKLIST GENERATOR =====
+// This is the killer feature for someone with an inspector coming next week
+
+export const generatePreInspectionChecklist = query({
+  args: {
+    address: v.string(),
+    city: v.optional(v.string()),
+    inspectionType: v.optional(v.string()), // "pos", "rental_registration", "general"
+  },
+  handler: async (ctx, args) => {
+    // Find the property
+    const parcels = await ctx.db
+      .query("parcels")
+      .withSearchIndex("search_address", (q) => q.search("fullAddress", args.address))
+      .take(1);
+
+    const parcel = parcels[0];
+    const city = args.city?.toUpperCase() || parcel?.city || "UNKNOWN";
+
+    // Get POS requirements for this city
+    const posReq = await ctx.db
+      .query("posRequirements")
+      .withIndex("by_city", (q) => q.eq("city", city))
+      .first();
+
+    // Get any existing violations for this property
+    let existingViolations: any[] = [];
+    if (parcel?.parcelId) {
+      existingViolations = await ctx.db
+        .query("codeViolations")
+        .withIndex("by_parcel_id", (q) => q.eq("parcelId", parcel.parcelId))
+        .collect();
+    }
+
+    const openViolations = existingViolations.filter(v =>
+      v.status === "open" || v.status === "in_progress"
+    );
+
+    // Master checklist items with repair costs
+    const CHECKLIST_ITEMS = [
+      // SAFETY - Always checked first
+      {
+        category: "Safety - Critical",
+        item: "Smoke detectors in all bedrooms and hallways",
+        costLow: 15, costHigh: 30, perUnit: "each",
+        diy: true, priority: 1,
+        notes: "Hardwired preferred in some cities. Replace batteries first."
+      },
+      {
+        category: "Safety - Critical",
+        item: "Carbon monoxide detectors (if gas appliances)",
+        costLow: 20, costHigh: 40, perUnit: "each",
+        diy: true, priority: 1,
+        notes: "Required within 10 feet of sleeping areas"
+      },
+      {
+        category: "Safety - Critical",
+        item: "GFCI outlets in kitchen, bathroom, basement, garage",
+        costLow: 15, costHigh: 25, perUnit: "each",
+        diy: false, priority: 1,
+        notes: "Most common fail item. Test with GFCI tester."
+      },
+      {
+        category: "Safety - Critical",
+        item: "Handrails on all stairs (3+ steps)",
+        costLow: 50, costHigh: 200, perUnit: "per staircase",
+        diy: true, priority: 1,
+        notes: "Must be graspable, 34-38 inches high, return to wall"
+      },
+      {
+        category: "Safety - Critical",
+        item: "Guardrails on porches/decks over 30 inches",
+        costLow: 200, costHigh: 800, perUnit: "per area",
+        diy: false, priority: 1,
+        notes: "42 inch height, 4 inch max gap between balusters"
+      },
+
+      // ELECTRICAL
+      {
+        category: "Electrical",
+        item: "No exposed wiring or junction boxes",
+        costLow: 50, costHigh: 150, perUnit: "per repair",
+        diy: false, priority: 2,
+        notes: "Cover plates on all boxes, no wire nuts visible"
+      },
+      {
+        category: "Electrical",
+        item: "All outlets and switches functional",
+        costLow: 10, costHigh: 25, perUnit: "each",
+        diy: false, priority: 2,
+        notes: "Test every outlet, check for reverse polarity"
+      },
+      {
+        category: "Electrical",
+        item: "Panel box properly labeled and accessible",
+        costLow: 0, costHigh: 50, perUnit: "one-time",
+        diy: true, priority: 2,
+        notes: "30 inches clearance, all breakers labeled"
+      },
+      {
+        category: "Electrical",
+        item: "No double-tapped breakers",
+        costLow: 100, costHigh: 300, perUnit: "per repair",
+        diy: false, priority: 2,
+        notes: "One wire per breaker unless rated for two"
+      },
+
+      // PLUMBING
+      {
+        category: "Plumbing",
+        item: "No active leaks under sinks or at fixtures",
+        costLow: 50, costHigh: 200, perUnit: "per repair",
+        diy: true, priority: 2,
+        notes: "Check all supply and drain lines"
+      },
+      {
+        category: "Plumbing",
+        item: "Hot water at all fixtures",
+        costLow: 0, costHigh: 100, perUnit: "varies",
+        diy: true, priority: 2,
+        notes: "120°F max for safety, check water heater temp"
+      },
+      {
+        category: "Plumbing",
+        item: "Water heater strapped (seismic) and vented properly",
+        costLow: 30, costHigh: 100, perUnit: "one-time",
+        diy: true, priority: 2,
+        notes: "Double straps required, proper flue clearance"
+      },
+      {
+        category: "Plumbing",
+        item: "Toilets secure and not leaking at base",
+        costLow: 10, costHigh: 50, perUnit: "each",
+        diy: true, priority: 3,
+        notes: "Replace wax ring if rocking or water stains"
+      },
+
+      // HVAC
+      {
+        category: "HVAC",
+        item: "Furnace operational with clean filter",
+        costLow: 5, costHigh: 30, perUnit: "filter",
+        diy: true, priority: 2,
+        notes: "Test heating, check for gas smells"
+      },
+      {
+        category: "HVAC",
+        item: "Furnace flue properly connected and sealed",
+        costLow: 50, costHigh: 200, perUnit: "per repair",
+        diy: false, priority: 1,
+        notes: "CO hazard if disconnected or leaking"
+      },
+      {
+        category: "HVAC",
+        item: "AC operational (if present)",
+        costLow: 100, costHigh: 400, perUnit: "service call",
+        diy: false, priority: 3,
+        notes: "Check both cooling and fan operation"
+      },
+
+      // STRUCTURE/EXTERIOR
+      {
+        category: "Exterior",
+        item: "No peeling/chipping paint (lead hazard pre-1978)",
+        costLow: 500, costHigh: 3000, perUnit: "varies",
+        diy: false, priority: 2,
+        notes: "Lead-safe work practices required for pre-1978"
+      },
+      {
+        category: "Exterior",
+        item: "Windows operational and not broken",
+        costLow: 100, costHigh: 400, perUnit: "per window",
+        diy: true, priority: 3,
+        notes: "Egress windows must open, screens intact"
+      },
+      {
+        category: "Exterior",
+        item: "Roof in serviceable condition",
+        costLow: 200, costHigh: 1000, perUnit: "repair",
+        diy: false, priority: 3,
+        notes: "No active leaks, look for stains inside"
+      },
+      {
+        category: "Exterior",
+        item: "Gutters and downspouts attached, directing water away",
+        costLow: 100, costHigh: 300, perUnit: "repair",
+        diy: true, priority: 3,
+        notes: "Extend downspouts 4+ feet from foundation"
+      },
+      {
+        category: "Exterior",
+        item: "Foundation visible and no major cracks",
+        costLow: 200, costHigh: 2000, perUnit: "varies",
+        diy: false, priority: 2,
+        notes: "Horizontal cracks are serious, vertical less so"
+      },
+      {
+        category: "Exterior",
+        item: "Walkways and steps in safe condition",
+        costLow: 100, costHigh: 500, perUnit: "per area",
+        diy: true, priority: 2,
+        notes: "No trip hazards, must be stable"
+      },
+
+      // INTERIOR
+      {
+        category: "Interior",
+        item: "All doors open/close/latch properly",
+        costLow: 20, costHigh: 100, perUnit: "per door",
+        diy: true, priority: 3,
+        notes: "Bedroom doors must latch for fire safety"
+      },
+      {
+        category: "Interior",
+        item: "No holes in walls/ceilings",
+        costLow: 20, costHigh: 100, perUnit: "per repair",
+        diy: true, priority: 3,
+        notes: "Patch and paint as needed"
+      },
+      {
+        category: "Interior",
+        item: "No signs of mold or water damage",
+        costLow: 500, costHigh: 5000, perUnit: "varies",
+        diy: false, priority: 1,
+        notes: "Address source first, then remediate"
+      },
+      {
+        category: "Interior",
+        item: "Basement dry and no standing water",
+        costLow: 200, costHigh: 2000, perUnit: "varies",
+        diy: false, priority: 2,
+        notes: "Check sump pump operation if present"
+      },
+
+      // EGRESS
+      {
+        category: "Egress/Safety",
+        item: "Bedroom windows meet egress requirements",
+        costLow: 300, costHigh: 1500, perUnit: "per window",
+        diy: false, priority: 1,
+        notes: "20 inch width, 24 inch height min openings"
+      },
+      {
+        category: "Egress/Safety",
+        item: "Basement bedrooms have proper egress",
+        costLow: 2000, costHigh: 6000, perUnit: "per window",
+        diy: false, priority: 1,
+        notes: "Egress window or door required for legal bedroom"
+      },
+    ];
+
+    // Build checklist based on city requirements
+    let checklistItems = [...CHECKLIST_ITEMS];
+
+    // Add city-specific items
+    if (posReq?.commonFailureItems) {
+      const citySpecificItems = posReq.commonFailureItems.map((item: string) => ({
+        category: `${city}-Specific`,
+        item,
+        costLow: 100,
+        costHigh: 500,
+        perUnit: "varies",
+        diy: false,
+        priority: 2,
+        notes: `Common failure in ${city} inspections`
+      }));
+
+      // Add at top priority
+      checklistItems = [...citySpecificItems, ...checklistItems];
+    }
+
+    // Flag items that match existing violations
+    const flaggedItems = checklistItems.map(item => {
+      const matchingViolation = openViolations.find(v =>
+        v.violationDescription?.toLowerCase().includes(item.item.toLowerCase().slice(0, 20)) ||
+        item.item.toLowerCase().includes(v.violationType?.toLowerCase() || "")
+      );
+
+      return {
+        ...item,
+        hasExistingViolation: !!matchingViolation,
+        violationDetails: matchingViolation ? {
+          caseNumber: matchingViolation.caseNumber,
+          description: matchingViolation.violationDescription,
+          dueDate: matchingViolation.dueDate,
+        } : null,
+      };
+    });
+
+    // Sort by priority, then by existing violations
+    flaggedItems.sort((a, b) => {
+      if (a.hasExistingViolation !== b.hasExistingViolation) {
+        return a.hasExistingViolation ? -1 : 1;
+      }
+      return a.priority - b.priority;
+    });
+
+    // Calculate total estimated repair cost
+    const costEstimate = {
+      low: flaggedItems.reduce((sum, i) => sum + i.costLow, 0),
+      high: flaggedItems.reduce((sum, i) => sum + i.costHigh, 0),
+      critical: flaggedItems
+        .filter(i => i.priority === 1)
+        .reduce((sum, i) => sum + i.costHigh, 0),
+    };
+
+    // Generate timeline
+    const criticalItems = flaggedItems.filter(i => i.priority === 1);
+    const diyItems = flaggedItems.filter(i => i.diy);
+    const contractorItems = flaggedItems.filter(i => !i.diy);
+
+    return {
+      property: parcel ? {
+        address: parcel.fullAddress,
+        parcelId: parcel.parcelId,
+        yearBuilt: parcel.parcelYear,
+        city: parcel.city,
+      } : { address: args.address, city },
+
+      inspectionInfo: {
+        city,
+        posRequired: posReq?.posRequired ?? null,
+        posCost: posReq?.posCost,
+        processingDays: posReq?.avgProcessingDays,
+        escrowRequired: posReq?.escrowRequired,
+        escrowPercent: posReq?.escrowPercent,
+        investorNotes: posReq?.investorNotes,
+      },
+
+      existingViolations: openViolations.map(v => ({
+        type: v.violationType,
+        description: v.violationDescription,
+        severity: v.severity,
+        dueDate: v.dueDate,
+        fineAmount: v.fineAmount,
+      })),
+
+      checklist: {
+        critical: flaggedItems.filter(i => i.priority === 1).map(i => ({
+          item: i.item,
+          category: i.category,
+          estimatedCost: `$${i.costLow}-${i.costHigh}`,
+          diy: i.diy,
+          notes: i.notes,
+          hasViolation: i.hasExistingViolation,
+        })),
+        important: flaggedItems.filter(i => i.priority === 2).map(i => ({
+          item: i.item,
+          category: i.category,
+          estimatedCost: `$${i.costLow}-${i.costHigh}`,
+          diy: i.diy,
+          notes: i.notes,
+          hasViolation: i.hasExistingViolation,
+        })),
+        standard: flaggedItems.filter(i => i.priority === 3).map(i => ({
+          item: i.item,
+          category: i.category,
+          estimatedCost: `$${i.costLow}-${i.costHigh}`,
+          diy: i.diy,
+          notes: i.notes,
+          hasViolation: i.hasExistingViolation,
+        })),
+      },
+
+      costEstimate: {
+        totalLow: costEstimate.low,
+        totalHigh: costEstimate.high,
+        criticalItemsOnly: costEstimate.critical,
+        formatted: `$${costEstimate.low.toLocaleString()}-$${costEstimate.high.toLocaleString()}`,
+      },
+
+      oneWeekGamePlan: {
+        day1_2: {
+          title: "Walk-through & Assessment",
+          tasks: [
+            "Walk entire property with this checklist",
+            "Take photos of every potential issue",
+            "Test all GFCI outlets with tester ($15 at hardware store)",
+            "Test all smoke/CO detectors",
+            "Check water heater temp and strapping",
+          ]
+        },
+        day3_4: {
+          title: "DIY Fixes",
+          tasks: [
+            "Replace smoke detector batteries or units",
+            "Add CO detectors if needed",
+            "Tighten loose handrails",
+            "Replace missing outlet/switch covers",
+            "Fix any leaky faucets or running toilets",
+            "Change furnace filter",
+          ],
+          itemCount: diyItems.length,
+        },
+        day5_6: {
+          title: "Contractor Work",
+          tasks: [
+            "GFCI outlet installation (electrician)",
+            "Handrail installation if needed",
+            "Any electrical panel issues",
+            "Plumbing repairs beyond DIY",
+          ],
+          itemCount: contractorItems.filter(i => i.priority <= 2).length,
+          note: "Book contractors ASAP - they're often booked out",
+        },
+        day7: {
+          title: "Final Check",
+          tasks: [
+            "Re-walk property with checklist",
+            "Verify all repairs completed",
+            "Clean property (inspectors notice this)",
+            "Ensure all areas accessible for inspector",
+            "Have paperwork ready (permits, receipts)",
+          ]
+        }
+      },
+
+      proTips: [
+        "GFCI outlets are the #1 fail item - test and replace proactively",
+        "Inspectors can't fail you for cosmetic issues - focus on safety",
+        "If you're not sure about an item, fix it anyway - it's cheaper than failing",
+        "Be present at inspection to address questions immediately",
+        "Some cities allow escrow for uncompleted items - ask upfront",
+        "Clean properties get more favorable treatment",
+        city === "CLEVELAND HEIGHTS" ? "Cleveland Heights is notoriously strict - over-prepare" : null,
+        city === "LAKEWOOD" ? "Lakewood focuses heavily on exterior maintenance" : null,
+        city === "PARMA" ? "Parma requires Certificate of Disclosure" : null,
+      ].filter(Boolean),
+
+      urgentWarning: criticalItems.length > 5
+        ? "⚠️ High number of critical items - consider requesting inspection delay"
+        : openViolations.length > 0
+        ? "⚠️ Existing violations must be addressed - inspector will check these first"
+        : null,
+    };
+  },
+});
+
 export const insertRentalComp = mutation({
   args: {
     parcelId: v.optional(v.string()),

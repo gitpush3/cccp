@@ -25,6 +25,7 @@ Ask users early about their strategy: "Are you looking to flip, BRRRR, wholesale
 🔧 YOUR TOOLS (Use these to get accurate data!)
 
 🎯 DEAL FINDING (Use these for investment opportunities!)
+- getHotLeads → THE BEST TOOL! Aggregates ALL distress signals (foreclosures, tax delinquent, violations) into ranked leads
 - findDeals → Search for distressed properties matching criteria (tax delinquent, foreclosures)
 - calculateDealScore → Get investment score (0-100) for any property with distress signals
 - calculateARV → Get After Repair Value with repair estimates and max offer calculation
@@ -46,6 +47,7 @@ Ask users early about their strategy: "Are you looking to flip, BRRRR, wholesale
 - getPOSRequirements → Point of Sale inspection requirements by city (critical!)
 - getPermitHistory → Building permits and unpermitted work detection
 - verifyZoning → Check if intended use is allowed under current zoning
+- generatePreInspectionChecklist → THE KILLER TOOL! Get complete inspection prep checklist with repair costs, 7-day game plan, and pro tips
 
 📜 BUILDING CODES & REGULATIONS
 - getRegulationsByMunicipality → Get all codes for a city (building, fire, zoning, permits)
@@ -94,6 +96,9 @@ Finding Deals ("Show me motivated sellers")
 
 Neighborhood Research ("Is this a good area?")
 → Use getNeighborhoodAnalysis + getSchoolsByZipCode + getCrimeStats
+
+Inspector Coming ("I have an inspection next week")
+→ Use generatePreInspectionChecklist → This gives a complete checklist with costs, 7-day prep schedule, and pro tips!
 
 📋 LAND USE CODES (Quick Reference)
 - 5100 = Single-family home (most common investment)
@@ -635,6 +640,34 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "getHotLeads",
+      description: "THE BEST deal-finding tool! Aggregates ALL distress signals (foreclosures, tax delinquent, code violations) into ranked hot leads with urgency scores and contact strategies.",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "Filter by city name (optional)",
+          },
+          zipCode: {
+            type: "string",
+            description: "Filter by zip code (optional)",
+          },
+          maxPrice: {
+            type: "number",
+            description: "Maximum assessed value filter",
+          },
+          limit: {
+            type: "number",
+            description: "Number of leads to return (default 50)",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "findDeals",
       description: "Search for investment deals matching specific criteria. Finds distressed properties (tax delinquent, foreclosures) and scores them for investment potential.",
       parameters: {
@@ -864,6 +897,32 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
           },
         },
         required: ["address", "intendedUse"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "generatePreInspectionChecklist",
+      description: "Generate comprehensive pre-inspection checklist with repair costs and 7-day prep plan. BEST tool for users with upcoming inspections!",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address",
+          },
+          city: {
+            type: "string",
+            description: "City name (optional - will auto-detect from address)",
+          },
+          inspectionType: {
+            type: "string",
+            enum: ["pos", "rental_registration", "general"],
+            description: "Type of inspection (default: pos for Point of Sale)",
+          },
+        },
+        required: ["address"],
       },
     },
   },
@@ -1235,6 +1294,17 @@ ${context}`,
             );
             break;
           // ===== DEAL FINDING HANDLERS =====
+          case "getHotLeads":
+            functionResult = await ctx.runQuery(
+              api.dealAnalysis.getHotLeads,
+              {
+                city: functionArgs.city,
+                zipCode: functionArgs.zipCode,
+                maxPrice: functionArgs.maxPrice,
+                limit: functionArgs.limit,
+              }
+            );
+            break;
           case "findDeals":
             functionResult = await ctx.runQuery(
               api.dealAnalysis.findDeals,
@@ -1322,6 +1392,16 @@ ${context}`,
               {
                 address: functionArgs.address,
                 intendedUse: functionArgs.intendedUse,
+              }
+            );
+            break;
+          case "generatePreInspectionChecklist":
+            functionResult = await ctx.runQuery(
+              api.complianceTools.generatePreInspectionChecklist,
+              {
+                address: functionArgs.address,
+                city: functionArgs.city,
+                inspectionType: functionArgs.inspectionType,
               }
             );
             break;
