@@ -463,6 +463,678 @@ Rental Registration:
     investorNotes: "Euclid has affordable housing stock but strict POS. Budget for repairs. Good cash flow market for rentals.",
     sourceUrl: "https://www.cityofeuclid.com/building",
   },
+  // CLEVELAND HEIGHTS - One of the strictest municipalities
+  {
+    municipality: "Cleveland Heights",
+    codeType: "zoning",
+    section: "1121.03",
+    title: "Residential Zoning Districts",
+    content: `Cleveland Heights Residential Zoning Districts:
+- A: Single-Family (20,000+ sq ft lots)
+- B: Single-Family (10,000+ sq ft lots)
+- C: Single-Family/Two-Family (7,500+ sq ft lots)
+- D: Multi-Family Low Density
+- E: Multi-Family High Density
+
+Setback Requirements:
+- Front yard: 30 feet minimum (A,B,C districts)
+- Side yard: 10% of lot width, minimum 5 feet
+- Rear yard: 25 feet minimum
+
+Height Limits:
+- Single-family: 35 feet / 2.5 stories
+- Multi-family: 45 feet / 4 stories
+
+Lot Coverage:
+- Single-family: 35% maximum
+- Multi-family: 50% maximum`,
+    summary: "Cleveland Heights has strict zoning with generous setback requirements and lot coverage limits.",
+    investorNotes: "Larger lots required than most suburbs. Strict enforcement - verify zoning before any modifications.",
+    sourceUrl: "https://www.clevelandheights.gov/269/Building",
+  },
+  {
+    municipality: "Cleveland Heights",
+    codeType: "permits",
+    section: "1305.01",
+    title: "Building Permit Requirements",
+    content: `Cleveland Heights Building Permits:
+
+Permits REQUIRED for:
+- All new construction
+- Additions of any size
+- Roofing replacement
+- Window/door replacement
+- All electrical work
+- All plumbing work
+- HVAC installation
+- Deck construction
+- Fence installation (any height)
+- Driveway work
+- Basement finishing
+
+Permit Fees:
+- Based on valuation: $10 per $1,000
+- Minimum fee: $75
+- Plan review: 65% of permit fee
+
+Processing Time:
+- Simple permits: 3-5 days
+- Complex projects: 2-4 weeks
+- Historic district: Additional review required
+
+Contractor Requirements:
+- Must be licensed in Cleveland Heights
+- Separate registration required`,
+    summary: "Cleveland Heights requires permits for virtually all construction work including fences of any height.",
+    investorNotes: "VERY strict permitting. Even minor work needs permits. Budget extra time for approvals. Historic districts add complexity.",
+    sourceUrl: "https://www.clevelandheights.gov/269/Building",
+  },
+  {
+    municipality: "Cleveland Heights",
+    codeType: "building",
+    section: "1341.01",
+    title: "Point of Sale Inspection",
+    content: `Cleveland Heights Point of Sale Inspection:
+
+One of the STRICTEST POS programs in Cuyahoga County.
+
+Required for:
+- All residential property sales
+- All residential refinances over 80% LTV
+- Transfer of ownership interest
+
+Inspection Covers:
+- Structural integrity
+- All electrical systems
+- All plumbing systems
+- Heating and cooling
+- Roof and exterior
+- All safety items
+- Code compliance history
+
+Common Violations:
+- Smoke/CO detectors (hardwired required in many cases)
+- GFCI outlets (all wet locations)
+- Electrical panel issues
+- Window glazing/operation
+- Garage door safety
+- Handrails (must be graspable)
+- Exterior paint condition
+
+Fees:
+- Single-family: $125
+- Two-family: $150
+- Three-family: $175
+
+Timeline:
+- Schedule: 5-10 business days
+- Reinspection: $50 per visit
+- Certificate valid: 180 days
+
+Escrow:
+- Up to 100% of repair costs may be escrowed
+- Must complete within 90 days of closing`,
+    summary: "Cleveland Heights has one of the strictest POS inspections in Cuyahoga County with comprehensive interior/exterior review.",
+    investorNotes: "BUDGET EXTRA for Cleveland Heights POS. Plan $5,000-10,000 for typical repairs. Get pre-inspection before making offers.",
+    sourceUrl: "https://www.clevelandheights.gov/269/Building",
+  },
+  {
+    municipality: "Cleveland Heights",
+    codeType: "rental",
+    section: "1361.01",
+    title: "Rental Registration and Inspection",
+    content: `Cleveland Heights Rental Registration:
+
+All rental properties MUST be registered.
+
+Requirements:
+- Annual registration required
+- Fee: $100 per dwelling unit
+- Local property manager required if owner outside Cuyahoga County
+- Inspection every 2 years (or more frequently if violations)
+
+Initial Certification:
+- Full interior/exterior inspection
+- Must pass before tenants can occupy
+- Same standards as POS inspection
+
+Biennial Inspection Items:
+- All safety systems
+- Structural condition
+- Electrical and plumbing
+- Heating system
+- Smoke/CO detectors
+- Egress requirements
+
+Violations:
+- Failure to register: $500/day fine
+- Operating without certificate: Criminal offense
+- Repeat violations: Possible revocation
+
+Lead Paint:
+- Pre-1978 properties require lead inspection
+- Lead-safe certification required for rentals`,
+    summary: "Cleveland Heights requires annual rental registration at $100/unit with biennial inspections.",
+    investorNotes: "High rental registration costs. Factor into cash flow analysis. Strict enforcement - properties regularly inspected.",
+    sourceUrl: "https://www.clevelandheights.gov/269/Building",
+  },
+  // SHAKER HEIGHTS - Historic preservation focus
+  {
+    municipality: "Shaker Heights",
+    codeType: "zoning",
+    section: "1211.01",
+    title: "Residential Districts and Historic Preservation",
+    content: `Shaker Heights Zoning and Historic Preservation:
+
+Residential Districts:
+- SF-A: Single-Family (30,000+ sq ft)
+- SF-B: Single-Family (20,000+ sq ft)
+- SF-C: Single-Family (12,000+ sq ft)
+- TF: Two-Family
+- MF: Multi-Family
+
+Historic Landmark Districts:
+- Many neighborhoods are designated historic
+- Exterior changes require Landmark Commission approval
+- Original architectural features must be preserved
+
+Setback Requirements:
+- Front: 40 feet minimum in SF-A/B
+- Side: 15 feet minimum
+- Rear: 30 feet minimum
+
+Special Requirements:
+- Shaker Heights maintains strict architectural standards
+- Paint colors may require approval
+- Window replacement must match original style
+- Garage additions strictly regulated`,
+    summary: "Shaker Heights has large lot requirements and strict historic preservation rules affecting exterior modifications.",
+    investorNotes: "Historic districts add significant complexity. Exterior changes require Landmark Commission approval. Budget 2-3 months extra for historic review.",
+    sourceUrl: "https://www.shakeronline.com/building",
+  },
+  {
+    municipality: "Shaker Heights",
+    codeType: "building",
+    section: "1305.01",
+    title: "Point of Sale Requirements",
+    content: `Shaker Heights Point of Sale Inspection:
+
+VERY STRICT - one of the toughest in the county.
+
+Required for:
+- All property transfers
+- Refinances in some cases
+
+Comprehensive Inspection:
+- Full interior inspection
+- Full exterior inspection
+- All mechanical systems
+- Historic compliance (if applicable)
+- Landscaping requirements
+
+Common Issues:
+- Historic window replacement violations
+- Unpermitted work from previous owners
+- Electrical system upgrades needed
+- Exterior maintenance items
+- Landscaping not meeting standards
+
+Fees:
+- Single-family: $150
+- Multi-family: $200+
+- Re-inspection: $75
+
+Timeline:
+- Expect 3-4 weeks for scheduling
+- Certificate valid: 180 days
+
+Escrow:
+- Up to 150% of repair costs
+- Strict completion timelines`,
+    summary: "Shaker Heights POS is among the strictest with historic preservation overlay adding complexity.",
+    investorNotes: "HIGH RISK for investors. Budget $10,000+ for POS repairs. Historic homes may require specialized contractors. Get attorney involved.",
+    sourceUrl: "https://www.shakeronline.com/building",
+  },
+  // SOUTH EUCLID
+  {
+    municipality: "South Euclid",
+    codeType: "permits",
+    section: "1301.01",
+    title: "Building Permit Requirements",
+    content: `South Euclid Building Permits:
+
+Permits Required:
+- New construction
+- Additions and alterations
+- Roofing replacement
+- Electrical work
+- Plumbing work
+- HVAC
+- Decks and patios
+- Fences over 4 feet
+
+Permit Fees:
+- Valuation based: $8 per $1,000
+- Minimum: $50
+- Electrical: $50+
+- Plumbing: $50+
+
+Processing:
+- Simple permits: 2-3 days
+- Complex: 1-2 weeks
+
+Contractor Requirements:
+- State license required
+- City registration encouraged`,
+    summary: "South Euclid has standard permit requirements with reasonable processing times.",
+    investorNotes: "Moderate difficulty. Good entry-level investor market. Standard permit process.",
+    sourceUrl: "https://www.southeuclid.com/building",
+  },
+  {
+    municipality: "South Euclid",
+    codeType: "building",
+    section: "1341.01",
+    title: "Point of Sale Inspection",
+    content: `South Euclid Point of Sale:
+
+Required for all residential property transfers.
+
+Inspection Type: Interior and Exterior
+
+Common Violations:
+- Smoke detectors
+- GFCI outlets
+- Handrails
+- Exterior maintenance
+
+Fees:
+- Single-family: $75
+- Two-family: $100
+
+Timeline:
+- Schedule: 3-5 days
+- Certificate valid: 1 year
+
+Escrow:
+- 100% of repair costs if needed
+- Completion within 60 days`,
+    summary: "South Euclid has moderate POS requirements with reasonable fees.",
+    investorNotes: "Standard POS process. Good investor market with affordable homes. Less strict than Cleveland Heights.",
+    sourceUrl: "https://www.southeuclid.com/building",
+  },
+  // MAPLE HEIGHTS
+  {
+    municipality: "Maple Heights",
+    codeType: "permits",
+    section: "1301.01",
+    title: "Building Permit Requirements",
+    content: `Maple Heights Building Permits:
+
+Permits Required:
+- Construction and additions
+- Roofing
+- Electrical and plumbing
+- HVAC
+- Decks and fences
+
+Fees:
+- Valuation based
+- Minimum: $50
+
+Point of Sale:
+- Required for all sales
+- Fee: $75
+- Interior and exterior inspection
+
+Common Issues:
+- Basic safety items
+- Smoke detectors
+- GFCI outlets`,
+    summary: "Maple Heights has straightforward permit and POS requirements.",
+    investorNotes: "Affordable market with less strict requirements. Good for cash flow investors. Lower barriers to entry.",
+    sourceUrl: "https://www.cityofmapleheights.com",
+  },
+  // GARFIELD HEIGHTS
+  {
+    municipality: "Garfield Heights",
+    codeType: "permits",
+    section: "1301.01",
+    title: "Building and POS Requirements",
+    content: `Garfield Heights Building and Point of Sale:
+
+Building Permits:
+- Standard requirements for construction
+- Roofing, electrical, plumbing permits required
+- Reasonable fees and processing
+
+Point of Sale:
+- Required for all residential sales
+- Fee: $75
+- Interior and exterior inspection
+
+Common POS Issues:
+- Smoke detectors
+- GFCI outlets
+- Handrails
+
+Timeline:
+- Quick scheduling: 2-5 days
+- Certificate valid: 1 year`,
+    summary: "Garfield Heights has standard permit requirements with efficient POS process.",
+    investorNotes: "Good affordable market. Less strict than inner-ring suburbs. Quick POS turnaround.",
+    sourceUrl: "https://www.garfieldhts.org/building",
+  },
+  // ROCKY RIVER
+  {
+    municipality: "Rocky River",
+    codeType: "zoning",
+    section: "1121.01",
+    title: "Residential Zoning Requirements",
+    content: `Rocky River Residential Zoning:
+
+Districts:
+- R-75: Single-Family (7,500 sq ft lots)
+- R-50: Single-Family (5,000 sq ft lots)
+- RTF: Two-Family
+- RMF: Multi-Family
+
+Setbacks:
+- Front: 30 feet
+- Side: 5 feet minimum
+- Rear: 25 feet
+
+Height: 35 feet maximum
+
+Special Considerations:
+- Lakefront properties have additional setbacks
+- Flood zone regulations may apply
+- Strict exterior maintenance standards`,
+    summary: "Rocky River has standard residential zoning with additional lakefront regulations.",
+    investorNotes: "Higher-end market. Well-maintained properties. Strict standards but reasonable process.",
+    sourceUrl: "https://www.rfrh.org/building",
+  },
+  {
+    municipality: "Rocky River",
+    codeType: "building",
+    section: "1341.01",
+    title: "Point of Sale Requirements",
+    content: `Rocky River Point of Sale:
+
+Required for all property transfers.
+
+Inspection: Interior and Exterior
+
+Focus Areas:
+- Safety systems
+- Structural integrity
+- Mechanical systems
+- Exterior condition
+
+Fees:
+- Single-family: $125
+- Multi-family: $150
+
+Escrow: 100% of repairs if needed`,
+    summary: "Rocky River has thorough POS inspection with focus on safety and maintenance.",
+    investorNotes: "Higher property values mean higher repair costs. Properties generally well-maintained.",
+    sourceUrl: "https://www.rfrh.org/building",
+  },
+  // BAY VILLAGE
+  {
+    municipality: "Bay Village",
+    codeType: "building",
+    section: "1341.01",
+    title: "Point of Sale - Exterior Only",
+    content: `Bay Village Point of Sale:
+
+UNIQUE: Exterior-only inspection
+
+Required for all property transfers.
+
+Inspection Covers:
+- Roof condition
+- Siding and paint
+- Windows and doors (exterior)
+- Garage doors
+- Driveway condition
+- Landscaping
+
+NOT Inspected:
+- Interior systems
+- Electrical
+- Plumbing
+- HVAC
+
+Fees:
+- $100 flat fee
+
+Timeline:
+- Quick scheduling
+- Certificate valid: 1 year`,
+    summary: "Bay Village only requires exterior POS inspection - one of the easiest in the county.",
+    investorNotes: "INVESTOR FRIENDLY! Exterior-only POS is rare. Much lower barrier than full inspection cities.",
+    sourceUrl: "https://www.cityofbayvillage.com/building",
+  },
+  // WESTLAKE
+  {
+    municipality: "Westlake",
+    codeType: "building",
+    section: "1301.01",
+    title: "No Point of Sale Required",
+    content: `Westlake - NO Point of Sale Inspection
+
+Westlake does NOT require Point of Sale inspections.
+
+This means:
+- No pre-sale inspection required
+- No certificate needed for closing
+- Faster transaction process
+- Lower closing costs
+
+Standard Building Requirements:
+- Permits required for construction
+- Regular building code enforcement
+- Rental registration required
+
+Benefits for Investors:
+- Quick closings
+- No unexpected repair requirements
+- Seller-friendly market`,
+    summary: "Westlake is one of few Cuyahoga County cities with NO Point of Sale requirement.",
+    investorNotes: "EXCELLENT for investors. No POS means faster closings and no surprise repair costs. Do your own due diligence.",
+    sourceUrl: "https://www.cityofwestlake.org/building",
+  },
+  // STRONGSVILLE
+  {
+    municipality: "Strongsville",
+    codeType: "building",
+    section: "1301.01",
+    title: "No Point of Sale Required",
+    content: `Strongsville - NO Point of Sale Inspection
+
+Strongsville does NOT require Point of Sale inspections.
+
+Benefits:
+- No pre-sale inspection
+- No certificate required
+- Faster transactions
+- Lower costs
+
+Standard Requirements:
+- Building permits for construction
+- Standard code enforcement
+- Rental registration may apply`,
+    summary: "Strongsville has no POS requirement - investor friendly.",
+    investorNotes: "No POS makes Strongsville attractive for investors. Good school district adds value.",
+    sourceUrl: "https://www.strongsville.org/building",
+  },
+  // GENERAL CODES - FENCES
+  {
+    municipality: "Ohio State",
+    codeType: "zoning",
+    section: "General Fence Requirements",
+    title: "Fence Height and Setback Rules",
+    content: `Ohio Residential Fence Requirements (varies by municipality):
+
+Typical Height Limits:
+- Front yard: 3-4 feet maximum
+- Side yard (behind front building line): 6 feet
+- Rear yard: 6-8 feet
+
+Typical Setback Requirements:
+- From property line: On or up to 6 inches inside
+- From sidewalk: 1-2 feet
+- Corner lots: Front setback applies to both streets
+
+Common Requirements:
+- Finished side faces neighbor
+- No barbed wire in residential
+- Pool fences: 4 feet minimum with self-closing gate
+
+Permit Requirements:
+- Most cities require fence permits
+- Some exempt fences under 4 feet
+- Surveys may be required
+
+Material Restrictions:
+- Chain link may be prohibited in front yards
+- Some cities require masonry or wood
+- Vinyl generally permitted`,
+    summary: "Fence regulations vary by municipality but typically allow 6 feet in rear/side and 4 feet in front.",
+    investorNotes: "Always check local fence rules before installing. Common mistake: putting fence on wrong side of property line.",
+    sourceUrl: "https://codes.ohio.gov",
+  },
+  // SHORT-TERM RENTALS (Airbnb)
+  {
+    municipality: "Cleveland",
+    codeType: "rental",
+    section: "363.01",
+    title: "Short-Term Rental Regulations",
+    content: `Cleveland Short-Term Rental (Airbnb) Rules:
+
+Permit Required:
+- Short-term rental permit from Building & Housing
+- Annual fee: $100
+- Must be current on taxes and fees
+
+Requirements:
+- Owner must be Cleveland resident
+- Maximum 120 rental days per year (non-owner occupied)
+- Unlimited if owner-occupied during rental
+- 1 listing per owner
+
+Safety Requirements:
+- Smoke and CO detectors
+- Fire extinguisher
+- Emergency contact posted
+- Building code compliance
+
+Zoning:
+- Permitted in residential zones
+- Must be accessory to residential use
+
+Violations:
+- Fines up to $500 per day
+- Permit revocation`,
+    summary: "Cleveland permits short-term rentals with annual permit, 120-day limit for non-owner occupied.",
+    investorNotes: "Airbnb permitted but regulated. 120-day limit makes pure STR difficult. House hacking with STR works well.",
+    sourceUrl: "https://www.clevelandohio.gov/city-hall/departments/building-housing",
+  },
+  {
+    municipality: "Lakewood",
+    codeType: "rental",
+    section: "1361.01",
+    title: "Short-Term Rental Prohibition",
+    content: `Lakewood Short-Term Rental Regulations:
+
+IMPORTANT: Lakewood has RESTRICTED short-term rentals.
+
+Current Status:
+- Short-term rentals (under 30 days) are prohibited in most residential zones
+- Limited exceptions may apply
+
+Alternatives:
+- 30+ day rentals are permitted
+- Traditional long-term rentals allowed
+- Month-to-month leases permitted
+
+Enforcement:
+- Active enforcement against illegal STRs
+- Fines and penalties for violations
+
+Check Current Status:
+- Regulations may change
+- Contact Building Department for current rules`,
+    summary: "Lakewood restricts short-term rentals under 30 days in residential zones.",
+    investorNotes: "NO Airbnb-style rentals in Lakewood. Only 30+ day rentals. Factor into investment strategy.",
+    sourceUrl: "https://www.lakewoodoh.gov/building/",
+  },
+  // BEACHWOOD
+  {
+    municipality: "Beachwood",
+    codeType: "building",
+    section: "1341.01",
+    title: "Point of Sale Requirements",
+    content: `Beachwood Point of Sale:
+
+Required for all residential property transfers.
+
+Inspection: Comprehensive interior and exterior
+
+Focus Areas:
+- All safety systems
+- HVAC condition
+- Electrical adequacy
+- Plumbing condition
+- Structural integrity
+- Exterior maintenance
+
+Fees:
+- Single-family: $150
+- Multi-family: $200
+
+High Standards:
+- Upscale community expectations
+- Strict enforcement
+- High-quality finish expected
+
+Escrow: 100% of estimated repairs`,
+    summary: "Beachwood has comprehensive POS with high standards reflecting upscale community.",
+    investorNotes: "Higher property values mean higher repair costs. Professional contractors expected. Good rental demand.",
+    sourceUrl: "https://www.beachwoodohio.com/building",
+  },
+  // LYNDHURST
+  {
+    municipality: "Lyndhurst",
+    codeType: "building",
+    section: "1341.01",
+    title: "Point of Sale Requirements",
+    content: `Lyndhurst Point of Sale:
+
+Required for all property transfers.
+
+Inspection Type: Interior and Exterior
+
+Common Issues:
+- Smoke/CO detectors
+- GFCI outlets
+- Electrical panel
+- Windows
+- Exterior condition
+
+Fees:
+- Single-family: $100
+- Multi-family: $125
+
+Timeline:
+- Schedule within 5 days
+- Certificate valid: 1 year
+
+Escrow: 100% of repairs available`,
+    summary: "Lyndhurst has standard POS requirements with focus on safety and basic maintenance.",
+    investorNotes: "Good location near Legacy Village. Reasonable POS process. Strong rental market.",
+    sourceUrl: "https://www.lyndhurst-oh.com/building",
+  },
   // GENERAL INVESTOR INFO
   {
     municipality: "Cuyahoga County",

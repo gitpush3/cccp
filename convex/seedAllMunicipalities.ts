@@ -127,33 +127,179 @@ const MUNICIPALITY_CODES = [
   { municipality: "Olmsted Township", population: 13513, posRequired: true, posFee: 125, rentalReg: false, rentalFee: 0, phone: "(440) 235-3079", notes: "Larger lots, growing" },
 ];
 
-// Generate code content entries for each municipality
+// Generate MULTIPLE code content entries for each municipality
 function generateMunicipalityContent() {
-  return MUNICIPALITY_CODES.map(m => ({
-    municipality: m.municipality,
-    codeType: "permits",
-    section: "POS and Permits",
-    title: `${m.municipality} Building Permits and Point of Sale`,
-    content: `${m.municipality} Building Requirements:
+  const allCodes: any[] = [];
 
-POINT OF SALE: ${m.posRequired ? `Required for all residential sales. Fee: $${m.posFee}. Valid 180 days to 1 year.` : "Not required or minimal requirements."}
+  for (const m of MUNICIPALITY_CODES) {
+    // 1. PERMITS/POS entry (always)
+    allCodes.push({
+      municipality: m.municipality,
+      codeType: "permits",
+      section: "POS and Permits",
+      title: `${m.municipality} Building Permits and Point of Sale`,
+      content: `${m.municipality} Building Requirements:
 
-RENTAL REGISTRATION: ${m.rentalReg ? `Required. Annual fee: $${m.rentalFee} per unit. Periodic inspections.` : "Not required or minimal requirements."}
+POINT OF SALE: ${m.posRequired ? `Required for all residential sales. Fee: $${m.posFee}. Typically valid 180 days to 1 year.` : "Not required - one of the easiest closings in the county."}
+
+PERMIT FEES:
+- Based on project valuation, minimum $50-75
+- Plan review: 50-65% of permit fee
+- Electrical: $50+, Plumbing: $50+, HVAC: $75+
 
 PERMITS REQUIRED FOR:
-- New construction
-- Additions and alterations  
-- Roofing replacement
-- Electrical, plumbing, HVAC work
-- Decks and fences
+- New construction and additions
+- Roofing replacement (not repairs)
+- Electrical work (except minor)
+- Plumbing work (except minor)
+- HVAC installation or replacement
+- Deck construction
+- Fences (height limits vary)
+- Window/door replacement (if changing size)
+
+PERMITS NOT REQUIRED FOR:
+- Painting and decorating
+- Flooring replacement
+- Cabinet installation
+- Minor same-for-same repairs
 
 CONTACT: ${m.municipality} Building Department - ${m.phone}
 
-INVESTOR NOTES: ${m.notes}`,
-    summary: `${m.municipality} ${m.posRequired ? `requires POS ($${m.posFee})` : "has minimal POS requirements"}${m.rentalReg ? ` and rental registration ($${m.rentalFee}/unit)` : ""}.`,
-    investorNotes: m.notes,
-    sourceUrl: `https://www.google.com/search?q=${encodeURIComponent(m.municipality + " Ohio building department")}`,
-  }));
+PROCESSING TIME: Simple permits 1-5 days, complex 2-4 weeks`,
+      summary: `${m.municipality} ${m.posRequired ? `requires POS ($${m.posFee})` : "has no POS requirement - investor friendly"}.`,
+      investorNotes: m.notes,
+      sourceUrl: `https://www.google.com/search?q=${encodeURIComponent(m.municipality + " Ohio building permits")}`,
+    });
+
+    // 2. ZONING entry (always)
+    const isUpscale = m.posFee >= 175 || ["Shaker Heights", "Pepper Pike", "Hunting Valley", "Gates Mills", "Moreland Hills", "Beachwood", "Orange Village", "Highland Heights", "Bratenahl"].includes(m.municipality);
+    const isAffordable = m.posFee <= 125 || ["East Cleveland", "Maple Heights", "Garfield Heights", "Newburgh Heights", "Highland Hills"].includes(m.municipality);
+
+    allCodes.push({
+      municipality: m.municipality,
+      codeType: "zoning",
+      section: "Zoning Overview",
+      title: `${m.municipality} Zoning and Land Use`,
+      content: `${m.municipality} Zoning Overview:
+
+RESIDENTIAL DISTRICTS:
+${isUpscale ? `- Large lot requirements (12,000+ sq ft typical)
+- Strict architectural review
+- Limited multi-family` : isAffordable ? `- Smaller lot sizes common (5,000-7,500 sq ft)
+- Some multi-family opportunities
+- Mixed-use in some areas` : `- Standard suburban lot sizes (7,500-10,000 sq ft)
+- Some two-family zones
+- Typical suburban development`}
+
+TYPICAL SETBACKS:
+- Front: 25-35 feet
+- Side: 5-10 feet
+- Rear: 20-30 feet
+
+HEIGHT LIMITS:
+- Residential: 35 feet / 2.5 stories typical
+- Varies by district
+
+ACCESSORY STRUCTURES:
+- Detached garages typically permitted
+- ADUs: Check local ordinance (many Ohio suburbs restrict)
+- Sheds: Size limits apply
+
+CONTACT: ${m.municipality} Building/Zoning - ${m.phone}`,
+      summary: `${m.municipality} has ${isUpscale ? "strict zoning with large lot requirements" : isAffordable ? "flexible zoning with smaller lots" : "standard suburban zoning"}.`,
+      investorNotes: `${isUpscale ? "Expect architectural review for exterior changes. " : ""}${m.notes}`,
+      sourceUrl: `https://www.google.com/search?q=${encodeURIComponent(m.municipality + " Ohio zoning code")}`,
+    });
+
+    // 3. RENTAL entry (if rental registration required)
+    if (m.rentalReg) {
+      allCodes.push({
+        municipality: m.municipality,
+        codeType: "rental",
+        section: "Rental Registration",
+        title: `${m.municipality} Rental Property Requirements`,
+        content: `${m.municipality} Rental Registration:
+
+REGISTRATION REQUIRED: Yes
+
+ANNUAL FEE: $${m.rentalFee} per unit
+
+REQUIREMENTS:
+- Register before first tenant
+- Annual renewal required
+- Local property manager may be required if owner out-of-county
+- Periodic inspections (typically every 2-3 years)
+
+INSPECTION ITEMS:
+- Smoke and CO detectors
+- Electrical safety (GFCI outlets)
+- Plumbing condition
+- Heating system
+- Structural condition
+- Egress requirements
+
+PENALTIES FOR NON-REGISTRATION:
+- Fines typically $100-500 per day
+- Cannot pursue evictions in court
+- May not be able to collect rent judgments
+
+CONTACT: ${m.municipality} Building Department - ${m.phone}
+
+INVESTOR NOTE: Register immediately after purchase to avoid penalties.`,
+        summary: `${m.municipality} requires rental registration at $${m.rentalFee}/unit annually with periodic inspections.`,
+        investorNotes: `Good rental market. Registration required. ${m.notes}`,
+        sourceUrl: `https://www.google.com/search?q=${encodeURIComponent(m.municipality + " Ohio rental registration")}`,
+      });
+    }
+
+    // 4. FIRE/SAFETY entry (always)
+    allCodes.push({
+      municipality: m.municipality,
+      codeType: "fire",
+      section: "Fire Safety",
+      title: `${m.municipality} Fire and Safety Requirements`,
+      content: `${m.municipality} Fire and Safety Requirements:
+
+SMOKE DETECTORS:
+- Required in each bedroom
+- Required outside each sleeping area (hallway)
+- Required on each floor including basement
+- Interconnected preferred (when one sounds, all sound)
+- Replace every 10 years
+
+CARBON MONOXIDE DETECTORS:
+- Required on each floor with sleeping areas
+- Required near fuel-burning appliances
+- Within 10 feet of bedroom doors
+
+FIRE EXTINGUISHER:
+- Recommended for all homes
+- Required in rental properties in many cities
+
+EGRESS REQUIREMENTS:
+- Bedrooms must have operable window (5.7 sq ft minimum)
+- Maximum 44" sill height
+- Basement bedrooms need egress window or door
+
+HANDRAILS AND GUARDRAILS:
+- Handrails required on stairs with 4+ risers
+- Guardrails required on elevated areas over 30"
+- Must be graspable (1.25"-2" diameter)
+
+COMMON POS FAILURES:
+- Missing/non-working smoke detectors
+- Missing CO detectors
+- Missing GFCI outlets
+- Inadequate handrails
+
+CONTACT: ${m.municipality} Fire Prevention - ${m.phone}`,
+      summary: `${m.municipality} requires standard Ohio fire safety: smoke detectors in bedrooms/hallways, CO detectors on each floor, proper egress.`,
+      investorNotes: "Fire safety items are top POS failure reasons. Budget $500-1500 for typical upgrades.",
+      sourceUrl: `https://www.google.com/search?q=${encodeURIComponent(m.municipality + " Ohio fire code")}`,
+    });
+  }
+
+  return allCodes;
 }
 
 // Seed Ohio State codes
