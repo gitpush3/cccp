@@ -355,7 +355,7 @@ export const seedAllCodes = mutation({
   handler: async (ctx) => {
     let inserted = 0;
     const now = Date.now();
-    
+
     // Ohio State codes
     for (const code of OHIO_STATE_CODES) {
       const existing = await ctx.db
@@ -363,13 +363,13 @@ export const seedAllCodes = mutation({
         .withIndex("by_municipality", (q) => q.eq("municipality", code.municipality))
         .filter((q) => q.eq(q.field("section"), code.section))
         .first();
-      
+
       if (!existing) {
         await ctx.db.insert("codeContent", { ...code, lastUpdated: now });
         inserted++;
       }
     }
-    
+
     // Municipality codes
     const muniCodes = generateMunicipalityContent();
     for (const code of muniCodes) {
@@ -378,13 +378,293 @@ export const seedAllCodes = mutation({
         .withIndex("by_municipality", (q) => q.eq("municipality", code.municipality))
         .filter((q) => q.eq(q.field("section"), code.section))
         .first();
-      
+
       if (!existing) {
         await ctx.db.insert("codeContent", { ...code, lastUpdated: now });
         inserted++;
       }
     }
-    
+
     return { inserted, ohioState: OHIO_STATE_CODES.length, municipalities: muniCodes.length };
+  },
+});
+
+// Get list of all 59 municipalities
+export const getAllMunicipalities = mutation({
+  args: {},
+  handler: async () => {
+    return {
+      count: MUNICIPALITY_CODES.length,
+      municipalities: MUNICIPALITY_CODES.map(m => ({
+        name: m.municipality,
+        population: m.population,
+        posRequired: m.posRequired,
+        posFee: m.posFee,
+        rentalReg: m.rentalReg,
+        phone: m.phone,
+        notes: m.notes,
+      })),
+    };
+  },
+});
+
+// ===== COUNTY-LEVEL CODES =====
+const CUYAHOGA_COUNTY_CODES = [
+  {
+    municipality: "Cuyahoga County",
+    codeType: "land-bank",
+    section: "Land Bank Program",
+    title: "Cuyahoga County Land Bank - Property Acquisition",
+    content: `Cuyahoga County Land Reutilization Corporation (Land Bank):
+
+MISSION: Acquire vacant, abandoned, and tax-delinquent properties for productive reuse.
+
+HOW TO PURCHASE FROM LAND BANK:
+1. Browse inventory at cuyahogalandbank.org
+2. Create account and submit application
+3. Provide renovation plan and budget
+4. Background check and interview
+5. Purchase for $1,000 - $25,000 typically
+
+REQUIREMENTS:
+- Must renovate within 18 months
+- Cannot flip immediately (holding period varies)
+- Must meet local building codes
+- Show proof of funds for renovation
+
+BENEFITS:
+- Below-market prices
+- Clear title (liens cleared)
+- May qualify for rehab financing
+- Technical assistance available
+
+IDENTIFYING LAND BANK PROPERTIES:
+- Owner: "CUYAHOGA COUNTY LAND REUTILIZATION CORPORATION"
+- Tax LUC code 6411 or ext_luc 6210
+
+CONTACT: (216) 698-8853
+WEBSITE: cuyahogalandbank.org`,
+    summary: "Cuyahoga Land Bank sells vacant properties at discount prices with 18-month renovation requirement.",
+    investorNotes: "Great source of deals but need full rehab capability. Budget $50-100k+ renovation. Good for experienced investors.",
+    sourceUrl: "https://cuyahogalandbank.org/",
+  },
+  {
+    municipality: "Cuyahoga County",
+    codeType: "tax",
+    section: "Property Tax Information",
+    title: "Cuyahoga County Property Tax Overview",
+    content: `Cuyahoga County Property Taxes:
+
+TAX RATES (2024-2025):
+- Vary by school district and municipality
+- Range: 2.5% - 4% of assessed value
+- Assessed value = 35% of market value
+
+PAYMENT SCHEDULE:
+- First half: Due January 31
+- Second half: Due July 31
+- Can pay full year in January
+
+DELINQUENT TAXES:
+- 10% penalty after due date
+- 18% annual interest
+- Tax lien after 2 years delinquent
+- Sheriff sale possible after 3+ years
+
+TAX ABATEMENTS:
+- CRA (Community Reinvestment Area): 100% for 10-15 years
+- TIF (Tax Increment Financing): For larger developments
+- Must apply BEFORE starting work
+
+TAX SEARCH:
+- County Auditor website: myplace.cuyahogacounty.us
+- Shows all tax history and bills
+
+COUNTY AUDITOR: (216) 443-7010
+COUNTY TREASURER: (216) 443-7400`,
+    summary: "Cuyahoga County property taxes range 2.5-4% of assessed value. Tax abatements available for renovation projects.",
+    investorNotes: "Always check tax status before purchasing. CRA abatement can save $50k+ on rehab projects.",
+    sourceUrl: "https://myplace.cuyahogacounty.us/",
+  },
+  {
+    municipality: "Cuyahoga County",
+    codeType: "recording",
+    section: "Deed Recording",
+    title: "Cuyahoga County Fiscal Office - Deed Recording",
+    content: `Cuyahoga County Deed Recording:
+
+RECORDING FEES (2024):
+- Deeds: $34 first 2 pages, $8 each additional
+- Mortgages: $34 first 2 pages, $8 each additional
+- Releases: $28 first page, $8 each additional
+
+CONVEYANCE FEE:
+- $4.00 per $1,000 of sale price
+- Split: State gets $1, County gets $3
+- Exemptions for certain transfers
+
+REQUIRED FOR RECORDING:
+- Original document
+- Proper signatures and notarization
+- Auditor's transfer stamp (conveyance fee paid)
+- Parcel number on document
+
+PROCESSING:
+- In-person: Same day
+- Mail: 5-7 business days
+- Online recording available through approved vendors
+
+TITLE SEARCH:
+- Records available online back to 1810
+- myplace.cuyahogacounty.us for searches
+
+FISCAL OFFICE: (216) 443-7100
+ADDRESS: 2079 East 9th St, Cleveland OH 44115`,
+    summary: "Cuyahoga County deed recording fees are $34 for first 2 pages plus $4/$1000 conveyance fee.",
+    investorNotes: "Budget $500-1500 for recording and transfer fees on typical purchase. Title search critical.",
+    sourceUrl: "https://fiscalofficer.cuyahogacounty.us/",
+  },
+  {
+    municipality: "Cuyahoga County",
+    codeType: "health",
+    section: "Board of Health",
+    title: "Cuyahoga County Board of Health - Housing & Environmental",
+    content: `Cuyahoga County Board of Health:
+
+JURISDICTION:
+- Unincorporated areas of Cuyahoga County
+- Some municipalities contract with county
+- Environmental health enforcement
+
+HOUSING INSPECTIONS:
+- Complaint-based inspections
+- Rental property complaints
+- Mold and environmental concerns
+- Lead paint inspections
+
+LEAD PAINT REQUIREMENTS:
+- Pre-1978 homes must disclose
+- Lead-safe certification for rentals
+- Clearance testing after abatement
+- Contractor certification required
+
+SEWAGE & WELLS (rural areas):
+- Septic system inspections
+- Well water testing
+- POS may require septic inspection
+
+FOOD SERVICE:
+- Restaurant permits
+- Food truck permits
+- Food handler certifications
+
+CONTACT:
+- Main: (216) 201-2000
+- Environmental Health: (216) 201-2001
+- Lead Program: (216) 201-2001
+
+ADDRESS: 5550 Venture Drive, Parma OH 44130`,
+    summary: "Cuyahoga County Board of Health handles environmental health, lead paint, and housing complaints.",
+    investorNotes: "Lead paint compliance critical for pre-1978 rentals. Budget $300-500 for lead clearance testing.",
+    sourceUrl: "https://www.ccbh.net/",
+  },
+];
+
+// Seed Cuyahoga County-level codes
+export const seedCountyCodes = mutation({
+  args: {},
+  handler: async (ctx) => {
+    let inserted = 0;
+    const now = Date.now();
+
+    for (const code of CUYAHOGA_COUNTY_CODES) {
+      const existing = await ctx.db
+        .query("codeContent")
+        .withIndex("by_municipality", (q) => q.eq("municipality", code.municipality))
+        .filter((q) => q.eq(q.field("section"), code.section))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("codeContent", { ...code, lastUpdated: now });
+        inserted++;
+      }
+    }
+    return { inserted, total: CUYAHOGA_COUNTY_CODES.length };
+  },
+});
+
+// ===== MASTER SEED FUNCTION =====
+// Seeds EVERYTHING: Ohio State + County + All 59 Municipalities
+export const seedEverything = mutation({
+  args: {},
+  handler: async (ctx) => {
+    let stats = {
+      ohioStateCodes: 0,
+      countyCodes: 0,
+      municipalityCodes: 0,
+      totalInserted: 0,
+      municipalities: 0,
+    };
+    const now = Date.now();
+
+    // 1. Seed Ohio State codes
+    for (const code of OHIO_STATE_CODES) {
+      const existing = await ctx.db
+        .query("codeContent")
+        .withIndex("by_municipality", (q) => q.eq("municipality", code.municipality))
+        .filter((q) => q.eq(q.field("section"), code.section))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("codeContent", { ...code, lastUpdated: now });
+        stats.ohioStateCodes++;
+        stats.totalInserted++;
+      }
+    }
+
+    // 2. Seed County codes
+    for (const code of CUYAHOGA_COUNTY_CODES) {
+      const existing = await ctx.db
+        .query("codeContent")
+        .withIndex("by_municipality", (q) => q.eq("municipality", code.municipality))
+        .filter((q) => q.eq(q.field("section"), code.section))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("codeContent", { ...code, lastUpdated: now });
+        stats.countyCodes++;
+        stats.totalInserted++;
+      }
+    }
+
+    // 3. Seed all 59 municipality codes
+    const muniCodes = generateMunicipalityContent();
+    stats.municipalities = MUNICIPALITY_CODES.length;
+
+    for (const code of muniCodes) {
+      const existing = await ctx.db
+        .query("codeContent")
+        .withIndex("by_municipality", (q) => q.eq("municipality", code.municipality))
+        .filter((q) => q.eq(q.field("section"), code.section))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("codeContent", { ...code, lastUpdated: now });
+        stats.municipalityCodes++;
+        stats.totalInserted++;
+      }
+    }
+
+    return {
+      success: true,
+      stats,
+      coverage: {
+        ohioState: `${OHIO_STATE_CODES.length} codes (building, residential, electrical, plumbing, mechanical, fire)`,
+        county: `${CUYAHOGA_COUNTY_CODES.length} codes (land bank, tax, recording, health)`,
+        municipalities: `${MUNICIPALITY_CODES.length} municipalities × 3-4 codes each = ~${muniCodes.length} codes`,
+        codeTypes: ["permits", "zoning", "rental", "fire"],
+      },
+      message: `Seeded ${stats.totalInserted} new code entries. Full coverage of Ohio State, Cuyahoga County, and all 59 municipalities.`,
+    };
   },
 });

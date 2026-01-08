@@ -744,3 +744,301 @@ export const getCodeSummary = query({
     };
   },
 });
+
+// ===== COMPREHENSIVE COVERAGE VERIFICATION =====
+// Check what's in the database for all areas
+
+export const verifyCoverage = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get all code content
+    const allCodes = await ctx.db.query("codeContent").collect();
+
+    // Get all POS requirements
+    const allPOS = await ctx.db.query("posRequirements").collect();
+
+    // Group codes by municipality
+    const byMunicipality: Record<string, { codeTypes: Set<string>; count: number }> = {};
+    for (const code of allCodes) {
+      if (!byMunicipality[code.municipality]) {
+        byMunicipality[code.municipality] = { codeTypes: new Set(), count: 0 };
+      }
+      byMunicipality[code.municipality].codeTypes.add(code.codeType);
+      byMunicipality[code.municipality].count++;
+    }
+
+    // Group codes by type
+    const byCodeType: Record<string, number> = {};
+    for (const code of allCodes) {
+      byCodeType[code.codeType] = (byCodeType[code.codeType] || 0) + 1;
+    }
+
+    // Expected municipalities (59 + Ohio State + Cuyahoga County)
+    const EXPECTED_MUNICIPALITIES = [
+      "Ohio State", "Cuyahoga County", "Cleveland",
+      "Parma", "Lakewood", "Euclid", "Cleveland Heights", "Parma Heights",
+      "Shaker Heights", "Garfield Heights", "South Euclid", "Maple Heights",
+      "North Olmsted", "Strongsville", "Westlake", "North Royalton", "Brunswick",
+      "Solon", "Broadview Heights", "Bay Village", "Fairview Park", "Rocky River",
+      "Lyndhurst", "Mayfield Heights", "University Heights", "Richmond Heights",
+      "Bedford", "Bedford Heights", "Warrensville Heights", "East Cleveland",
+      "Berea", "Middleburg Heights", "Brook Park", "Seven Hills", "Independence",
+      "Brooklyn", "Olmsted Falls", "Highland Heights", "Mayfield Village",
+      "Beachwood", "Pepper Pike", "Orange Village", "Moreland Hills",
+      "Hunting Valley", "Gates Mills", "Chagrin Falls", "Bentleyville",
+      "Bratenahl", "Woodmere", "Valley View", "Brooklyn Heights",
+      "Cuyahoga Heights", "Glenwillow", "Linndale", "Newburgh Heights",
+      "North Randall", "Highland Hills", "Oakwood Village", "Walton Hills",
+      "Olmsted Township",
+    ];
+
+    // Check coverage
+    const covered = Object.keys(byMunicipality);
+    const missing = EXPECTED_MUNICIPALITIES.filter(m => !covered.includes(m));
+    const unexpected = covered.filter(m => !EXPECTED_MUNICIPALITIES.includes(m));
+
+    // Municipalities with limited data (< 3 code entries)
+    const limited = Object.entries(byMunicipality)
+      .filter(([_, data]) => data.count < 3)
+      .map(([name, data]) => ({ name, count: data.count }));
+
+    // Code type coverage
+    const EXPECTED_CODE_TYPES = ["permits", "zoning", "rental", "fire", "building", "residential", "electrical", "plumbing", "mechanical", "investor-guide", "land-bank", "tax", "recording", "health"];
+    const missingCodeTypes = EXPECTED_CODE_TYPES.filter(t => !byCodeType[t]);
+
+    return {
+      summary: {
+        totalCodeEntries: allCodes.length,
+        totalMunicipalitiesWithCodes: covered.length,
+        expectedMunicipalities: EXPECTED_MUNICIPALITIES.length,
+        posRequirementsCount: allPOS.length,
+      },
+      coverage: {
+        ohioState: byMunicipality["Ohio State"] || { count: 0, codeTypes: [] },
+        county: byMunicipality["Cuyahoga County"] || { count: 0, codeTypes: [] },
+        cleveland: byMunicipality["Cleveland"] || { count: 0, codeTypes: [] },
+      },
+      codeTypeBreakdown: Object.entries(byCodeType).map(([type, count]) => ({ type, count })),
+      issues: {
+        missingMunicipalities: missing,
+        unexpectedMunicipalities: unexpected,
+        limitedCoverage: limited,
+        missingCodeTypes: missingCodeTypes,
+      },
+      municipalityCoverage: Object.entries(byMunicipality)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 20)
+        .map(([name, data]) => ({
+          name,
+          count: data.count,
+          codeTypes: Array.from(data.codeTypes),
+        })),
+      recommendations: [
+        missing.length > 0 ? `Run seedAllMunicipalities:seedEverything to add ${missing.length} missing municipalities` : null,
+        allPOS.length < 24 ? "Run seedData:seedPOSRequirements to add POS data for 24 cities" : null,
+        allCodes.length < 100 ? "Run seedData:seedCodeContent to add detailed code content" : null,
+        missingCodeTypes.length > 0 ? `Missing code types: ${missingCodeTypes.join(", ")}` : null,
+      ].filter(Boolean),
+    };
+  },
+});
+
+// ===== INVESTOR CONTEXT QUERY =====
+// Returns everything an investor needs to know about a city
+
+export const getInvestorBriefing = query({
+  args: {
+    municipality: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const municipality = args.municipality;
+
+    // Get all codes for this municipality
+    const codes = await ctx.db
+      .query("codeContent")
+      .withIndex("by_municipality", (q) => q.eq("municipality", municipality))
+      .collect();
+
+    // Get POS requirements
+    const posReq = await ctx.db
+      .query("posRequirements")
+      .withIndex("by_city", (q) => q.eq("city", municipality.toUpperCase()))
+      .first();
+
+    // Get Ohio State codes (always relevant)
+    const stateCodes = await ctx.db
+      .query("codeContent")
+      .withIndex("by_municipality", (q) => q.eq("municipality", "Ohio State"))
+      .collect();
+
+    // Get county codes (always relevant)
+    const countyCodes = await ctx.db
+      .query("codeContent")
+      .withIndex("by_municipality", (q) => q.eq("municipality", "Cuyahoga County"))
+      .collect();
+
+    // Organize by category
+    const permits = codes.filter(c => c.codeType === "permits");
+    const zoning = codes.filter(c => c.codeType === "zoning");
+    const rental = codes.filter(c => c.codeType === "rental");
+    const fire = codes.filter(c => c.codeType === "fire");
+    const building = codes.filter(c => c.codeType === "building");
+
+    // Extract key investor notes
+    const investorNotes = codes
+      .filter(c => c.investorNotes)
+      .map(c => c.investorNotes);
+
+    return {
+      municipality,
+      overview: {
+        totalLocalCodes: codes.length,
+        hasDetailedData: codes.length >= 5,
+        posRequired: posReq?.posRequired ?? "Unknown",
+        posCost: posReq?.posCost ?? "Unknown",
+      },
+      pointOfSale: posReq ? {
+        required: posReq.posRequired,
+        cost: posReq.posCost,
+        processingDays: posReq.avgProcessingDays,
+        escrowRequired: posReq.escrowRequired,
+        escrowPercent: posReq.escrowPercent,
+        commonFailures: posReq.commonFailureItems,
+        investorAdvice: posReq.investorNotes,
+        contactPhone: posReq.contactPhone,
+        contactWebsite: posReq.contactWebsite,
+      } : { message: "No POS data - check if this municipality requires POS inspection" },
+      permits: permits.map(p => ({
+        title: p.title,
+        summary: p.summary,
+        investorNotes: p.investorNotes,
+      })),
+      zoning: zoning.map(z => ({
+        title: z.title,
+        summary: z.summary,
+        investorNotes: z.investorNotes,
+      })),
+      rentalRules: rental.length > 0 ? rental.map(r => ({
+        title: r.title,
+        summary: r.summary,
+        investorNotes: r.investorNotes,
+      })) : [{ message: "No specific rental registration info. Check with building department." }],
+      fireAndSafety: fire.map(f => ({
+        title: f.title,
+        summary: f.summary,
+      })),
+      stateCodeHighlights: stateCodes.slice(0, 3).map(s => ({
+        title: s.title,
+        summary: s.summary,
+        investorNotes: s.investorNotes,
+      })),
+      countyResources: countyCodes.map(c => ({
+        title: c.title,
+        summary: c.summary,
+      })),
+      keyInvestorTakeaways: investorNotes.slice(0, 5),
+      quickReference: {
+        posFee: posReq?.posCost ? `$${posReq.posCost}` : "Check with city",
+        typicalPOSBudget: posReq?.posRequired ? "$2,000-$10,000 for repairs" : "N/A - No POS",
+        processingTime: posReq?.avgProcessingDays ? `${posReq.avgProcessingDays} days` : "Unknown",
+        rentalRegistration: rental.length > 0 ? "Required - see rental rules above" : "Check with city",
+      },
+    };
+  },
+});
+
+// ===== QUICK ANSWER - Common Questions =====
+// Super fast answers to common investor questions
+
+export const quickAnswer = query({
+  args: {
+    question: v.string(),
+    municipality: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const q = args.question.toLowerCase();
+    const muni = args.municipality;
+
+    // Get POS requirements for most questions
+    const posReq = await ctx.db
+      .query("posRequirements")
+      .withIndex("by_city", (q) => q.eq("city", muni.toUpperCase()))
+      .first();
+
+    // Quick answers for common questions
+    if (q.includes("pos") || q.includes("point of sale")) {
+      return {
+        answer: posReq
+          ? `${muni}: POS ${posReq.posRequired ? `required ($${posReq.posCost}), ~${posReq.avgProcessingDays} days processing` : "NOT required"}`
+          : `No POS data for ${muni}. Contact building department.`,
+        details: posReq?.commonFailureItems || [],
+        contact: posReq?.contactPhone || "Contact building department",
+      };
+    }
+
+    if (q.includes("permit") && q.includes("roof")) {
+      return {
+        answer: `Roofing permits are REQUIRED in ${muni}. Typical fee: $75-150.`,
+        details: ["Must use licensed contractor", "2 layer maximum", "Ice/water shield required"],
+        tip: "Always pull permit - insurance claims require proof of permitted work.",
+      };
+    }
+
+    if (q.includes("rental") || q.includes("landlord")) {
+      const rental = await ctx.db
+        .query("codeContent")
+        .withIndex("by_municipality_and_type", (q) =>
+          q.eq("municipality", muni).eq("codeType", "rental")
+        )
+        .first();
+
+      return {
+        answer: rental
+          ? `${muni} has rental registration requirements. See details.`
+          : `Check with ${muni} building department for rental requirements.`,
+        details: rental?.summary || "Contact building department",
+        contact: posReq?.contactPhone || "Contact building department",
+      };
+    }
+
+    if (q.includes("adu") || q.includes("accessory dwelling") || q.includes("in-law")) {
+      return {
+        answer: `ADU rules vary by municipality. ${muni} requires zoning check.`,
+        details: [
+          "Most Ohio suburbs restrict ADUs",
+          "Cleveland permits ADUs with owner occupancy",
+          "Check local zoning code for specific rules",
+        ],
+        tip: "Contact zoning department before planning ADU.",
+      };
+    }
+
+    if (q.includes("airbnb") || q.includes("short-term") || q.includes("vacation rental")) {
+      return {
+        answer: `Short-term rental rules vary. Some cities (Lakewood) prohibit, others (Cleveland) permit with restrictions.`,
+        details: [
+          "Cleveland: Permit required, 120-day limit non-owner-occupied",
+          "Lakewood: Prohibited in residential zones",
+          "Other cities: Check local ordinance",
+        ],
+        tip: "Verify STR rules BEFORE purchasing for Airbnb strategy.",
+      };
+    }
+
+    // Generic fallback - search for answer
+    const results = await ctx.db
+      .query("codeContent")
+      .withSearchIndex("search_content", (q) =>
+        q.search("content", args.question).eq("municipality", muni)
+      )
+      .take(2);
+
+    return {
+      answer: results.length > 0
+        ? `Found ${results.length} relevant code sections. See details.`
+        : `No specific answer found. Contact ${muni} building department.`,
+      details: results.map(r => r.summary || r.title),
+      contact: posReq?.contactPhone || "Contact building department",
+    };
+  },
+});

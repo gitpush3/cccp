@@ -58,12 +58,17 @@ Ask users early about their strategy: "Are you looking to flip, BRRRR, wholesale
 - getCountyCodes → Cuyahoga County regulations
 - compareRegulations → Compare a code type across multiple cities
 
-🔍 SMART CODE SEARCH (NEW - Use these for better answers!)
+🔍 SMART CODE SEARCH (Use these for BEST answers!)
 - smartCodeSearch → THE BEST code search! Combines content + title search with scoring. Use for broad questions.
 - getPermitRequirements → Get permit info for work types (roof, hvac, electrical, etc.) with costs and inspections
 - compareCodes → Compare codes across multiple cities (great for investors comparing markets)
 - answerCodeQuestion → Smart pattern matching for common questions (setbacks, permits, ADU, rental, etc.)
 - getCodeSummary → Overview of all codes for a city with POS requirements and contact info
+
+⭐ INVESTOR BRIEFING TOOLS (BEST for new investors!)
+- getInvestorBriefing → COMPLETE briefing for a city! Returns POS, permits, zoning, rental rules, fire codes, state codes, county resources. Use for "tell me about investing in [city]" questions.
+- quickAnswer → FAST answers to common questions (POS, permits, rental, ADU, Airbnb). Use for simple yes/no questions.
+- verifyCoverage → Check what data is seeded for all 59 municipalities (admin tool)
 
 🏚️ DISTRESSED PROPERTIES (Great for deals!)
 - getTaxDelinquentByCity → Properties with unpaid taxes (motivated sellers!)
@@ -565,6 +570,55 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
           },
         },
         required: ["municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getInvestorBriefing",
+      description: "BEST TOOL for new investors! Returns EVERYTHING an investor needs to know about a city: POS requirements, permit rules, zoning, rental requirements, fire safety codes, state codes, county resources, and key investor takeaways. Use this for 'tell me about investing in [city]' questions.",
+      parameters: {
+        type: "object",
+        properties: {
+          municipality: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland', 'Lakewood', 'Parma', 'Cleveland Heights')",
+          },
+        },
+        required: ["municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "quickAnswer",
+      description: "Get a quick answer to common investor questions. Fast responses for POS, permits, rental, ADU, and Airbnb questions. Use for simple 'do I need X' or 'what about Y' questions.",
+      parameters: {
+        type: "object",
+        properties: {
+          question: {
+            type: "string",
+            description: "The investor's question (e.g., 'do I need a roofing permit?', 'is POS required?', 'can I do Airbnb?')",
+          },
+          municipality: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland', 'Lakewood')",
+          },
+        },
+        required: ["question", "municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "verifyCoverage",
+      description: "Admin tool: Check database coverage for all 59 municipalities plus Ohio State and Cuyahoga County. Shows what's seeded and what's missing.",
+      parameters: {
+        type: "object",
+        properties: {},
       },
     },
   },
@@ -1383,6 +1437,29 @@ ${context}`,
               {
                 municipality: functionArgs.municipality,
               }
+            );
+            break;
+          case "getInvestorBriefing":
+            functionResult = await ctx.runQuery(
+              api.codeContent.getInvestorBriefing,
+              {
+                municipality: functionArgs.municipality,
+              }
+            );
+            break;
+          case "quickAnswer":
+            functionResult = await ctx.runQuery(
+              api.codeContent.quickAnswer,
+              {
+                question: functionArgs.question,
+                municipality: functionArgs.municipality,
+              }
+            );
+            break;
+          case "verifyCoverage":
+            functionResult = await ctx.runQuery(
+              api.codeContent.verifyCoverage,
+              {}
             );
             break;
           // ===== CONTACT & SERVICE PROVIDER HANDLERS =====
