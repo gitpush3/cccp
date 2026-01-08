@@ -706,6 +706,112 @@ const applicationTables = {
     .index("by_zip_code", ["zipCode"])
     .index("by_city", ["city"])
     .index("by_flood_zone", ["floodZone"]),
+
+  // ===== CODE VIOLATIONS - Critical for compliance checking =====
+  codeViolations: defineTable({
+    parcelId: v.optional(v.string()),
+    address: v.string(),
+    city: v.string(),
+    zipCode: v.optional(v.string()),
+    violationType: v.string(), // "tall_grass", "unsafe_structure", "unpermitted_work", etc.
+    violationCode: v.optional(v.string()), // Municipal code reference
+    violationDescription: v.string(),
+    severity: v.union(
+      v.literal("minor"),
+      v.literal("major"),
+      v.literal("critical")
+    ),
+    status: v.union(
+      v.literal("open"),
+      v.literal("in_progress"),
+      v.literal("corrected"),
+      v.literal("hearing_scheduled"),
+      v.literal("lien_placed"),
+      v.literal("closed")
+    ),
+    issuedDate: v.string(),
+    dueDate: v.optional(v.string()),
+    closedDate: v.optional(v.string()),
+    fineAmount: v.optional(v.number()),
+    inspectorNotes: v.optional(v.string()),
+    caseNumber: v.optional(v.string()),
+    sourceUrl: v.optional(v.string()),
+    lastUpdated: v.number(),
+  })
+    .index("by_parcel_id", ["parcelId"])
+    .index("by_address", ["address"])
+    .index("by_city", ["city"])
+    .index("by_status", ["status"])
+    .index("by_severity", ["severity"])
+    .index("by_violation_type", ["violationType"])
+    .searchIndex("search_address", {
+      searchField: "address",
+      filterFields: ["city", "status"],
+    }),
+
+  // ===== POINT OF SALE (POS) REQUIREMENTS by Municipality =====
+  posRequirements: defineTable({
+    city: v.string(),
+    posRequired: v.boolean(),
+    posCost: v.optional(v.number()), // Fee in dollars
+    inspectionType: v.optional(v.string()), // "interior_exterior", "exterior_only", etc.
+    avgProcessingDays: v.optional(v.number()),
+    escrowRequired: v.optional(v.boolean()),
+    escrowPercent: v.optional(v.number()), // Percentage of repairs to escrow
+    transferRestrictions: v.optional(v.string()),
+    commonFailureItems: v.optional(v.array(v.string())),
+    investorNotes: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
+    contactWebsite: v.optional(v.string()),
+    lastUpdated: v.number(),
+  })
+    .index("by_city", ["city"]),
+
+  // ===== RENTAL COMPS - For DSCR and cash flow analysis =====
+  rentalComps: defineTable({
+    parcelId: v.optional(v.string()),
+    address: v.string(),
+    city: v.string(),
+    zipCode: v.string(),
+    propertyType: v.string(), // SFR, duplex, triplex, etc.
+    bedrooms: v.number(),
+    bathrooms: v.number(),
+    sqft: v.optional(v.number()),
+    monthlyRent: v.number(),
+    listDate: v.optional(v.string()),
+    rentedDate: v.optional(v.string()),
+    daysOnMarket: v.optional(v.number()),
+    source: v.string(), // zillow, rentometer, mls, etc.
+    lastUpdated: v.number(),
+  })
+    .index("by_city", ["city"])
+    .index("by_zip", ["zipCode"])
+    .index("by_property_type", ["propertyType"])
+    .index("by_bedrooms", ["bedrooms"]),
+
+  // ===== DEAL SCORES - Cached investment analysis =====
+  dealScores: defineTable({
+    parcelId: v.string(),
+    address: v.string(),
+    city: v.string(),
+    zipCode: v.string(),
+    overallScore: v.number(), // 0-100
+    equityScore: v.number(),
+    distressScore: v.number(),
+    motivationScore: v.number(),
+    marketScore: v.number(),
+    complianceScore: v.number(),
+    estimatedArv: v.optional(v.number()),
+    estimatedRepairs: v.optional(v.number()),
+    maxOffer: v.optional(v.number()),
+    strategy: v.string(), // flip, brrrr, wholesale, rental
+    analysisNotes: v.optional(v.string()),
+    lastCalculated: v.number(),
+  })
+    .index("by_parcel_id", ["parcelId"])
+    .index("by_city", ["city"])
+    .index("by_score", ["overallScore"])
+    .index("by_strategy", ["strategy"]),
 };
 
 export default defineSchema({

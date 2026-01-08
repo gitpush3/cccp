@@ -14,23 +14,42 @@ const openai = process.env.OPENAI_API_KEY
 // System prompt for the building codes and real estate assistant
 const SYSTEM_PROMPT = `You are a friendly, expert real estate assistant for Cuyahoga County, Ohio. You help real estate agents, investors, brokers, lenders, fix-and-flippers, wholesalers, and contractors make smart decisions.
 
-📅 TODAY'S DATE: December 28, 2025
+📅 TODAY'S DATE: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
 
 🎯 YOUR MISSION
-Help users research properties, understand building codes, find motivated sellers, analyze neighborhoods, and navigate the 59 municipalities in Cuyahoga County. Always cite your sources so users can verify and dig deeper.
+Help users research properties, understand building codes, find motivated sellers, analyze deals, check compliance, and navigate the 59 municipalities in Cuyahoga County. Always cite your sources so users can verify and dig deeper.
+
+💡 INVESTMENT STRATEGY AWARENESS
+Ask users early about their strategy: "Are you looking to flip, BRRRR, wholesale, or buy-and-hold?" This affects which analysis tools to use.
 
 🔧 YOUR TOOLS (Use these to get accurate data!)
 
-PROPERTY RESEARCH
+🎯 DEAL FINDING (Use these for investment opportunities!)
+- getHotLeads → THE BEST TOOL! Aggregates ALL distress signals (foreclosures, tax delinquent, violations) into ranked leads
+- findDeals → Search for distressed properties matching criteria (tax delinquent, foreclosures)
+- calculateDealScore → Get investment score (0-100) for any property with distress signals
+- calculateARV → Get After Repair Value with repair estimates and max offer calculation
+- getOwnerIntelligence → Analyze owner portfolio, motivation, and contact strategy
+- getRentalAnalysis → DSCR, cap rate, cash-on-cash analysis for rentals/BRRRR
+
+📊 PROPERTY RESEARCH
 - searchParcelByAddress → Look up any property by address. Use this FIRST for property questions!
 - getParcelById → Look up property by parcel ID/PIN number
 - searchByOwner → Find all properties owned by a person or company
-- getMostRecentSalesByCity → Get latest sales in a city, sorted by date. Use for "most recent sale" questions!
+- getMostRecentSalesByCity → Get latest sales in a city, sorted by date
 - getComparables → Find similar properties that sold recently for ARV estimates
 - getInvestmentAnalysis → Get appreciation, price/sqft, tax abatement status
 - getZipCodeStats → Market stats for a zip code (median prices, avg values)
 
-BUILDING CODES & PERMITS
+⚠️ COMPLIANCE & CODE CHECKING (ALWAYS check before discussing purchase!)
+- getComplianceRisk → Get compliance risk score, open violations, and estimated costs
+- getCodeViolations → Get open and historical code violations for a property
+- getPOSRequirements → Point of Sale inspection requirements by city (critical!)
+- getPermitHistory → Building permits and unpermitted work detection
+- verifyZoning → Check if intended use is allowed under current zoning
+- generatePreInspectionChecklist → THE KILLER TOOL! Get complete inspection prep checklist with repair costs, 7-day game plan, and pro tips
+
+📜 BUILDING CODES & REGULATIONS
 - getRegulationsByMunicipality → Get all codes for a city (building, fire, zoning, permits)
 - getRegulation → Get a specific code type for a city
 - searchCodeContent → Search actual code text for specific requirements
@@ -39,16 +58,30 @@ BUILDING CODES & PERMITS
 - getCountyCodes → Cuyahoga County regulations
 - compareRegulations → Compare a code type across multiple cities
 
-CONTACTS & SERVICES
+🔍 SMART CODE SEARCH (Use these for BEST answers!)
+- smartCodeSearch → THE BEST code search! Combines content + title search with scoring. Use for broad questions.
+- getPermitRequirements → Get permit info for work types (roof, hvac, electrical, etc.) with costs and inspections
+- compareCodes → Compare codes across multiple cities (great for investors comparing markets)
+- answerCodeQuestion → Smart pattern matching for common questions (setbacks, permits, ADU, rental, etc.)
+- getCodeSummary → Overview of all codes for a city with POS requirements and contact info
+
+⭐ INVESTOR BRIEFING TOOLS (BEST for new investors!)
+- getInvestorBriefing → COMPLETE briefing for a city! Returns POS, permits, zoning, rental rules, fire codes, state codes, county resources. Use for "tell me about investing in [city]" questions.
+- quickAnswer → FAST answers to common questions (POS, permits, rental, ADU, Airbnb). Use for simple yes/no questions.
+- verifyCoverage → Check what data is seeded for all 59 municipalities (admin tool)
+
+🏚️ DISTRESSED PROPERTIES (Great for deals!)
+- getTaxDelinquentByCity → Properties with unpaid taxes (motivated sellers!)
+- getHighValueDelinquent → Properties owing $5000+ in back taxes
+- getSheriffSalesByCity → Foreclosure auctions in a city
+- getUpcomingSheriffSales → All upcoming sheriff sales
+
+📞 CONTACTS & SERVICES
 - getBuildingDeptContact → Phone, address, website for a city's building department
 - getServiceProviders → Find lenders, title companies, inspectors, etc.
 - getFeaturedProviders → Recommended service providers including 3bids.io
 
-DISTRESSED PROPERTIES (Great for deals!)
-- getTaxDelinquentByCity → Properties with unpaid taxes (motivated sellers!)
-- getHighValueDelinquent → Properties owing $5000+ in back taxes
-
-NEIGHBORHOOD DATA
+🏘️ NEIGHBORHOOD DATA
 - getSchoolsByZipCode → School ratings (affects property values!)
 - getWalkScoreByZip → Walk, Transit, and Bike scores
 - getCrimeStats → Crime statistics by zip code
@@ -65,7 +98,12 @@ Most Recent Sales ("What's the latest sale in Lakewood?")
 → Use getMostRecentSalesByCity with the user's selected city
 
 Code/Permit Questions ("Do I need a permit for a roof?")
-→ Use searchCodeContent or getRegulation for the specific city
+→ Use getPermitRequirements first! It has built-in knowledge for 12 work types.
+→ For general code questions, use answerCodeQuestion or smartCodeSearch
+
+Code Comparison ("Which city is easier for investors?")
+→ Use compareCodes to compare zoning, permits, or building codes across cities
+→ Use getCodeSummary to see what codes are available for a specific city
 
 Investment Analysis ("Is this a good deal?")
 → Use getInvestmentAnalysis + getComparables + getZipCodeStats
@@ -75,6 +113,9 @@ Finding Deals ("Show me motivated sellers")
 
 Neighborhood Research ("Is this a good area?")
 → Use getNeighborhoodAnalysis + getSchoolsByZipCode + getCrimeStats
+
+Inspector Coming ("I have an inspection next week")
+→ Use generatePreInspectionChecklist → This gives a complete checklist with costs, 7-day prep schedule, and pro tips!
 
 📋 LAND USE CODES (Quick Reference)
 - 5100 = Single-family home (most common investment)
@@ -428,6 +469,159 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
       },
     },
   },
+  // ===== SMART CODE SEARCH TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "smartCodeSearch",
+      description: "Smart search across all code content - combines content + title search with scoring. Returns best matches organized by code type. Use this for broad code questions.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "Search query (e.g., 'setback requirements', 'smoke detectors', 'ADU regulations')",
+          },
+          municipality: {
+            type: "string",
+            description: "Optional: Filter by municipality (e.g., 'Cleveland', 'Lakewood')",
+          },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getPermitRequirements",
+      description: "Get permit requirements for specific work types. Returns permit type, typical cost, inspections needed, and municipality-specific info. Best for 'do I need a permit for...' questions.",
+      parameters: {
+        type: "object",
+        properties: {
+          workType: {
+            type: "string",
+            enum: ["roof", "hvac", "electrical", "plumbing", "fence", "deck", "addition", "renovation", "water heater", "window", "siding", "driveway"],
+            description: "Type of work being done",
+          },
+          municipality: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland', 'Lakewood', 'Parma')",
+          },
+        },
+        required: ["workType", "municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "compareCodes",
+      description: "Compare a specific code type across multiple municipalities. Great for investors deciding between cities.",
+      parameters: {
+        type: "object",
+        properties: {
+          codeType: {
+            type: "string",
+            description: "Type of code to compare (e.g., 'zoning', 'permits', 'building', 'rental')",
+          },
+          municipalities: {
+            type: "array",
+            items: { type: "string" },
+            description: "Array of municipality names to compare (e.g., ['Cleveland', 'Lakewood', 'Parma'])",
+          },
+        },
+        required: ["codeType", "municipalities"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "answerCodeQuestion",
+      description: "Answer common investor code questions using smart pattern matching. Searches relevant code types based on question keywords.",
+      parameters: {
+        type: "object",
+        properties: {
+          question: {
+            type: "string",
+            description: "The investor's question about codes/regulations",
+          },
+          municipality: {
+            type: "string",
+            description: "City name to search codes for",
+          },
+        },
+        required: ["question", "municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getCodeSummary",
+      description: "Get a summary of all codes available for a municipality. Shows code types, section counts, POS requirements, and contact info.",
+      parameters: {
+        type: "object",
+        properties: {
+          municipality: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland', 'Lakewood')",
+          },
+        },
+        required: ["municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getInvestorBriefing",
+      description: "BEST TOOL for new investors! Returns EVERYTHING an investor needs to know about a city: POS requirements, permit rules, zoning, rental requirements, fire safety codes, state codes, county resources, and key investor takeaways. Use this for 'tell me about investing in [city]' questions.",
+      parameters: {
+        type: "object",
+        properties: {
+          municipality: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland', 'Lakewood', 'Parma', 'Cleveland Heights')",
+          },
+        },
+        required: ["municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "quickAnswer",
+      description: "Get a quick answer to common investor questions. Fast responses for POS, permits, rental, ADU, and Airbnb questions. Use for simple 'do I need X' or 'what about Y' questions.",
+      parameters: {
+        type: "object",
+        properties: {
+          question: {
+            type: "string",
+            description: "The investor's question (e.g., 'do I need a roofing permit?', 'is POS required?', 'can I do Airbnb?')",
+          },
+          municipality: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland', 'Lakewood')",
+          },
+        },
+        required: ["question", "municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "verifyCoverage",
+      description: "Admin tool: Check database coverage for all 59 municipalities plus Ohio State and Cuyahoga County. Shows what's seeded and what's missing.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
   // ===== CONTACT & SERVICE PROVIDER TOOLS =====
   {
     type: "function",
@@ -609,6 +803,325 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
           },
         },
         required: ["parcelId"],
+      },
+    },
+  },
+  // ===== DEAL FINDING TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "getHotLeads",
+      description: "THE BEST deal-finding tool! Aggregates ALL distress signals (foreclosures, tax delinquent, code violations) into ranked hot leads with urgency scores and contact strategies.",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "Filter by city name (optional)",
+          },
+          zipCode: {
+            type: "string",
+            description: "Filter by zip code (optional)",
+          },
+          maxPrice: {
+            type: "number",
+            description: "Maximum assessed value filter",
+          },
+          limit: {
+            type: "number",
+            description: "Number of leads to return (default 50)",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "findDeals",
+      description: "Search for investment deals matching specific criteria. Finds distressed properties (tax delinquent, foreclosures) and scores them for investment potential.",
+      parameters: {
+        type: "object",
+        properties: {
+          cities: {
+            type: "array",
+            items: { type: "string" },
+            description: "Cities to search in (e.g., ['CLEVELAND', 'LAKEWOOD'])",
+          },
+          minScore: {
+            type: "number",
+            description: "Minimum deal score (0-100, default 50)",
+          },
+          maxArv: {
+            type: "number",
+            description: "Maximum ARV budget filter",
+          },
+          propertyTypes: {
+            type: "array",
+            items: { type: "string" },
+            description: "Land use codes to filter (e.g., ['5100'] for SFR)",
+          },
+          distressTypes: {
+            type: "array",
+            items: { type: "string" },
+            description: "Types of distress to find: 'tax_delinquent', 'foreclosure'",
+          },
+          limit: {
+            type: "number",
+            description: "Number of deals to return (default 25)",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "calculateDealScore",
+      description: "Calculate investment deal score (0-100) for a property. Analyzes equity spread, distress signals, owner motivation, market conditions, and compliance risk.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address to analyze",
+          },
+          strategy: {
+            type: "string",
+            enum: ["flip", "brrrr", "wholesale", "rental"],
+            description: "Investment strategy (affects scoring weights)",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "calculateARV",
+      description: "Calculate After Repair Value with repair estimates and max offer. Uses comparables and condition level to estimate repairs, ARV, and maximum offer using 70% rule.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address",
+          },
+          conditionLevel: {
+            type: "string",
+            enum: ["cosmetic", "moderate", "heavy", "gut"],
+            description: "Rehab level needed (affects repair estimate)",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getOwnerIntelligence",
+      description: "Analyze property owner's portfolio, motivation level, and suggest contact strategy. Identifies out-of-state owners, portfolio investors, and distressed sellers.",
+      parameters: {
+        type: "object",
+        properties: {
+          ownerName: {
+            type: "string",
+            description: "Owner name to analyze",
+          },
+          parcelId: {
+            type: "string",
+            description: "Or parcel ID to look up owner",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getRentalAnalysis",
+      description: "Calculate rental investment metrics: DSCR, cap rate, cash-on-cash return, and BRRRR analysis. Essential for buy-and-hold investors.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address",
+          },
+          purchasePrice: {
+            type: "number",
+            description: "Expected purchase price",
+          },
+          rehabCost: {
+            type: "number",
+            description: "Estimated rehab cost",
+          },
+          downPaymentPercent: {
+            type: "number",
+            description: "Down payment percentage (default 25%)",
+          },
+          interestRate: {
+            type: "number",
+            description: "Mortgage interest rate (default 7.5%)",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  // ===== COMPLIANCE TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "getComplianceRisk",
+      description: "Calculate compliance risk score for a property. Returns open violations, estimated compliance costs, unpermitted work indicators, and POS requirements.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getCodeViolations",
+      description: "Get code violations for a property including open violations, historical violations, and fines.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address",
+          },
+          city: {
+            type: "string",
+            description: "City name for filtering",
+          },
+          includeResolved: {
+            type: "boolean",
+            description: "Include resolved violations (default false)",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getPOSRequirements",
+      description: "Get Point of Sale inspection requirements for a city. Critical for closing - includes fees, common failures, and timeline.",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland Heights', 'Lakewood')",
+          },
+        },
+        required: ["city"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getPermitHistory",
+      description: "Get building permit history and detect possible unpermitted work. Returns all permits and flags missing permits for expected work.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "verifyZoning",
+      description: "Verify if intended use is allowed under current zoning. Checks for variance requirements.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address",
+          },
+          intendedUse: {
+            type: "string",
+            enum: ["sfr", "duplex", "triplex", "fourplex", "airbnb", "commercial"],
+            description: "Intended property use",
+          },
+        },
+        required: ["address", "intendedUse"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "generatePreInspectionChecklist",
+      description: "Generate comprehensive pre-inspection checklist with repair costs and 7-day prep plan. BEST tool for users with upcoming inspections!",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "Property address",
+          },
+          city: {
+            type: "string",
+            description: "City name (optional - will auto-detect from address)",
+          },
+          inspectionType: {
+            type: "string",
+            enum: ["pos", "rental_registration", "general"],
+            description: "Type of inspection (default: pos for Point of Sale)",
+          },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  // ===== ADDITIONAL DISTRESSED PROPERTY TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "getSheriffSalesByCity",
+      description: "Get sheriff sales (foreclosure auctions) for a city. Returns scheduled, sold, and cancelled sales.",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "City name",
+          },
+        },
+        required: ["city"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getUpcomingSheriffSales",
+      description: "Get all upcoming sheriff sales across Cuyahoga County.",
+      parameters: {
+        type: "object",
+        properties: {},
       },
     },
   },
@@ -880,6 +1393,75 @@ ${context}`,
               {}
             );
             break;
+          // ===== SMART CODE SEARCH HANDLERS =====
+          case "smartCodeSearch":
+            functionResult = await ctx.runQuery(
+              api.codeContent.smartSearch,
+              {
+                query: functionArgs.query,
+                municipality: functionArgs.municipality,
+                limit: 10,
+              }
+            );
+            break;
+          case "getPermitRequirements":
+            functionResult = await ctx.runQuery(
+              api.codeContent.getPermitRequirements,
+              {
+                workType: functionArgs.workType,
+                municipality: functionArgs.municipality,
+              }
+            );
+            break;
+          case "compareCodes":
+            functionResult = await ctx.runQuery(
+              api.codeContent.compareCodes,
+              {
+                codeType: functionArgs.codeType,
+                municipalities: functionArgs.municipalities,
+              }
+            );
+            break;
+          case "answerCodeQuestion":
+            functionResult = await ctx.runQuery(
+              api.codeContent.answerCodeQuestion,
+              {
+                question: functionArgs.question,
+                municipality: functionArgs.municipality,
+              }
+            );
+            break;
+          case "getCodeSummary":
+            functionResult = await ctx.runQuery(
+              api.codeContent.getCodeSummary,
+              {
+                municipality: functionArgs.municipality,
+              }
+            );
+            break;
+          case "getInvestorBriefing":
+            functionResult = await ctx.runQuery(
+              api.codeContent.getInvestorBriefing,
+              {
+                municipality: functionArgs.municipality,
+              }
+            );
+            break;
+          case "quickAnswer":
+            functionResult = await ctx.runQuery(
+              api.codeContent.quickAnswer,
+              {
+                question: functionArgs.question,
+                municipality: functionArgs.municipality,
+              }
+            );
+            break;
+          case "verifyCoverage":
+            functionResult = await ctx.runQuery(
+              api.codeContent.verifyCoverage,
+              {}
+            );
+            break;
           // ===== CONTACT & SERVICE PROVIDER HANDLERS =====
           case "getBuildingDeptContact":
             functionResult = await ctx.runQuery(
@@ -948,6 +1530,131 @@ ${context}`,
             functionResult = await ctx.runQuery(
               api.marketData.getFloodZoneByParcel,
               { parcelId: functionArgs.parcelId }
+            );
+            break;
+          // ===== DEAL FINDING HANDLERS =====
+          case "getHotLeads":
+            functionResult = await ctx.runQuery(
+              api.dealAnalysis.getHotLeads,
+              {
+                city: functionArgs.city,
+                zipCode: functionArgs.zipCode,
+                maxPrice: functionArgs.maxPrice,
+                limit: functionArgs.limit,
+              }
+            );
+            break;
+          case "findDeals":
+            functionResult = await ctx.runQuery(
+              api.dealAnalysis.findDeals,
+              {
+                cities: functionArgs.cities,
+                minScore: functionArgs.minScore,
+                maxArv: functionArgs.maxArv,
+                propertyTypes: functionArgs.propertyTypes,
+                distressTypes: functionArgs.distressTypes,
+                limit: functionArgs.limit,
+              }
+            );
+            break;
+          case "calculateDealScore":
+            functionResult = await ctx.runQuery(
+              api.dealAnalysis.calculateDealScore,
+              {
+                address: functionArgs.address,
+                strategy: functionArgs.strategy,
+              }
+            );
+            break;
+          case "calculateARV":
+            functionResult = await ctx.runQuery(
+              api.dealAnalysis.calculateARV,
+              {
+                address: functionArgs.address,
+                conditionLevel: functionArgs.conditionLevel,
+              }
+            );
+            break;
+          case "getOwnerIntelligence":
+            functionResult = await ctx.runQuery(
+              api.dealAnalysis.getOwnerIntelligence,
+              {
+                ownerName: functionArgs.ownerName,
+                parcelId: functionArgs.parcelId,
+              }
+            );
+            break;
+          case "getRentalAnalysis":
+            functionResult = await ctx.runQuery(
+              api.dealAnalysis.getRentalAnalysis,
+              {
+                address: functionArgs.address,
+                purchasePrice: functionArgs.purchasePrice,
+                rehabCost: functionArgs.rehabCost,
+                downPaymentPercent: functionArgs.downPaymentPercent,
+                interestRate: functionArgs.interestRate,
+              }
+            );
+            break;
+          // ===== COMPLIANCE HANDLERS =====
+          case "getComplianceRisk":
+            functionResult = await ctx.runQuery(
+              api.complianceTools.getComplianceRisk,
+              { address: functionArgs.address }
+            );
+            break;
+          case "getCodeViolations":
+            functionResult = await ctx.runQuery(
+              api.complianceTools.getViolationsByAddress,
+              {
+                address: functionArgs.address,
+                city: functionArgs.city,
+                includeResolved: functionArgs.includeResolved,
+              }
+            );
+            break;
+          case "getPOSRequirements":
+            functionResult = await ctx.runQuery(
+              api.complianceTools.getPOSRequirements,
+              { city: functionArgs.city }
+            );
+            break;
+          case "getPermitHistory":
+            functionResult = await ctx.runQuery(
+              api.complianceTools.getPermitHistory,
+              { address: functionArgs.address }
+            );
+            break;
+          case "verifyZoning":
+            functionResult = await ctx.runQuery(
+              api.complianceTools.verifyZoning,
+              {
+                address: functionArgs.address,
+                intendedUse: functionArgs.intendedUse,
+              }
+            );
+            break;
+          case "generatePreInspectionChecklist":
+            functionResult = await ctx.runQuery(
+              api.complianceTools.generatePreInspectionChecklist,
+              {
+                address: functionArgs.address,
+                city: functionArgs.city,
+                inspectionType: functionArgs.inspectionType,
+              }
+            );
+            break;
+          // ===== SHERIFF SALES HANDLERS =====
+          case "getSheriffSalesByCity":
+            functionResult = await ctx.runQuery(
+              api.distressedData.getSheriffSalesByCity,
+              { city: functionArgs.city }
+            );
+            break;
+          case "getUpcomingSheriffSales":
+            functionResult = await ctx.runQuery(
+              api.distressedData.getUpcomingSheriffSales,
+              {}
             );
             break;
           default:
