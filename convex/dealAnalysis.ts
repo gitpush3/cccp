@@ -282,7 +282,7 @@ export const findDeals = query({
 
         const parcel = await ctx.db
           .query("parcels")
-          .withIndex("by_parcel_id", (q) => q.eq("parcelId", ss.parcelId))
+          .withIndex("by_parcel_id", (q) => q.eq("parcelId", ss.parcelId!))
           .first();
 
         if (parcel) {
@@ -455,7 +455,7 @@ export const getOwnerIntelligence = query({
     if (args.parcelId) {
       targetParcel = await ctx.db
         .query("parcels")
-        .withIndex("by_parcel_id", (q) => q.eq("parcelId", args.parcelId))
+        .withIndex("by_parcel_id", (q) => q.eq("parcelId", args.parcelId!))
         .first();
       ownerName = targetParcel?.currentOwner;
     }
@@ -506,7 +506,7 @@ export const getOwnerIntelligence = query({
         return td ? 1 : 0;
       })
     );
-    const hasDistressedProperties = distressedCount.reduce((a, b) => a + b, 0);
+    const hasDistressedProperties = distressedCount.reduce<number>((a, b) => a + b, 0);
 
     // Calculate motivation score
     let motivationScore = 0;
@@ -755,7 +755,7 @@ export const getHotLeads = query({
         address: td.address,
         city: td.city,
         zipCode: td.zipCode || "",
-        signals: [],
+        signals: [] as string[],
         signalCount: 0,
         urgencyScore: 0,
       };
@@ -800,7 +800,7 @@ export const getHotLeads = query({
         address: sale.address,
         city: sale.city,
         zipCode: sale.zipCode || "",
-        signals: [],
+        signals: [] as string[],
         signalCount: 0,
         urgencyScore: 0,
       };
@@ -851,9 +851,10 @@ export const getHotLeads = query({
         address: firstVio.address,
         city: firstVio.city,
         zipCode: firstVio.zipCode || "",
-        signals: [],
+        signals: [] as string[],
         signalCount: 0,
         urgencyScore: 0,
+        violations: [] as any[],
       };
 
       const criticalCount = vios.filter(v => v.severity === "critical").length;
