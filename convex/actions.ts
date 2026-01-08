@@ -58,6 +58,13 @@ Ask users early about their strategy: "Are you looking to flip, BRRRR, wholesale
 - getCountyCodes → Cuyahoga County regulations
 - compareRegulations → Compare a code type across multiple cities
 
+🔍 SMART CODE SEARCH (NEW - Use these for better answers!)
+- smartCodeSearch → THE BEST code search! Combines content + title search with scoring. Use for broad questions.
+- getPermitRequirements → Get permit info for work types (roof, hvac, electrical, etc.) with costs and inspections
+- compareCodes → Compare codes across multiple cities (great for investors comparing markets)
+- answerCodeQuestion → Smart pattern matching for common questions (setbacks, permits, ADU, rental, etc.)
+- getCodeSummary → Overview of all codes for a city with POS requirements and contact info
+
 🏚️ DISTRESSED PROPERTIES (Great for deals!)
 - getTaxDelinquentByCity → Properties with unpaid taxes (motivated sellers!)
 - getHighValueDelinquent → Properties owing $5000+ in back taxes
@@ -86,7 +93,12 @@ Most Recent Sales ("What's the latest sale in Lakewood?")
 → Use getMostRecentSalesByCity with the user's selected city
 
 Code/Permit Questions ("Do I need a permit for a roof?")
-→ Use searchCodeContent or getRegulation for the specific city
+→ Use getPermitRequirements first! It has built-in knowledge for 12 work types.
+→ For general code questions, use answerCodeQuestion or smartCodeSearch
+
+Code Comparison ("Which city is easier for investors?")
+→ Use compareCodes to compare zoning, permits, or building codes across cities
+→ Use getCodeSummary to see what codes are available for a specific city
 
 Investment Analysis ("Is this a good deal?")
 → Use getInvestmentAnalysis + getComparables + getZipCodeStats
@@ -449,6 +461,110 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
       parameters: {
         type: "object",
         properties: {},
+      },
+    },
+  },
+  // ===== SMART CODE SEARCH TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "smartCodeSearch",
+      description: "Smart search across all code content - combines content + title search with scoring. Returns best matches organized by code type. Use this for broad code questions.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "Search query (e.g., 'setback requirements', 'smoke detectors', 'ADU regulations')",
+          },
+          municipality: {
+            type: "string",
+            description: "Optional: Filter by municipality (e.g., 'Cleveland', 'Lakewood')",
+          },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getPermitRequirements",
+      description: "Get permit requirements for specific work types. Returns permit type, typical cost, inspections needed, and municipality-specific info. Best for 'do I need a permit for...' questions.",
+      parameters: {
+        type: "object",
+        properties: {
+          workType: {
+            type: "string",
+            enum: ["roof", "hvac", "electrical", "plumbing", "fence", "deck", "addition", "renovation", "water heater", "window", "siding", "driveway"],
+            description: "Type of work being done",
+          },
+          municipality: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland', 'Lakewood', 'Parma')",
+          },
+        },
+        required: ["workType", "municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "compareCodes",
+      description: "Compare a specific code type across multiple municipalities. Great for investors deciding between cities.",
+      parameters: {
+        type: "object",
+        properties: {
+          codeType: {
+            type: "string",
+            description: "Type of code to compare (e.g., 'zoning', 'permits', 'building', 'rental')",
+          },
+          municipalities: {
+            type: "array",
+            items: { type: "string" },
+            description: "Array of municipality names to compare (e.g., ['Cleveland', 'Lakewood', 'Parma'])",
+          },
+        },
+        required: ["codeType", "municipalities"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "answerCodeQuestion",
+      description: "Answer common investor code questions using smart pattern matching. Searches relevant code types based on question keywords.",
+      parameters: {
+        type: "object",
+        properties: {
+          question: {
+            type: "string",
+            description: "The investor's question about codes/regulations",
+          },
+          municipality: {
+            type: "string",
+            description: "City name to search codes for",
+          },
+        },
+        required: ["question", "municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getCodeSummary",
+      description: "Get a summary of all codes available for a municipality. Shows code types, section counts, POS requirements, and contact info.",
+      parameters: {
+        type: "object",
+        properties: {
+          municipality: {
+            type: "string",
+            description: "City name (e.g., 'Cleveland', 'Lakewood')",
+          },
+        },
+        required: ["municipality"],
       },
     },
   },
@@ -1221,6 +1337,52 @@ ${context}`,
             functionResult = await ctx.runQuery(
               api.codeContent.getInvestorGuides,
               {}
+            );
+            break;
+          // ===== SMART CODE SEARCH HANDLERS =====
+          case "smartCodeSearch":
+            functionResult = await ctx.runQuery(
+              api.codeContent.smartSearch,
+              {
+                query: functionArgs.query,
+                municipality: functionArgs.municipality,
+                limit: 10,
+              }
+            );
+            break;
+          case "getPermitRequirements":
+            functionResult = await ctx.runQuery(
+              api.codeContent.getPermitRequirements,
+              {
+                workType: functionArgs.workType,
+                municipality: functionArgs.municipality,
+              }
+            );
+            break;
+          case "compareCodes":
+            functionResult = await ctx.runQuery(
+              api.codeContent.compareCodes,
+              {
+                codeType: functionArgs.codeType,
+                municipalities: functionArgs.municipalities,
+              }
+            );
+            break;
+          case "answerCodeQuestion":
+            functionResult = await ctx.runQuery(
+              api.codeContent.answerCodeQuestion,
+              {
+                question: functionArgs.question,
+                municipality: functionArgs.municipality,
+              }
+            );
+            break;
+          case "getCodeSummary":
+            functionResult = await ctx.runQuery(
+              api.codeContent.getCodeSummary,
+              {
+                municipality: functionArgs.municipality,
+              }
             );
             break;
           // ===== CONTACT & SERVICE PROVIDER HANDLERS =====
