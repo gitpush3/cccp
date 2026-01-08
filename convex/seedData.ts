@@ -580,7 +580,7 @@ export const reseedCodeContent = mutation({
     for (const doc of existing) {
       await ctx.db.delete(doc._id);
     }
-    
+
     // Insert fresh
     const now = Date.now();
     for (const code of CODE_CONTENT) {
@@ -590,5 +590,659 @@ export const reseedCodeContent = mutation({
       });
     }
     return { deleted: existing.length, inserted: CODE_CONTENT.length };
+  },
+});
+
+// ===== POINT OF SALE REQUIREMENTS =====
+// Critical investor data - varies by municipality
+
+const POS_REQUIREMENTS = [
+  {
+    city: "CLEVELAND",
+    posRequired: true,
+    posCost: 150,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 14,
+    escrowRequired: true,
+    escrowPercent: 150,
+    transferRestrictions: "Certificate required before deed transfer",
+    commonFailureItems: ["Smoke detectors", "GFCI outlets", "Handrails", "Water heater strapping", "Exterior paint/siding"],
+    investorNotes: "Strict enforcement. Budget $2-5K for typical repairs. Schedule inspection ASAP after contract.",
+    contactPhone: "216-664-2282",
+    contactWebsite: "https://www.clevelandohio.gov/city-hall/departments/building-housing",
+  },
+  {
+    city: "CLEVELAND HEIGHTS",
+    posRequired: true,
+    posCost: 125,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 21,
+    escrowRequired: true,
+    escrowPercent: 100,
+    transferRestrictions: "Cannot close without POS certificate or escrow agreement",
+    commonFailureItems: ["Smoke/CO detectors", "Electrical panel issues", "Window glazing", "Garage door openers", "Roof condition"],
+    investorNotes: "Very strict municipality. One of the toughest POS in the county. Factor extra time and money.",
+    contactPhone: "216-291-4900",
+    contactWebsite: "https://www.clevelandheights.gov/269/Building",
+  },
+  {
+    city: "LAKEWOOD",
+    posRequired: true,
+    posCost: 100,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 14,
+    escrowRequired: true,
+    escrowPercent: 125,
+    transferRestrictions: "Occupancy permit required",
+    commonFailureItems: ["Smoke detectors", "GFCI outlets", "Handrails", "Peeling paint", "Garage condition"],
+    investorNotes: "Moderate strictness. Good investor market with reasonable POS process.",
+    contactPhone: "216-529-6270",
+    contactWebsite: "https://www.lakewoodoh.gov/building/",
+  },
+  {
+    city: "PARMA",
+    posRequired: true,
+    posCost: 85,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 10,
+    escrowRequired: false,
+    transferRestrictions: "Certificate or compliance letter required",
+    commonFailureItems: ["Smoke detectors", "GFCI", "Handrails", "Water heater"],
+    investorNotes: "Reasonable POS process. Large inventory of affordable homes.",
+    contactPhone: "440-887-7400",
+    contactWebsite: "https://www.cityofparma-oh.gov/building",
+  },
+  {
+    city: "EUCLID",
+    posRequired: true,
+    posCost: 100,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 14,
+    escrowRequired: true,
+    escrowPercent: 100,
+    transferRestrictions: "POS certificate required",
+    commonFailureItems: ["Smoke/CO detectors", "GFCI", "Electrical issues", "Plumbing", "Exterior maintenance"],
+    investorNotes: "Active enforcement. Good deals available but factor in compliance costs.",
+    contactPhone: "216-289-2703",
+    contactWebsite: "https://www.cityofeuclid.com/building",
+  },
+  {
+    city: "SHAKER HEIGHTS",
+    posRequired: true,
+    posCost: 150,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 21,
+    escrowRequired: true,
+    escrowPercent: 150,
+    transferRestrictions: "Strict compliance required before transfer",
+    commonFailureItems: ["Historic preservation items", "Window condition", "Electrical", "Exterior appearance", "Landscaping"],
+    investorNotes: "High-end market with VERY strict POS. Historic homes have additional requirements.",
+    contactPhone: "216-491-1420",
+    contactWebsite: "https://www.shakeronline.com/building",
+  },
+  {
+    city: "SOUTH EUCLID",
+    posRequired: true,
+    posCost: 75,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 14,
+    escrowRequired: true,
+    escrowPercent: 100,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke detectors", "GFCI", "Handrails", "Exterior maintenance"],
+    investorNotes: "Standard POS process. Good entry-level investor market.",
+    contactPhone: "216-381-0400",
+    contactWebsite: "https://www.southeuclid.com/building",
+  },
+  {
+    city: "MAPLE HEIGHTS",
+    posRequired: true,
+    posCost: 75,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 10,
+    escrowRequired: false,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke detectors", "GFCI", "Basic safety items"],
+    investorNotes: "Affordable market with less strict POS. Good for cash flow investors.",
+    contactPhone: "216-662-6000",
+    contactWebsite: "https://www.cityofmapleheights.com",
+  },
+  {
+    city: "GARFIELD HEIGHTS",
+    posRequired: true,
+    posCost: 75,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 10,
+    escrowRequired: false,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke detectors", "GFCI", "Handrails"],
+    investorNotes: "Affordable homes. Less strict than inner-ring suburbs.",
+    contactPhone: "216-475-1100",
+    contactWebsite: "https://www.garfieldhts.org/building",
+  },
+  {
+    city: "EAST CLEVELAND",
+    posRequired: true,
+    posCost: 50,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 7,
+    escrowRequired: false,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke detectors", "Basic safety"],
+    investorNotes: "Very affordable market. Less strict POS but higher risk area. Due diligence critical.",
+    contactPhone: "216-681-5020",
+    contactWebsite: "https://eastcleveland.org/building",
+  },
+  {
+    city: "ROCKY RIVER",
+    posRequired: true,
+    posCost: 125,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 14,
+    escrowRequired: true,
+    escrowPercent: 100,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke/CO detectors", "GFCI", "Windows", "Exterior"],
+    investorNotes: "Higher-end market. Well-maintained properties. Strict standards.",
+    contactPhone: "440-331-0600",
+    contactWebsite: "https://www.rfrh.org/building",
+  },
+  {
+    city: "BAY VILLAGE",
+    posRequired: true,
+    posCost: 100,
+    inspectionType: "exterior_only",
+    avgProcessingDays: 10,
+    escrowRequired: false,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Exterior paint", "Roof condition", "Garage doors"],
+    investorNotes: "Exterior-only inspection. High-end lakefront community.",
+    contactPhone: "440-871-2200",
+    contactWebsite: "https://www.cityofbayvillage.com/building",
+  },
+  {
+    city: "WESTLAKE",
+    posRequired: false,
+    investorNotes: "No POS required. One of the easiest closings in the county.",
+    contactPhone: "440-871-3300",
+    contactWebsite: "https://www.cityofwestlake.org/building",
+  },
+  {
+    city: "NORTH OLMSTED",
+    posRequired: false,
+    investorNotes: "No POS required. Good suburb with easy transactions.",
+    contactPhone: "440-777-8000",
+    contactWebsite: "https://www.north-olmsted.com/building",
+  },
+  {
+    city: "STRONGSVILLE",
+    posRequired: false,
+    investorNotes: "No POS required. Family-friendly suburb, easy closing process.",
+    contactPhone: "440-580-3100",
+    contactWebsite: "https://www.strongsville.org/building",
+  },
+  {
+    city: "BROOK PARK",
+    posRequired: true,
+    posCost: 75,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 10,
+    escrowRequired: false,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke detectors", "GFCI", "Basic safety"],
+    investorNotes: "Near airport. Affordable market with standard POS.",
+    contactPhone: "216-433-1300",
+    contactWebsite: "https://www.cityofbrookpark.com/building",
+  },
+  {
+    city: "MIDDLEBURG HEIGHTS",
+    posRequired: false,
+    investorNotes: "No POS required. Convenient location, easy transactions.",
+    contactPhone: "440-234-8811",
+    contactWebsite: "https://www.middleburgheights.com/building",
+  },
+  {
+    city: "PARMA HEIGHTS",
+    posRequired: true,
+    posCost: 75,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 10,
+    escrowRequired: false,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke detectors", "GFCI", "Handrails"],
+    investorNotes: "Similar to Parma. Affordable with standard POS.",
+    contactPhone: "440-884-9600",
+    contactWebsite: "https://www.parmaheightsoh.gov/building",
+  },
+  {
+    city: "SEVEN HILLS",
+    posRequired: false,
+    investorNotes: "No POS required. Nice suburb with easy transactions.",
+    contactPhone: "216-524-4421",
+    contactWebsite: "https://www.sevenhillsohio.org/building",
+  },
+  {
+    city: "BROADVIEW HEIGHTS",
+    posRequired: false,
+    investorNotes: "No POS required. Growing suburb, easy closing process.",
+    contactPhone: "440-838-4705",
+    contactWebsite: "https://www.broadview-heights.org/building",
+  },
+  {
+    city: "BEACHWOOD",
+    posRequired: true,
+    posCost: 150,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 14,
+    escrowRequired: true,
+    escrowPercent: 100,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke/CO detectors", "GFCI", "High-end finish items"],
+    investorNotes: "Upscale suburb. High property values, strict standards.",
+    contactPhone: "216-292-1970",
+    contactWebsite: "https://www.beachwoodohio.com/building",
+  },
+  {
+    city: "LYNDHURST",
+    posRequired: true,
+    posCost: 100,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 14,
+    escrowRequired: true,
+    escrowPercent: 100,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke/CO detectors", "GFCI", "Electrical panel", "Windows"],
+    investorNotes: "Near Legacy Village. Good rental market.",
+    contactPhone: "440-442-5777",
+    contactWebsite: "https://www.lyndhurst-oh.com/building",
+  },
+  {
+    city: "RICHMOND HEIGHTS",
+    posRequired: true,
+    posCost: 75,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 10,
+    escrowRequired: false,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke detectors", "GFCI", "Basic safety"],
+    investorNotes: "Affordable east-side suburb. Standard POS.",
+    contactPhone: "216-383-6300",
+    contactWebsite: "https://richmondheightsohio.org/building",
+  },
+  {
+    city: "MAYFIELD HEIGHTS",
+    posRequired: true,
+    posCost: 100,
+    inspectionType: "interior_exterior",
+    avgProcessingDays: 14,
+    escrowRequired: false,
+    transferRestrictions: "Certificate required",
+    commonFailureItems: ["Smoke/CO detectors", "GFCI", "Electrical", "Exterior"],
+    investorNotes: "Near Hillcrest Hospital. Good location.",
+    contactPhone: "440-442-2626",
+    contactWebsite: "https://www.mayfieldheights.org/building",
+  },
+];
+
+// Seed Point of Sale requirements
+export const seedPOSRequirements = mutation({
+  args: {},
+  handler: async (ctx) => {
+    let inserted = 0;
+    let updated = 0;
+
+    for (const pos of POS_REQUIREMENTS) {
+      const existing = await ctx.db
+        .query("posRequirements")
+        .withIndex("by_city", (q) => q.eq("city", pos.city))
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, { ...pos, lastUpdated: Date.now() });
+        updated++;
+      } else {
+        await ctx.db.insert("posRequirements", { ...pos, lastUpdated: Date.now() });
+        inserted++;
+      }
+    }
+
+    return { inserted, updated, total: POS_REQUIREMENTS.length };
+  },
+});
+
+// ===== SAMPLE DATA FOR TESTING =====
+
+// Sample tax delinquent data
+export const seedSampleTaxDelinquent = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const sampleData = [
+      {
+        parcelId: "10321081",
+        address: "3456 E 147TH ST",
+        city: "CLEVELAND",
+        zipCode: "44120",
+        ownerName: "SMITH, JOHN",
+        totalAmountOwed: 8500,
+        yearsDelinquent: 3,
+        oldestDelinquentYear: 2021,
+        paymentPlanStatus: "none" as const,
+        certifiedForSale: true,
+      },
+      {
+        parcelId: "11523067",
+        address: "15234 LAKE SHORE BLVD",
+        city: "CLEVELAND",
+        zipCode: "44110",
+        ownerName: "JOHNSON LLC",
+        totalAmountOwed: 12000,
+        yearsDelinquent: 4,
+        oldestDelinquentYear: 2020,
+        paymentPlanStatus: "defaulted" as const,
+        certifiedForSale: true,
+      },
+      {
+        parcelId: "64312045",
+        address: "1823 WINCHESTER AVE",
+        city: "LAKEWOOD",
+        zipCode: "44107",
+        ownerName: "WILLIAMS, MARY",
+        totalAmountOwed: 5200,
+        yearsDelinquent: 2,
+        oldestDelinquentYear: 2022,
+        paymentPlanStatus: "none" as const,
+        certifiedForSale: false,
+      },
+      {
+        parcelId: "47125089",
+        address: "4521 BROOKPARK RD",
+        city: "PARMA",
+        zipCode: "44134",
+        ownerName: "GARCIA INVESTMENTS LLC",
+        totalAmountOwed: 15000,
+        yearsDelinquent: 5,
+        oldestDelinquentYear: 2019,
+        paymentPlanStatus: "none" as const,
+        certifiedForSale: true,
+      },
+      {
+        parcelId: "68234091",
+        address: "2156 LEE RD",
+        city: "CLEVELAND HEIGHTS",
+        zipCode: "44118",
+        ownerName: "BROWN, ROBERT",
+        totalAmountOwed: 7800,
+        yearsDelinquent: 3,
+        oldestDelinquentYear: 2021,
+        paymentPlanStatus: "active" as const,
+        certifiedForSale: false,
+      },
+    ];
+
+    let inserted = 0;
+    for (const record of sampleData) {
+      const existing = await ctx.db
+        .query("taxDelinquent")
+        .withIndex("by_parcel_id", (q) => q.eq("parcelId", record.parcelId))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("taxDelinquent", { ...record, lastUpdated: Date.now() });
+        inserted++;
+      }
+    }
+
+    return { inserted, total: sampleData.length };
+  },
+});
+
+// Sample sheriff sales data
+export const seedSampleSheriffSales = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const sampleData = [
+      {
+        caseNumber: "CV-24-123456",
+        parcelId: "10456789",
+        address: "5678 SUPERIOR AVE",
+        city: "CLEVELAND",
+        zipCode: "44103",
+        saleDate: "2026-02-15",
+        saleTime: "9:00 AM",
+        openingBid: 45000,
+        appraisedValue: 85000,
+        plaintiff: "WELLS FARGO BANK",
+        defendant: "DOE, JANE",
+        status: "scheduled" as const,
+        propertyType: "Single Family",
+        caseType: "Foreclosure",
+        sourceUrl: "https://cuyahoga.sheriffsaleauction.ohio.gov",
+      },
+      {
+        caseNumber: "CV-24-234567",
+        parcelId: "64789012",
+        address: "12345 DETROIT AVE",
+        city: "LAKEWOOD",
+        zipCode: "44107",
+        saleDate: "2026-02-22",
+        saleTime: "9:00 AM",
+        openingBid: 95000,
+        appraisedValue: 175000,
+        plaintiff: "CHASE BANK",
+        defendant: "MILLER, TOM",
+        status: "scheduled" as const,
+        propertyType: "Single Family",
+        caseType: "Foreclosure",
+        sourceUrl: "https://cuyahoga.sheriffsaleauction.ohio.gov",
+      },
+      {
+        caseNumber: "CV-24-345678",
+        parcelId: "47234567",
+        address: "7890 STATE RD",
+        city: "PARMA",
+        zipCode: "44134",
+        saleDate: "2026-02-08",
+        saleTime: "9:00 AM",
+        openingBid: 55000,
+        appraisedValue: 110000,
+        plaintiff: "US BANK",
+        defendant: "WILSON TRUST",
+        status: "scheduled" as const,
+        propertyType: "Single Family",
+        caseType: "Foreclosure",
+        sourceUrl: "https://cuyahoga.sheriffsaleauction.ohio.gov",
+      },
+    ];
+
+    let inserted = 0;
+    for (const sale of sampleData) {
+      const existing = await ctx.db
+        .query("sheriffSales")
+        .withIndex("by_case_number", (q) => q.eq("caseNumber", sale.caseNumber))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("sheriffSales", { ...sale, lastUpdated: Date.now() });
+        inserted++;
+      }
+    }
+
+    return { inserted, total: sampleData.length };
+  },
+});
+
+// Sample code violations
+export const seedSampleCodeViolations = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const sampleData = [
+      {
+        parcelId: "10321081",
+        address: "3456 E 147TH ST, CLEVELAND",
+        city: "CLEVELAND",
+        zipCode: "44120",
+        violationType: "exterior_maintenance",
+        violationCode: "BMC 369.15",
+        violationDescription: "Peeling paint and deteriorated siding on exterior walls",
+        severity: "major" as const,
+        status: "open" as const,
+        issuedDate: "2025-08-15",
+        dueDate: "2025-10-15",
+        fineAmount: 250,
+        caseNumber: "VN-2025-12345",
+      },
+      {
+        parcelId: "64312045",
+        address: "1823 WINCHESTER AVE, LAKEWOOD",
+        city: "LAKEWOOD",
+        zipCode: "44107",
+        violationType: "unsafe_structure",
+        violationCode: "LMC 1341.02",
+        violationDescription: "Deteriorated front porch railing - safety hazard",
+        severity: "critical" as const,
+        status: "open" as const,
+        issuedDate: "2025-09-01",
+        dueDate: "2025-09-30",
+        fineAmount: 500,
+        caseNumber: "VN-2025-5678",
+      },
+      {
+        parcelId: "11523067",
+        address: "15234 LAKE SHORE BLVD, CLEVELAND",
+        city: "CLEVELAND",
+        zipCode: "44110",
+        violationType: "vacant_building",
+        violationCode: "BMC 3103.09",
+        violationDescription: "Vacant building not properly secured - open windows",
+        severity: "major" as const,
+        status: "lien_placed" as const,
+        issuedDate: "2025-03-15",
+        dueDate: "2025-04-15",
+        fineAmount: 1000,
+        caseNumber: "VN-2025-3456",
+      },
+    ];
+
+    let inserted = 0;
+    for (const violation of sampleData) {
+      const existing = await ctx.db
+        .query("codeViolations")
+        .filter((q) => q.eq(q.field("caseNumber"), violation.caseNumber))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("codeViolations", { ...violation, lastUpdated: Date.now() });
+        inserted++;
+      }
+    }
+
+    return { inserted, total: sampleData.length };
+  },
+});
+
+// Sample demographics
+export const seedSampleDemographics = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const sampleData = [
+      {
+        zipCode: "44107",
+        city: "LAKEWOOD",
+        population: 52131,
+        medianHouseholdIncome: 52000,
+        medianAge: 34,
+        ownerOccupiedPercent: 42,
+        renterOccupiedPercent: 58,
+        vacancyRate: 6.5,
+        medianHomeValue: 165000,
+        medianRent: 950,
+        povertyRate: 12.5,
+        unemploymentRate: 4.2,
+        collegeEducatedPercent: 48,
+        dataYear: 2022,
+      },
+      {
+        zipCode: "44118",
+        city: "CLEVELAND HEIGHTS",
+        population: 45000,
+        medianHouseholdIncome: 58000,
+        medianAge: 38,
+        ownerOccupiedPercent: 55,
+        renterOccupiedPercent: 45,
+        vacancyRate: 8.0,
+        medianHomeValue: 145000,
+        medianRent: 1050,
+        povertyRate: 14.0,
+        unemploymentRate: 5.1,
+        collegeEducatedPercent: 52,
+        dataYear: 2022,
+      },
+      {
+        zipCode: "44120",
+        city: "CLEVELAND",
+        population: 28000,
+        medianHouseholdIncome: 32000,
+        medianAge: 36,
+        ownerOccupiedPercent: 38,
+        renterOccupiedPercent: 62,
+        vacancyRate: 15.0,
+        medianHomeValue: 65000,
+        medianRent: 750,
+        povertyRate: 28.0,
+        unemploymentRate: 8.5,
+        collegeEducatedPercent: 22,
+        dataYear: 2022,
+      },
+      {
+        zipCode: "44134",
+        city: "PARMA",
+        population: 35000,
+        medianHouseholdIncome: 48000,
+        medianAge: 42,
+        ownerOccupiedPercent: 68,
+        renterOccupiedPercent: 32,
+        vacancyRate: 5.5,
+        medianHomeValue: 135000,
+        medianRent: 875,
+        povertyRate: 10.0,
+        unemploymentRate: 4.0,
+        collegeEducatedPercent: 28,
+        dataYear: 2022,
+      },
+    ];
+
+    let inserted = 0;
+    for (const demo of sampleData) {
+      const existing = await ctx.db
+        .query("demographics")
+        .withIndex("by_zip_code", (q) => q.eq("zipCode", demo.zipCode))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("demographics", { ...demo, lastUpdated: Date.now() });
+        inserted++;
+      }
+    }
+
+    return { inserted, total: sampleData.length };
+  },
+});
+
+// Seed all sample data at once
+export const seedAllSampleData = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return {
+      message: "Run individual seed functions to populate data:",
+      functions: [
+        "seedLandUseCodes - Land use code reference",
+        "seedCodeContent - Building codes and investor guides",
+        "seedPOSRequirements - Point of Sale requirements (24 cities)",
+        "seedSampleTaxDelinquent - Sample distressed properties",
+        "seedSampleSheriffSales - Sample foreclosures",
+        "seedSampleCodeViolations - Sample code violations",
+        "seedSampleDemographics - Sample demographics",
+      ],
+    };
   },
 });
