@@ -1143,36 +1143,12 @@ export const chatWithPro = action({
       };
     }
 
-    // Check message limits based on user status
-    let messageLimits;
-    if (args.clerkId) {
-      messageLimits = await ctx.runQuery(api.queries.getUserMessageLimits, { 
-        userId: args.clerkId 
-      });
-    } else if (args.sessionId) {
-      messageLimits = await ctx.runQuery(api.queries.getUserMessageLimits, { 
-        sessionId: args.sessionId 
-      });
-    } else {
+    // Validate that we have either clerkId or sessionId
+    if (!args.clerkId && !args.sessionId) {
       return {
         error: "invalid_request",
         message: "Either clerkId or sessionId must be provided",
       };
-    }
-
-    // Check if user has exceeded their message limit
-    if (messageLimits.messagesLimit !== -1 && messageLimits.messagesUsed >= messageLimits.messagesLimit) {
-      if (messageLimits.tier === "anonymous") {
-        return {
-          error: "signup_required",
-          message: "You've used your 5 free messages. Sign up to get 5 more messages!",
-        };
-      } else if (messageLimits.tier === "authenticated") {
-        return {
-          error: "payment_required",
-          message: "You've used your 5 authenticated messages. Upgrade to Pro for unlimited access!",
-        };
-      }
     }
 
     // Get regulations for the selected jurisdiction using RAG

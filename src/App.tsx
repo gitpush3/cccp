@@ -7,13 +7,8 @@ import { Dashboard } from "./components/Dashboard";
 import { AnonymousDashboard } from "./components/AnonymousDashboard";
 import { Paywall } from "./components/Paywall";
 import ReferralPage from "./components/ReferralPage";
-import TripsListPage from "./pages/trips/index";
-import TripDetailPage from "./pages/trips/[slug]";
-import TripPage from "./pages/trips/TripPage";
-import BookingSuccessPage from "./pages/booking/success";
-import MyBookings from "./pages/dashboard/MyBookings";
-import EditBooking from "./pages/dashboard/EditBooking";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
 import { useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes, Link } from "react-router-dom";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -29,10 +24,8 @@ export default function App() {
           <div className="flex items-center gap-3">
             <img src={FaviconLogo} alt="Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
             <h2 className="text-lg font-bold text-primary dark:text-white tracking-tight">Cuyahoga Code, Permit & Parcel Chat</h2>
-            <Link to="/trips" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">Trips</Link>
-            <Link to="/about" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">About</Link>
+<Link to="/about" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">About</Link>
             <Authenticated>
-              <Link to="/my-bookings" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">My Bookings</Link>
               <Link to="/referrals" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">Referrals</Link>
             </Authenticated>
           </div>
@@ -63,14 +56,9 @@ export default function App() {
             <Route path="/welcome" element={<WelcomeScreen />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/join" element={<JoinPage />} />
-            <Route path="/referrals" element={<ReferralPage />} />
-            <Route path="/trips" element={<TripsListPage />} />
-            <Route path="/trips/:slug" element={<TripDetailPage />} />
-            <Route path="/trip-:tripId" element={<TripPage />} />
-            <Route path="/booking/success" element={<BookingSuccessPage />} />
-            <Route path="/my-bookings" element={<MyBookings />} />
-            <Route path="/bookings/:bookingId/edit" element={<EditBooking />} />
+<Route path="/referrals" element={<ReferralPage />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/analytics" element={<AnalyticsDashboard />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="*" element={<Navigate to="/welcome" replace />} />
@@ -153,14 +141,17 @@ function WelcomeScreen() {
             Cuyahoga Code, Permit & Parcel Chat
           </h1>
           <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">
-            Real Estate Intelligence for Investors & Contractors
+            Free AI-Powered Real Estate Chat for Cuyahoga County
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8">
-            AI-powered property research and building code assistant for real estate investors, contractors, and developers.
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-4">
+            Useful for <span className="font-semibold">agents, lenders, brokers, investors, fix & flippers, landlords</span> and more!
+          </p>
+          <p className="text-gray-500 dark:text-gray-500 max-w-xl mx-auto mb-8 text-sm">
+            Try it now — no cost, just let us know if you think it's a helpful tool!
           </p>
           <Link to="/chat">
             <button className="px-8 py-4 bg-accent hover:bg-accent/90 text-white rounded-lg font-bold text-lg transition-colors shadow-lg">
-              Try It Now!
+              Start Free Chat
             </button>
           </Link>
         </div>
@@ -230,15 +221,30 @@ function WelcomeScreen() {
         <div className="text-center">
           <Link to="/chat">
             <button className="px-8 py-4 bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-md">
-              Try 5 Free Messages Now
+              Start Chatting Now
             </button>
           </Link>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-            No signup required • Sign up for 5 more • Pro members get unlimited access for $19/month
+            100% free to try • Let us know if it's helpful!
           </p>
           <Link to="/about" className="text-sm text-primary dark:text-accent hover:underline mt-2 inline-block">
             Learn more about our data →
           </Link>
+        </div>
+
+        {/* 3bids.io Promo */}
+        <div className="mt-12 p-6 bg-gradient-to-r from-accent/10 to-primary/10 dark:from-accent/20 dark:to-primary/20 rounded-xl border border-accent/20 text-center">
+          <p className="text-gray-700 dark:text-gray-300">
+            To post <span className="font-semibold">anonymous jobs</span> or get <span className="font-semibold">free leads & predictable CAC</span>, try{" "}
+            <a 
+              href="https://app.3bids.io" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-accent font-bold hover:underline"
+            >
+              app.3bids.io
+            </a>
+          </p>
         </div>
       </div>
     </div>
@@ -330,7 +336,6 @@ function UserContent() {
   const user = useQuery(api.users.getCurrentUser);
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
   const syncAfterSuccess = useAction(api.stripe.syncAfterSuccess);
-  const messageCount = useQuery(api.queries.countMessagesByUserId, { userId: user?.clerkId || "unknown" });
   const requestedCreateRef = useRef(false);
   const syncAttemptedRef = useRef(false);
 
@@ -383,12 +388,7 @@ function UserContent() {
     );
   }
 
-  // Allow access if user has active subscription OR has sent fewer than 5 messages
-  if (user.subscriptionStatus !== "active" && messageCount !== undefined && messageCount >= 5) {
-    return <Navigate to="/join" replace />;
-  }
-
-  return <Dashboard />;
+return <Dashboard />;
 }
 
 function ProfilePage() {
@@ -489,9 +489,9 @@ function AboutPage() {
           <h2 className="text-2xl font-bold mb-4">Pro Membership - $19/month</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold mb-3">Free Users Get:</h3>
+<h3 className="font-semibold mb-3">Free Users Get:</h3>
               <ul className="space-y-2 text-sm opacity-90">
-                <li>✓ 5 AI-powered questions</li>
+                <li>✓ AI-powered property research</li>
                 <li>✓ Basic property lookups</li>
                 <li>✓ Code reference links</li>
               </ul>

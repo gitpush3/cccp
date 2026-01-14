@@ -354,78 +354,8 @@ export const handleWebhook = internalAction({
 
     const eventData = args.data as any;
     const customerId = eventData.customer;
-    const metadata = eventData.metadata || {};
 
-    // Handle trip booking deposit payments
-    if (metadata.type === "trip_deposit" && args.type === "checkout.session.completed") {
-      const bookingId = metadata.bookingId;
-      const advisorId = metadata.advisorId;
-      const amount = eventData.amount_total || 0;
-
-      if (bookingId) {
-        // Confirm the booking deposit
-        await ctx.runMutation(internal.bookings.confirmBookingDeposit, {
-          bookingId,
-          depositAmount: amount,
-          stripeSessionId: eventData.id,
-        });
-
-        // Process advisor commission if applicable
-        if (advisorId && amount > 0) {
-          const commissionAmount = Math.floor(amount * 0.01); // 1% commission
-          
-          // Get the booking to find the user
-          const booking = await ctx.runQuery(api.bookings.getBookingById, { bookingId });
-          if (booking) {
-            await ctx.runMutation(internal.stripe.createReferralCommission, {
-              referrerId: advisorId,
-              refereeId: booking.userId,
-              amount: commissionAmount,
-              paymentIntentId: eventData.payment_intent || eventData.id,
-            });
-          }
-        }
-      }
-      return;
-    }
-
-    // Handle trip installment payments
-    if (metadata.type === "trip_installment" && args.type === "checkout.session.completed") {
-      const installmentId = metadata.installmentId;
-      const bookingId = metadata.bookingId;
-      const amount = eventData.amount_total || 0;
-
-      if (installmentId) {
-        // Mark installment as paid
-        await ctx.runMutation(internal.bookings.markInstallmentPaid, {
-          installmentId,
-          amount,
-          stripeSessionId: eventData.id,
-        });
-
-        // Check if booking is now fully paid
-        if (bookingId) {
-          await ctx.runMutation(internal.bookings.checkAndUpdateBookingStatus, {
-            bookingId,
-          });
-
-          // Get booking to check for advisor commission
-          const booking = await ctx.runQuery(api.bookings.getBookingById, { bookingId });
-          if (booking && booking.advisorId && amount > 0) {
-            const commissionAmount = Math.floor(amount * 0.01); // 1% commission
-            await ctx.runMutation(internal.stripe.createReferralCommission, {
-              referrerId: booking.advisorId,
-              refereeId: booking.userId,
-              amount: commissionAmount,
-              paymentIntentId: eventData.payment_intent || eventData.id,
-            });
-          }
-        }
-      }
-      return;
-    }
-
-    // Handle regular subscription payments
+    // Handle subscription payments
     if (typeof customerId !== "string") {
       console.error(`[STRIPE WEBHOOK] No customer ID in event: ${args.type}`);
       return;

@@ -21,6 +21,8 @@ export const countAnonymousMessages = query({
   },
 });
 
+// Note: Message limits have been removed. Users now get unlimited messages
+// after providing email + consent. This query is kept for potential future use.
 export const getUserMessageLimits = query({
   args: { 
     userId: v.optional(v.string()),
@@ -30,18 +32,12 @@ export const getUserMessageLimits = query({
     const identity = await ctx.auth.getUserIdentity();
     
     if (!identity && args.sessionId) {
-      // Anonymous user
-      const anonymousCount = await ctx.db
-        .query("messages")
-        .withIndex("by_session_id", (q) => q.eq("sessionId", args.sessionId))
-        .filter((q) => q.eq(q.field("isAnonymous"), true))
-        .collect();
-      
+      // Anonymous user - unlimited messages after email consent
       return {
         isAuthenticated: false,
         isSubscribed: false,
-        messagesUsed: anonymousCount.length,
-        messagesLimit: 5,
+        messagesUsed: 0,
+        messagesLimit: -1, // -1 means unlimited
         tier: "anonymous" as const
       };
     }
@@ -53,19 +49,13 @@ export const getUserMessageLimits = query({
         .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.userId))
         .unique();
       
-      const userMessages = await ctx.db
-        .query("messages")
-        .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-        .filter((q) => q.neq(q.field("isAnonymous"), true))
-        .collect();
-      
       const isSubscribed = user?.subscriptionStatus === "active";
       
       return {
         isAuthenticated: true,
         isSubscribed,
-        messagesUsed: userMessages.length,
-        messagesLimit: isSubscribed ? -1 : 5, // -1 means unlimited
+        messagesUsed: 0,
+        messagesLimit: -1, // -1 means unlimited
         tier: isSubscribed ? "subscribed" : "authenticated" as const
       };
     }
@@ -74,7 +64,7 @@ export const getUserMessageLimits = query({
       isAuthenticated: false,
       isSubscribed: false,
       messagesUsed: 0,
-      messagesLimit: 5,
+      messagesLimit: -1,
       tier: "anonymous" as const
     };
   },

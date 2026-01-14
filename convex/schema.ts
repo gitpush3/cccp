@@ -253,6 +253,51 @@ const applicationTables = {
       filterFields: ["municipality", "codeType"],
     }),
 
+  // Chat analytics for tracking usage
+  chatAnalytics: defineTable({
+    sessionId: v.optional(v.string()),
+    clerkId: v.optional(v.string()),
+    chatId: v.string(),
+    jurisdiction: v.string(),
+    messageCount: v.number(),
+    firstMessageAt: v.number(),
+    lastMessageAt: v.number(),
+    isAnonymous: v.boolean(),
+  })
+    .index("by_session_id", ["sessionId"])
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_chat_id", ["chatId"])
+    .index("by_last_message", ["lastMessageAt"]),
+
+  // Daily aggregated analytics
+  dailyAnalytics: defineTable({
+    date: v.string(), // YYYY-MM-DD format
+    totalMessages: v.number(),
+    totalChats: v.number(),
+    uniqueUsers: v.number(),
+    anonymousUsers: v.number(),
+    authenticatedUsers: v.number(),
+    topJurisdictions: v.optional(v.array(v.object({
+      jurisdiction: v.string(),
+      count: v.number(),
+    }))),
+  })
+    .index("by_date", ["date"]),
+
+  // User feedback after 8 messages
+  userFeedback: defineTable({
+    sessionId: v.optional(v.string()), // For anonymous users
+    clerkId: v.optional(v.string()), // For authenticated users
+    email: v.optional(v.string()),
+    isHelpful: v.optional(v.union(v.literal("yes"), v.literal("no"), v.literal("too_early"))),
+    roleInRealEstate: v.optional(v.string()), // What they do in Cuyahoga real estate
+    otherMarkets: v.optional(v.string()), // Which other markets they'd want
+    submittedAt: v.number(),
+  })
+    .index("by_session_id", ["sessionId"])
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_email", ["email"]),
+
   // Legacy muniCodes table (for vector search - kept for backward compatibility)
   muniCodes: defineTable({
     jurisdiction: v.string(),
@@ -541,91 +586,6 @@ const applicationTables = {
   })
     .index("by_zip_code", ["zipCode"])
     .index("by_city", ["city"]),
-
-  // ===== TRIP BOOKING SYSTEM (Source of Truth) =====
-  
-  trips: defineTable({
-    title: v.string(),
-    slug: v.string(), // URL-friendly identifier
-    description: v.optional(v.string()),
-    startDate: v.string(), // ISO date
-    endDate: v.string(),
-    cutoffDate: v.string(), // Final payment must be made by this date
-    status: v.union(v.literal("draft"), v.literal("published"), v.literal("completed"), v.literal("cancelled")),
-    template: v.union(v.literal("1"), v.literal("2"), v.literal("3")), // Which template to use
-    // Hero section
-    heroImageUrl: v.optional(v.string()),
-    heroImageStorageId: v.optional(v.id("_storage")),
-    heroTagline: v.optional(v.string()),
-    // Gallery
-    galleryImages: v.optional(v.array(v.string())), // Array of image URLs
-    // Itinerary
-    itinerary: v.optional(v.array(v.object({
-      day: v.number(),
-      title: v.string(),
-      description: v.string(),
-      imageUrl: v.optional(v.string()),
-    }))),
-    // Highlights/Features
-    highlights: v.optional(v.array(v.string())),
-    // Included/Excluded
-    included: v.optional(v.array(v.string())),
-    excluded: v.optional(v.array(v.string())),
-    // Location info
-    destination: v.optional(v.string()),
-    meetingPoint: v.optional(v.string()),
-    // Additional content
-    longDescription: v.optional(v.string()), // Rich text / markdown
-    videoUrl: v.optional(v.string()), // YouTube/Vimeo embed
-    // SEO
-    metaTitle: v.optional(v.string()),
-    metaDescription: v.optional(v.string()),
-    // Legacy
-    wpId: v.optional(v.number()),
-  }).index("by_slug", ["slug"]),
-
-  packages: defineTable({
-    tripId: v.id("trips"),
-    title: v.string(),
-    price: v.number(), // Total price in cents
-    depositAmount: v.number(), // Deposit required at booking (cents)
-    description: v.optional(v.string()),
-    maxSeats: v.optional(v.number()),
-    inventory: v.optional(v.number()),
-    status: v.union(v.literal("active"), v.literal("sold_out"), v.literal("inactive")),
-  }).index("by_trip", ["tripId"]),
-
-  bookings: defineTable({
-    userId: v.id("users"),
-    tripId: v.id("trips"),
-    packageId: v.id("packages"),
-    advisorId: v.optional(v.id("users")), // The "Influencer" or "Advisor" who referred
-    totalAmount: v.number(), // Locked-in price at time of booking
-    depositPaid: v.number(),
-    status: v.union(
-      v.literal("pending_deposit"), 
-      v.literal("confirmed"), // Deposit paid
-      v.literal("fully_paid"), 
-      v.literal("cancelled"),
-      v.literal("refunded")
-    ),
-    stripeSubscriptionId: v.optional(v.string()), // For monthly installments
-    metadata: v.optional(v.any()), // Extra info like dietary reqs
-    createdAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_trip", ["tripId"])
-    .index("by_advisor", ["advisorId"])
-    .index("by_status", ["status"]),
-
-  installments: defineTable({
-    bookingId: v.id("bookings"),
-    amount: v.number(),
-    dueDate: v.number(), // Timestamp
-    status: v.union(v.literal("pending"), v.literal("paid"), v.literal("failed"), v.literal("void")),
-    stripeInvoiceId: v.optional(v.string()),
-    paidAt: v.optional(v.number()),
-  }).index("by_booking", ["bookingId"]),
 
   // Building Permits
   buildingPermits: defineTable({
