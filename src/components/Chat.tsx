@@ -46,10 +46,10 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
 
   // Quick action prompts to showcase app capabilities
   const quickActions = [
+    { emoji: "🔮", text: "Find me pre-foreclosure houses in Lakewood" },
     { emoji: "🏠", text: "What's the most recent sale?" },
     { emoji: "📋", text: "Do I need a Point of Sale inspection?" },
     { emoji: "💰", text: "Show me tax delinquent properties" },
-    { emoji: "📊", text: "Best zip codes for rentals?" },
   ];
 
   const handleQuickAction = (prompt: string) => {
@@ -144,20 +144,12 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
           chatId,
         });
 
-        if (response.error === "signup_required") {
+        if (response.error === "payment_required") {
           await addMessage({
             chatId,
             userId: userId,
             role: "assistant",
-            content: "🎉 You've used your 5 free messages! Sign up to get 5 more messages and unlock additional features.",
-            isAnonymous: false,
-          });
-        } else if (response.error === "payment_required") {
-          await addMessage({
-            chatId,
-            userId: userId,
-            role: "assistant",
-            content: "⚠️ You've used your 5 authenticated messages. Upgrade to Pro for unlimited access!",
+            content: "⚠️ Pro subscription required for AI assistance. Please upgrade to continue.",
             isAnonymous: false,
           });
         } else if (response.error) {

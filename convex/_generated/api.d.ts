@@ -10,9 +10,8 @@
 
 import type * as actions from "../actions.js";
 import type * as admin from "../admin.js";
+import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
-import type * as bookings from "../bookings.js";
-import type * as bookingsActions from "../bookingsActions.js";
 import type * as censusData from "../censusData.js";
 import type * as chats from "../chats.js";
 import type * as codeContent from "../codeContent.js";
@@ -22,6 +21,7 @@ import type * as crons from "../crons.js";
 import type * as dataImports from "../dataImports.js";
 import type * as dealAnalysis from "../dealAnalysis.js";
 import type * as distressedData from "../distressedData.js";
+import type * as feedback from "../feedback.js";
 import type * as formSubmissions from "../formSubmissions.js";
 import type * as formSubmissionsActions from "../formSubmissionsActions.js";
 import type * as http from "../http.js";
@@ -30,6 +30,7 @@ import type * as marketData from "../marketData.js";
 import type * as messages from "../messages.js";
 import type * as neighborhoodData from "../neighborhoodData.js";
 import type * as parcels from "../parcels.js";
+import type * as preForeclosure from "../preForeclosure.js";
 import type * as queries from "../queries.js";
 import type * as regulations from "../regulations.js";
 import type * as router from "../router.js";
@@ -40,9 +41,7 @@ import type * as seedContacts from "../seedContacts.js";
 import type * as seedData from "../seedData.js";
 import type * as seedInvestorData from "../seedInvestorData.js";
 import type * as stripe from "../stripe.js";
-import type * as trips from "../trips.js";
 import type * as users from "../users.js";
-import type * as webhooks from "../webhooks.js";
 
 import type {
   ApiFromModules,
@@ -53,9 +52,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   admin: typeof admin;
+  analytics: typeof analytics;
   auth: typeof auth;
-  bookings: typeof bookings;
-  bookingsActions: typeof bookingsActions;
   censusData: typeof censusData;
   chats: typeof chats;
   codeContent: typeof codeContent;
@@ -65,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   dataImports: typeof dataImports;
   dealAnalysis: typeof dealAnalysis;
   distressedData: typeof distressedData;
+  feedback: typeof feedback;
   formSubmissions: typeof formSubmissions;
   formSubmissionsActions: typeof formSubmissionsActions;
   http: typeof http;
@@ -73,6 +72,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   neighborhoodData: typeof neighborhoodData;
   parcels: typeof parcels;
+  preForeclosure: typeof preForeclosure;
   queries: typeof queries;
   regulations: typeof regulations;
   router: typeof router;
@@ -83,9 +83,7 @@ declare const fullApi: ApiFromModules<{
   seedData: typeof seedData;
   seedInvestorData: typeof seedInvestorData;
   stripe: typeof stripe;
-  trips: typeof trips;
   users: typeof users;
-  webhooks: typeof webhooks;
 }>;
 
 /**

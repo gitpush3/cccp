@@ -35,20 +35,22 @@ This is a real estate intelligence LLM chat application for Cuyahoga County, Ohi
 │   ├── messages.ts      # Message storage
 │   ├── parcels.ts       # Property data queries
 │   ├── stripe.ts        # Payment integration
-│   ├── bookings.ts      # Trip booking system
+│   ├── analytics.ts     # Chat analytics tracking
+│   ├── feedback.ts      # User feedback collection
 │   ├── codeContent.ts   # Building code search
-│   └── http.ts          # HTTP routes (webhooks)
+│   └── router.ts        # HTTP routes (webhooks)
 │
 ├── src/
 │   ├── components/      # React components
-│   │   ├── Chat.tsx     # Main chat interface
+│   │   ├── Chat.tsx     # Main chat interface (authenticated)
+│   │   ├── AnonymousChat.tsx # Chat for anonymous users
 │   │   ├── Dashboard.tsx
+│   │   ├── FeedbackModal.tsx # Survey after 8 messages
+│   │   ├── PromoModal.tsx    # 3bids.io promo after 10 messages
 │   │   ├── Paywall.tsx
 │   │   └── ReferralPage.tsx
 │   ├── pages/           # Full page components
-│   │   ├── trips/       # Trip booking pages
-│   │   ├── dashboard/   # User dashboard
-│   │   └── admin/       # Admin panel
+│   │   └── admin/       # Admin analytics dashboard
 │   ├── App.tsx          # Main router
 │   └── main.tsx         # Entry point
 │
@@ -105,15 +107,14 @@ npx convex dev        # Convex dashboard & hot reload
 2. JWT passed to Convex via `ConvexProviderWithClerk`
 3. Backend validates via `ctx.auth.getUserIdentity()`
 4. User auto-created on first login via `getOrCreateUser()`
-5. Anonymous users tracked by sessionId (5 free messages)
+5. Anonymous users tracked by sessionId (email + consent required for access)
 
 ## Monetization Tiers
 
-| Tier | Access | Limit |
-|------|--------|-------|
-| Anonymous | Basic chat | 5 messages |
-| Form submission | Full access | Unlimited (bypasses payment) |
-| Pro subscription | Full access | Unlimited ($19/month) |
+| Tier | Access | Requirement |
+|------|--------|-------------|
+| Anonymous | Full chat | Email + consent |
+| Pro subscription | Full access | $19/month |
 | Referral | 1% commission | Via Stripe Connect |
 
 ## LLM Integration (actions.ts)
@@ -201,7 +202,7 @@ SITE_URL=
 
 - Parcel data uses `parcelPin` as primary identifier (not `parcelId`)
 - Chat sessions are city-scoped for jurisdiction-specific code lookup
-- Anonymous messages tracked by `sessionId` from localStorage
+- Anonymous users tracked by `sessionId` from localStorage (email + consent required)
 - Stripe Connect required for referral payouts
 - Form submissions bypass payment (manual access grant alternative)
 - Image uploads stored in Convex storage with `imageStorageId`

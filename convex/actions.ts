@@ -5,11 +5,76 @@ import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import OpenAI from "openai";
 
-const openai = process.env.OPENAI_API_KEY 
+const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     })
   : null;
+
+// Web search helper function using Tavily API
+async function performWebSearch(query: string, searchType: string = "general"): Promise<{
+  results: Array<{ title: string; url: string; snippet: string }>;
+  answer?: string;
+  error?: string;
+}> {
+  const tavilyApiKey = process.env.TAVILY_API_KEY;
+
+  if (!tavilyApiKey) {
+    return {
+      results: [],
+      error: "Web search not configured. Add TAVILY_API_KEY to environment variables.",
+    };
+  }
+
+  try {
+    // Add Cuyahoga County context to improve local results
+    const enhancedQuery = searchType === "local"
+      ? `${query} Cuyahoga County Ohio`
+      : query;
+
+    const response = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        api_key: tavilyApiKey,
+        query: enhancedQuery,
+        search_depth: "advanced",
+        include_answer: true,
+        include_domains: searchType === "local" ? [
+          "cuyahogacounty.gov",
+          "clevelandheights.gov",
+          "onelakewood.com",
+          "cityofparma.com",
+          "city.cleveland.oh.us",
+          "sheriff.cuyahogacounty.us",
+        ] : undefined,
+        max_results: 5,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Search API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      results: data.results?.map((r: any) => ({
+        title: r.title,
+        url: r.url,
+        snippet: r.content?.substring(0, 300) || "",
+      })) || [],
+      answer: data.answer,
+    };
+  } catch (error: any) {
+    return {
+      results: [],
+      error: `Web search failed: ${error.message}`,
+    };
+  }
+}
 
 // System prompt for the building codes and real estate assistant
 const SYSTEM_PROMPT = `You are a friendly, expert real estate assistant for Cuyahoga County, Ohio. You help real estate agents, investors, brokers, lenders, fix-and-flippers, wholesalers, and contractors make smart decisions.
@@ -50,31 +115,29 @@ Ask users early about their strategy: "Are you looking to flip, BRRRR, wholesale
 - generatePreInspectionChecklist → THE KILLER TOOL! Get complete inspection prep checklist with repair costs, 7-day game plan, and pro tips
 
 📜 BUILDING CODES & REGULATIONS
-- getRegulationsByMunicipality → Get all codes for a city (building, fire, zoning, permits)
-- getRegulation → Get a specific code type for a city
-- searchCodeContent → Search actual code text for specific requirements
-- getCodeByMunicipality → Get all code content for a city
-- getStateCodes → Ohio state codes (baseline when cities adopt state code)
+- smartCodeSearch → PREFERRED! Best code search - combines content + title search with scoring
+- getPermitRequirements → PREFERRED for permits! Built-in knowledge for 12 work types (roof, hvac, etc.)
+- getInvestorBriefing → PREFERRED for city overviews! Complete investor info for a city
+- compareCodes → Compare codes across multiple cities
+- getCodeSummary → Quick overview of available codes for a city
+- quickAnswer → Fast yes/no for common questions (POS, permits, rental, ADU)
+- getRegulationsByMunicipality → Get regulation URLs for a city
+- getStateCodes → Ohio state codes (baseline when cities adopt state)
 - getCountyCodes → Cuyahoga County regulations
-- compareRegulations → Compare a code type across multiple cities
-
-🔍 SMART CODE SEARCH (Use these for BEST answers!)
-- smartCodeSearch → THE BEST code search! Combines content + title search with scoring. Use for broad questions.
-- getPermitRequirements → Get permit info for work types (roof, hvac, electrical, etc.) with costs and inspections
-- compareCodes → Compare codes across multiple cities (great for investors comparing markets)
-- answerCodeQuestion → Smart pattern matching for common questions (setbacks, permits, ADU, rental, etc.)
-- getCodeSummary → Overview of all codes for a city with POS requirements and contact info
-
-⭐ INVESTOR BRIEFING TOOLS (BEST for new investors!)
-- getInvestorBriefing → COMPLETE briefing for a city! Returns POS, permits, zoning, rental rules, fire codes, state codes, county resources. Use for "tell me about investing in [city]" questions.
-- quickAnswer → FAST answers to common questions (POS, permits, rental, ADU, Airbnb). Use for simple yes/no questions.
-- verifyCoverage → Check what data is seeded for all 59 municipalities (admin tool)
 
 🏚️ DISTRESSED PROPERTIES (Great for deals!)
+- getHotLeads → BEST! Aggregates ALL distress signals into ranked leads with urgency scores
+- findDeals → Search for deals matching criteria (cities, price, property type)
 - getTaxDelinquentByCity → Properties with unpaid taxes (motivated sellers!)
-- getHighValueDelinquent → Properties owing $5000+ in back taxes
 - getSheriffSalesByCity → Foreclosure auctions in a city
 - getUpcomingSheriffSales → All upcoming sheriff sales
+
+🔮 PRE-FORECLOSURE TRACKING (6+ months before sheriff sale!)
+- getPreForeclosuresByCity → THE GOLD! Find properties in foreclosure process BEFORE sheriff sale. Track from lis pendens to auction.
+- getPreForeclosuresCountyWide → County-wide pre-foreclosure search with urgency ranking
+- getEarlyStageForeclosures → HIDDEN GEMS! Properties 4-7 months before sale that most investors miss
+- getForeclosureTimeline → Full timeline of court filings for a property. Great for due diligence.
+- getPreForeclosureStats → Summary stats: count by stage, urgency levels, insights
 
 📞 CONTACTS & SERVICES
 - getBuildingDeptContact → Phone, address, website for a city's building department
@@ -87,6 +150,9 @@ Ask users early about their strategy: "Are you looking to flip, BRRRR, wholesale
 - getCrimeStats → Crime statistics by zip code
 - getDemographicsByZip → Income, home values, vacancy rates, etc.
 - getNeighborhoodAnalysis → Full neighborhood report
+
+🌐 WEB SEARCH (For real-time info!)
+- webSearch → Search the web for current info not in our database. Use for: sheriff sale auction schedules, current permit fees, building department hours, recent news about municipalities, contractor reviews. Always cite URLs from results.
 - getFloodZoneByParcel → FEMA flood zone (affects insurance costs)
 
 🏠 WHEN TO USE WHICH TOOL
@@ -99,20 +165,32 @@ Most Recent Sales ("What's the latest sale in Lakewood?")
 
 Code/Permit Questions ("Do I need a permit for a roof?")
 → Use getPermitRequirements first! It has built-in knowledge for 12 work types.
-→ For general code questions, use answerCodeQuestion or smartCodeSearch
+→ For general code questions, use smartCodeSearch (BEST) - it combines multiple search strategies
+→ Use quickAnswer for simple yes/no questions (faster response)
 
 Code Comparison ("Which city is easier for investors?")
 → Use compareCodes to compare zoning, permits, or building codes across cities
 → Use getCodeSummary to see what codes are available for a specific city
 
 Investment Analysis ("Is this a good deal?")
-→ Use getInvestmentAnalysis + getComparables + getZipCodeStats
+→ Use calculateDealScore first for quick assessment
+→ Then getInvestmentAnalysis + getComparables + getZipCodeStats for details
 
 Finding Deals ("Show me motivated sellers")
-→ Use getTaxDelinquentByCity or getHighValueDelinquent
+→ Use getHotLeads for aggregated distress signals (BEST)
+→ Or getTaxDelinquentByCity / getSheriffSalesByCity for specific types
+
+Pre-Foreclosure Leads ("Find me houses before they hit sheriff sale")
+→ Use getPreForeclosuresByCity for properties 3-7 months BEFORE auction
+→ Use getEarlyStageForeclosures for the earliest leads (lis pendens stage)
+→ Use getForeclosureTimeline to see full court filing history
 
 Neighborhood Research ("Is this a good area?")
 → Use getNeighborhoodAnalysis + getSchoolsByZipCode + getCrimeStats
+
+Current/Live Info ("What are the current permit fees?")
+→ Use webSearch when you need real-time info not in our database
+→ Great for: auction schedules, current fees, building dept hours, recent news
 
 Inspector Coming ("I have an inspection next week")
 → Use generatePreInspectionChecklist → This gives a complete checklist with costs, 7-day prep schedule, and pro tips!
@@ -1125,6 +1203,137 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
       },
     },
   },
+  // ===== PRE-FORECLOSURE TOOLS (6+ months before sheriff sale!) =====
+  {
+    type: "function",
+    function: {
+      name: "getPreForeclosuresByCity",
+      description: "Find pre-foreclosure properties in a city. These are properties in the foreclosure process BEFORE they hit the sheriff sale - 3-7 months of lead time! Returns timeline stage, urgency score, and investor recommendations.",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "City name (e.g., 'Lakewood', 'Cleveland Heights')",
+          },
+          stage: {
+            type: "string",
+            enum: ["lis_pendens", "complaint_filed", "summons_served", "answer_deadline", "default_motion", "default_judgment", "decree_issued", "praecipe_filed", "appraisal", "advertising", "scheduled"],
+            description: "Filter by specific stage in foreclosure process",
+          },
+          minUrgency: {
+            type: "number",
+            description: "Minimum urgency score (1-10). Higher = closer to sale. Use 7+ for hot leads.",
+          },
+        },
+        required: ["city"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getPreForeclosuresCountyWide",
+      description: "Find pre-foreclosure properties across ALL of Cuyahoga County. Great for investors looking county-wide. Returns count by city and ranked list by urgency.",
+      parameters: {
+        type: "object",
+        properties: {
+          stage: {
+            type: "string",
+            enum: ["lis_pendens", "complaint_filed", "summons_served", "answer_deadline", "default_motion", "default_judgment", "decree_issued", "praecipe_filed", "appraisal", "advertising", "scheduled"],
+            description: "Filter by specific stage in foreclosure process",
+          },
+          minUrgency: {
+            type: "number",
+            description: "Minimum urgency score (1-10). Higher = closer to sale.",
+          },
+          limit: {
+            type: "number",
+            description: "Maximum results to return (default 100)",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getEarlyStageForeclosures",
+      description: "Find EARLY stage foreclosures (lis pendens through default motion). These are the HIDDEN GEMS - properties 4-7 months before sale that most investors don't know about yet!",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "City name (optional - omit for county-wide)",
+          },
+          limit: {
+            type: "number",
+            description: "Maximum results (default 50)",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getForeclosureTimeline",
+      description: "Get the full foreclosure timeline for a specific property. Shows all court filings, dates, and where the property is in the process. Great for due diligence.",
+      parameters: {
+        type: "object",
+        properties: {
+          caseNumber: {
+            type: "string",
+            description: "Court case number (e.g., 'CV-24-123456')",
+          },
+          address: {
+            type: "string",
+            description: "Property address (if case number unknown)",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getPreForeclosureStats",
+      description: "Get summary statistics on pre-foreclosures. Shows count by stage, urgency levels, and key insights.",
+      parameters: {
+        type: "object",
+        properties: {
+          city: {
+            type: "string",
+            description: "City name (optional - omit for county-wide stats)",
+          },
+        },
+      },
+    },
+  },
+  // ===== WEB SEARCH TOOL =====
+  {
+    type: "function",
+    function: {
+      name: "webSearch",
+      description: "Search the web for real-time information. Use this for: current sheriff sale auction schedules, up-to-date permit fees, municipal building department hours, current property listings, contractor reviews, or any information that may have changed recently. Always cite search results.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "The search query. Be specific and include location (e.g., 'Cleveland Heights Ohio building permit fees 2024', 'Cuyahoga County sheriff sale schedule January 2025')",
+          },
+          searchType: {
+            type: "string",
+            enum: ["general", "news", "local"],
+            description: "Type of search: 'general' for broad searches, 'news' for recent news/announcements, 'local' for local business/government info",
+          },
+        },
+        required: ["query"],
+      },
+    },
+  },
 ];
 
 export const chatWithPro = action({
@@ -1143,36 +1352,12 @@ export const chatWithPro = action({
       };
     }
 
-    // Check message limits based on user status
-    let messageLimits;
-    if (args.clerkId) {
-      messageLimits = await ctx.runQuery(api.queries.getUserMessageLimits, { 
-        userId: args.clerkId 
-      });
-    } else if (args.sessionId) {
-      messageLimits = await ctx.runQuery(api.queries.getUserMessageLimits, { 
-        sessionId: args.sessionId 
-      });
-    } else {
+    // Validate that we have either clerkId or sessionId
+    if (!args.clerkId && !args.sessionId) {
       return {
         error: "invalid_request",
         message: "Either clerkId or sessionId must be provided",
       };
-    }
-
-    // Check if user has exceeded their message limit
-    if (messageLimits.messagesLimit !== -1 && messageLimits.messagesUsed >= messageLimits.messagesLimit) {
-      if (messageLimits.tier === "anonymous") {
-        return {
-          error: "signup_required",
-          message: "You've used your 5 free messages. Sign up to get 5 more messages!",
-        };
-      } else if (messageLimits.tier === "authenticated") {
-        return {
-          error: "payment_required",
-          message: "You've used your 5 authenticated messages. Upgrade to Pro for unlimited access!",
-        };
-      }
     }
 
     // Get regulations for the selected jurisdiction using RAG
@@ -1243,7 +1428,7 @@ export const chatWithPro = action({
         content: `${SYSTEM_PROMPT}
 
 🏙️ CURRENT SESSION
-- Today: December 28, 2025
+- Today: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
 - User's City: ${args.jurisdiction}
 - Remember: Search "${args.jurisdiction}" specifically when looking up properties or sales!
 
@@ -1256,14 +1441,25 @@ ${context}`,
     ];
 
     // Call OpenAI with function calling for RAG
-    let response = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
-      messages,
-      tools: REGULATION_TOOLS,
-      tool_choice: "auto",
-      temperature: 0.4,
-      max_tokens: 1200, // Increased for detailed property responses
-    });
+    let response;
+    try {
+      response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages,
+        tools: REGULATION_TOOLS,
+        tool_choice: "auto",
+        temperature: 0.4,
+        max_tokens: 1200,
+      });
+    } catch (apiError: any) {
+      console.error("OpenAI API error:", apiError);
+      return {
+        error: "ai_service_error",
+        message: apiError.status === 429
+          ? "The service is experiencing high demand. Please try again in a moment."
+          : "I'm having trouble processing your request. Please try again.",
+      };
+    }
 
     let assistantMessage = response.choices[0].message;
 
@@ -1275,10 +1471,26 @@ ${context}`,
         // Type guard for function tool calls
         if (toolCall.type !== "function") continue;
         const functionName = toolCall.function.name;
-        const functionArgs = JSON.parse(toolCall.function.arguments);
 
         let functionResult;
+        let functionArgs: any;
 
+        try {
+          functionArgs = JSON.parse(toolCall.function.arguments);
+        } catch (parseError) {
+          functionResult = {
+            error: "Invalid function arguments",
+            message: "Could not parse the function parameters. Please try again.",
+          };
+          messages.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(functionResult),
+          });
+          continue;
+        }
+
+        try {
         switch (functionName) {
           case "getRegulationsByMunicipality":
             functionResult = await ctx.runQuery(
@@ -1657,8 +1869,70 @@ ${context}`,
               {}
             );
             break;
+          // ===== PRE-FORECLOSURE HANDLERS =====
+          case "getPreForeclosuresByCity":
+            functionResult = await ctx.runQuery(
+              api.preForeclosure.getPreForeclosuresByCity,
+              {
+                city: functionArgs.city,
+                stage: functionArgs.stage,
+                minUrgency: functionArgs.minUrgency,
+                limit: functionArgs.limit,
+              }
+            );
+            break;
+          case "getPreForeclosuresCountyWide":
+            functionResult = await ctx.runQuery(
+              api.preForeclosure.getPreForeclosuresCountyWide,
+              {
+                stage: functionArgs.stage,
+                minUrgency: functionArgs.minUrgency,
+                limit: functionArgs.limit,
+              }
+            );
+            break;
+          case "getEarlyStageForeclosures":
+            functionResult = await ctx.runQuery(
+              api.preForeclosure.getEarlyStageForeclosures,
+              {
+                city: functionArgs.city,
+                limit: functionArgs.limit,
+              }
+            );
+            break;
+          case "getForeclosureTimeline":
+            functionResult = await ctx.runQuery(
+              api.preForeclosure.getForeclosureTimeline,
+              {
+                caseNumber: functionArgs.caseNumber,
+                address: functionArgs.address,
+              }
+            );
+            break;
+          case "getPreForeclosureStats":
+            functionResult = await ctx.runQuery(
+              api.preForeclosure.getPreForeclosureStats,
+              { city: functionArgs.city }
+            );
+            break;
+          // ===== WEB SEARCH HANDLER =====
+          case "webSearch":
+            functionResult = await performWebSearch(
+              functionArgs.query,
+              functionArgs.searchType || "general"
+            );
+            break;
           default:
-            functionResult = { error: "Unknown function" };
+            functionResult = { error: "Unknown function", function: functionName };
+        }
+        } catch (toolError: any) {
+          // Catch any errors from tool execution and format nicely
+          functionResult = {
+            error: "Tool execution failed",
+            function: functionName,
+            message: toolError.message || "An unexpected error occurred",
+            suggestion: "Try rephrasing your question or contact the building department directly.",
+          };
         }
 
         messages.push({
@@ -1669,19 +1943,27 @@ ${context}`,
       }
 
       // Get next response from OpenAI
-      response = await openai.chat.completions.create({
-        model: "gpt-4-turbo-preview",
-        messages,
-        tools: REGULATION_TOOLS,
-        tool_choice: "auto",
-        temperature: 0.4,
-        max_tokens: 1200, // Increased for detailed property responses
-      });
+      try {
+        response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages,
+          tools: REGULATION_TOOLS,
+          tool_choice: "auto",
+          temperature: 0.4,
+          max_tokens: 1200,
+        });
+      } catch (apiError: any) {
+        console.error("OpenAI API error during tool processing:", apiError);
+        return {
+          error: "ai_service_error",
+          message: "I encountered an issue while processing the data. Please try again.",
+        };
+      }
 
       assistantMessage = response.choices[0].message;
     }
 
-    const responseText: string = assistantMessage.content || "I couldn't generate a response.";
+    const responseText: string = assistantMessage.content || "I couldn't generate a response. Please try asking in a different way.";
 
     // Save assistant response to chat history
     await ctx.runMutation(api.messages.addMessage, {
