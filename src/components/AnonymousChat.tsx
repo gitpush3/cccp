@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Upload, Send, Image as ImageIcon } from "lucide-react";
+import { Send, Building2, Flame, FileText, Scale } from "lucide-react";
 import { toast } from "sonner";
-import { SignInButton } from "@clerk/clerk-react";
 import { getOrCreateSessionId, incrementSessionMessageCount, getSessionMessageCount } from "../utils/sessionUtils";
+import { FeedbackModal } from "./FeedbackModal";
+import { EmailCaptureModal } from "./EmailCaptureModal";
 
 interface AnonymousChatProps {
   chatId: string;
@@ -22,7 +23,7 @@ function renderContentWithLinks(content: string, isUser: boolean) {
           href={part}
           target="_blank"
           rel="noreferrer"
-          className={`underline break-words ${isUser ? "text-white" : "text-primary dark:text-primary"}`}
+          className={`underline break-words ${isUser ? "text-white/90 hover:text-white" : "text-accent hover:text-accent/80"} transition-colors`}
         >
           {part}
         </a>
@@ -32,18 +33,23 @@ function renderContentWithLinks(content: string, isUser: boolean) {
   });
 }
 
+const FREE_MESSAGES = 10;
+const FEEDBACK_TRIGGER = 8;
+
 export function AnonymousChat({ chatId, jurisdiction }: AnonymousChatProps) {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sessionId] = useState(() => getOrCreateSessionId());
   const [messageCount, setMessageCount] = useState(() => getSessionMessageCount());
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [hasEmail, setHasEmail] = useState(() => localStorage.getItem("email-consent-given") === "true");
+  const [feedbackGiven, setFeedbackGiven] = useState(() => localStorage.getItem("feedback-given") === "true");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const messages = useQuery(api.messages.getChatMessages, { chatId });
   const addMessage = useMutation(api.messages.addMessage);
-  const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
   const chatWithPro = useAction(api.actions.chatWithPro);
 
   const scrollToBottom = () => {
@@ -54,218 +60,186 @@ export function AnonymousChat({ chatId, jurisdiction }: AnonymousChatProps) {
     scrollToBottom();
   }, [messages]);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
-
-  const uploadFile = async (file: File) => {
-    const uploadUrl = await generateUploadUrl();
-    
-    const result = await fetch(uploadUrl, {
-      method: "POST",
-      headers: { "Content-Type": file.type },
-      body: file,
-    });
-
-    if (!result.ok) {
-      throw new Error("Upload failed");
-    }
-
-    const { storageId } = await result.json();
-    return storageId;
-  };
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!message.trim() && !selectedFile) || isLoading) return;
+    if (!message.trim() || isLoading) return;
 
-    // Check message limit
-    if (messageCount >= 5) {
-      toast.error("You've reached your 5 free messages. Sign up to continue!");
+    if (messageCount >= FREE_MESSAGES && !hasEmail) {
+      setShowEmailModal(true);
       return;
     }
 
     const currentMessage = message.trim();
-    const currentFile = selectedFile;
-
-    // Clear input immediately for better UX
     setMessage("");
-    setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
     setIsLoading(true);
 
     try {
-      let imageStorageId;
-      if (currentFile) {
-        imageStorageId = await uploadFile(currentFile);
-      }
-
-      const messageContent = currentMessage || "Uploaded image for analysis";
-
       await addMessage({
         chatId,
         sessionId,
         role: "user",
-        content: messageContent,
-        imageStorageId,
+        content: currentMessage,
         isAnonymous: true,
       });
 
-      // Increment message count
       const newCount = incrementSessionMessageCount();
       setMessageCount(newCount);
 
-      if (currentMessage) {
-        const response = await chatWithPro({
-          sessionId,
-          question: currentMessage,
-          jurisdiction,
-          chatId,
-        });
+      if (newCount === FEEDBACK_TRIGGER && !feedbackGiven) {
+        setTimeout(() => setShowFeedbackModal(true), 1500);
+      }
 
-        if (response.error === "signup_required") {
-          await addMessage({
-            chatId,
-            sessionId,
-            role: "assistant",
-            content: "🎉 You've used your 5 free messages! Sign up to get 5 more messages and unlock additional features.",
-            isAnonymous: true,
-          });
-        } else if (response.error === "payment_required") {
-          await addMessage({
-            chatId,
-            sessionId,
-            role: "assistant",
-            content: "⚠️ Pro subscription required for AI assistance. Please upgrade to continue.",
-            isAnonymous: true,
-          });
-        } else if (response.error) {
-          toast.error(response.message ?? "We couldn't complete that request. Please try again.");
-          setMessage(currentMessage); // Restore message on error
-          return;
-        }
+      if (newCount === FREE_MESSAGES && !hasEmail) {
+        setTimeout(() => setShowEmailModal(true), 1500);
+      }
+
+      const response = await chatWithPro({
+        sessionId,
+        question: currentMessage,
+        jurisdiction,
+        chatId,
+      });
+
+      if (response.error === "signup_required" && !hasEmail) {
+        setShowEmailModal(true);
+      } else if (response.error) {
+        toast.error(response.message ?? "Something went wrong. Please try again.");
+        setMessage(currentMessage);
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Something went wrong sending your message. Please try again.");
-      setMessage(currentMessage); // Restore message on error
+      toast.error("Something went wrong. Please try again.");
+      setMessage(currentMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const remainingMessages = Math.max(0, 5 - messageCount);
+  const canSendMessage = hasEmail || messageCount < FREE_MESSAGES;
 
-  // Quick action prompts to showcase app capabilities
+  const handleFeedbackSubmit = (feedback: { rating: number; useCase: string; helpful: boolean }) => {
+    console.log("Feedback received:", feedback);
+    setFeedbackGiven(true);
+  };
+
+  const handleEmailSubmitted = () => {
+    setHasEmail(true);
+    setShowEmailModal(false);
+    toast.success("Thanks! You can now continue chatting.");
+  };
+
   const quickActions = [
-    { emoji: "🏠", text: "What's the most recent sale?" },
-    { emoji: "📋", text: "Do I need a Point of Sale inspection?" },
-    { emoji: "💰", text: "Show me tax delinquent properties" },
-    { emoji: "📊", text: "Best zip codes for rentals?" },
+    { icon: Building2, text: "Look up 3456 E 147th St Cleveland", color: "from-blue-500 to-blue-600" },
+    { icon: Flame, text: "What are the smoke detector requirements in Lakewood?", color: "from-orange-500 to-red-500" },
+    { icon: FileText, text: "Show me pre-foreclosure leads in Cuyahoga County", color: "from-emerald-500 to-teal-500" },
+    { icon: Scale, text: "Compare Brecksville codes vs Ohio state code", color: "from-purple-500 to-indigo-500" },
   ];
 
   const handleQuickAction = (prompt: string) => {
-    if (remainingMessages === 0 || isLoading) return;
+    if (!canSendMessage || isLoading) return;
     setMessage(prompt);
-    // Auto-submit after a brief delay so user sees what's being sent
     setTimeout(() => {
-      const form = document.querySelector('form');
+      const form = document.querySelector("form");
       if (form) form.requestSubmit();
     }, 100);
   };
 
-  return (
-    <div className="flex flex-col h-full min-h-0 bg-gray-50 dark:bg-dark transition-colors duration-300">
-      {/* Header */}
-      <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-surface shadow-sm">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
-              AI Assistant - {jurisdiction}
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-              Ask questions about municipal codes, building regulations, and receive state-approved guidance.
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              {remainingMessages} free messages left
-            </div>
-            <SignInButton mode="modal">
-              <button className="text-xs text-primary dark:text-accent hover:underline">
-                Sign up for 5 more →
-              </button>
-            </SignInButton>
-          </div>
-        </div>
-      </div>
+  const hasMessages = messages && messages.length > 0;
 
-      {/* Messages */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 sm:p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-        {/* Quick Actions - show when no messages */}
-        {(!messages || messages.length === 0) && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-full py-8">
-            <div className="text-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                👋 Welcome! Try asking:
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Click a question or type your own
+  return (
+    <div className="flex flex-col h-full overflow-hidden bg-gradient-to-b from-gray-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+        {/* Welcome Screen */}
+        {!hasMessages && !isLoading && (
+          <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-accent/70 shadow-lg shadow-accent/25 mb-4">
+                <Building2 className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                How can I help you today?
+              </h2>
+              <p className="text-gray-500 dark:text-slate-400 text-sm sm:text-base">
+                Ask about building codes, permits, property info, or investment opportunities
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
-              {quickActions.map((action, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleQuickAction(action.text)}
-                  disabled={remainingMessages === 0}
-                  className="flex items-center gap-3 p-4 bg-white dark:bg-dark-surface border border-gray-200 dark:border-gray-700 rounded-xl hover:border-primary dark:hover:border-accent hover:shadow-md transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span className="text-2xl">{action.emoji}</span>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{action.text}</span>
-                </button>
-              ))}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+              {quickActions.map((action, index) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickAction(action.text)}
+                    disabled={!canSendMessage}
+                    className="group flex items-start gap-4 p-4 bg-white dark:bg-slate-800/50
+                      border border-gray-200 dark:border-slate-700/50 rounded-2xl
+                      hover:border-gray-300 dark:hover:border-slate-600
+                      hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/20
+                      transition-all duration-200 text-left
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${action.color}
+                      flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-slate-300 leading-relaxed">
+                      {action.text}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {messages?.map((msg) => (
-          <div
-            key={msg._id}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[85%] sm:max-w-md lg:max-w-lg px-5 sm:px-6 py-3 shadow-md ${
-                msg.role === "user"
-                  ? "bg-primary text-white rounded-3xl rounded-tr-sm"
-                  : "bg-white text-primary dark:text-primary rounded-3xl rounded-tl-sm border border-gray-100 dark:border-gray-700"
-              }`}
-            >
-              {msg.imageUrl && (
-                <img
-                  src={msg.imageUrl}
-                  alt="Uploaded"
-                  className="w-full h-auto rounded-xl mb-3 max-h-48 object-cover border border-white/20"
-                />
-              )}
-              <p className="text-sm whitespace-pre-wrap leading-relaxed font-medium">
-                {renderContentWithLinks(msg.content, msg.role === "user")}
-              </p>
-            </div>
+        {/* Messages */}
+        {hasMessages && (
+          <div className="max-w-3xl mx-auto space-y-4">
+            {messages?.map((msg) => (
+              <div
+                key={msg._id}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[85%] sm:max-w-xl px-5 py-3.5 ${
+                    msg.role === "user"
+                      ? "bg-gradient-to-br from-primary to-primary/90 text-white rounded-2xl rounded-tr-md shadow-lg shadow-primary/20"
+                      : "bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-2xl rounded-tl-md shadow-lg shadow-gray-200/50 dark:shadow-black/20 border border-gray-100 dark:border-slate-700/50"
+                  }`}
+                >
+                  {msg.imageUrl && (
+                    <img
+                      src={msg.imageUrl}
+                      alt="Uploaded"
+                      className="w-full h-auto rounded-xl mb-3 max-h-48 object-cover"
+                    />
+                  )}
+                  <p className="text-sm sm:text-base whitespace-pre-wrap leading-relaxed">
+                    {renderContentWithLinks(msg.content, msg.role === "user")}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
+
+        {/* Loading */}
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="max-w-xs lg:max-w-md px-6 py-4 shadow-md bg-white text-primary rounded-3xl rounded-tl-sm border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
-                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
-                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+          <div className="max-w-3xl mx-auto">
+            <div className="flex justify-start">
+              <div className="px-5 py-4 bg-white dark:bg-slate-800 rounded-2xl rounded-tl-md shadow-lg shadow-gray-200/50 dark:shadow-black/20 border border-gray-100 dark:border-slate-700/50">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 bg-accent rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2.5 h-2.5 bg-accent rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2.5 h-2.5 bg-accent rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
               </div>
             </div>
           </div>
@@ -273,87 +247,76 @@ export function AnonymousChat({ chatId, jurisdiction }: AnonymousChatProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="sticky bottom-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-surface pt-3 sm:pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] px-3 sm:px-4">
-        {remainingMessages === 0 && (
-          <div className="mb-3 p-3 bg-accent/10 border border-accent/20 rounded-lg text-center">
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-              🎉 You've used all 5 free messages!
-            </p>
-            <SignInButton mode="modal">
-              <button className="px-4 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium text-sm transition-colors">
-                Sign Up for 5 More Messages
-              </button>
-            </SignInButton>
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {selectedFile && (
-            <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-              <ImageIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">{selectedFile.name}</span>
+      {/* Input Area */}
+      <div className="flex-shrink-0 border-t border-gray-200/80 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg">
+        <div className="max-w-3xl mx-auto px-4 py-4 sm:px-6">
+          {!canSendMessage && !hasEmail && (
+            <div className="mb-4 p-4 bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 rounded-xl text-center">
+              <p className="text-sm text-gray-700 dark:text-slate-300 mb-3">
+                Enter your email to continue chatting
+              </p>
               <button
-                type="button"
-                onClick={() => {
-                  setSelectedFile(null);
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
-                className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
+                onClick={() => setShowEmailModal(true)}
+                className="px-6 py-2.5 bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70
+                  text-white rounded-xl font-semibold text-sm transition-all duration-200
+                  shadow-lg shadow-accent/25 hover:shadow-xl hover:shadow-accent/30"
               >
-                Remove
+                Continue Free
               </button>
             </div>
           )}
-          
-          <div className="flex gap-2">
+
+          <form onSubmit={handleSubmit} className="flex gap-3">
             <input
-              type="file"
-              id="file-upload"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              accept="image/*,.pdf"
-              className="hidden"
-            />
-            
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={remainingMessages === 0}
-              className="h-11 w-11 inline-flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Upload Document"
-            >
-              <Upload className="h-5 w-5" />
-            </button>
-            
-            <input
+              ref={inputRef}
               type="text"
-              id="message-input"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck={false}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={remainingMessages > 0 ? "Ask about codes, regulations, or upload blueprints..." : "Sign up to continue chatting..."}
-              className="flex-1 h-11 px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading || remainingMessages === 0}
+              placeholder="Ask a question..."
+              disabled={isLoading || !canSendMessage}
+              className="flex-1 h-12 sm:h-14 px-5 bg-gray-100 dark:bg-slate-800
+                text-gray-900 dark:text-white rounded-xl
+                border-2 border-transparent
+                focus:border-accent focus:bg-white dark:focus:bg-slate-700
+                focus:outline-none focus:ring-4 focus:ring-accent/10
+                placeholder-gray-400 dark:placeholder-slate-500
+                disabled:opacity-50 disabled:cursor-not-allowed
+                transition-all duration-200 text-sm sm:text-base"
             />
-            
             <button
               type="submit"
-              disabled={(!message.trim() && !selectedFile) || isLoading || remainingMessages === 0}
-              className="h-11 px-5 bg-primary text-white rounded-full hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 transition-colors shadow-sm flex-shrink-0"
+              disabled={!message.trim() || isLoading || !canSendMessage}
+              className="h-12 sm:h-14 w-12 sm:w-14 bg-gradient-to-br from-primary to-primary/90
+                text-white rounded-xl
+                hover:from-primary/90 hover:to-primary/80
+                disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center justify-center transition-all duration-200
+                shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30
+                hover:-translate-y-0.5 active:translate-y-0
+                disabled:hover:translate-y-0 disabled:hover:shadow-lg"
             >
               {isLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" />
               )}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
+
+      {/* Modals */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        onSubmit={handleFeedbackSubmit}
+      />
+      <EmailCaptureModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        onEmailSubmitted={handleEmailSubmitted}
+        sessionId={sessionId}
+      />
     </div>
   );
 }

@@ -29,8 +29,6 @@ export default function App() {
           <div className="flex items-center gap-3">
             <img src={FaviconLogo} alt="Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
             <h2 className="text-lg font-bold text-primary dark:text-white tracking-tight">Cuyahoga Code, Permit & Parcel Chat</h2>
-            <Link to="/trips" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">Trips</Link>
-            <Link to="/about" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">About</Link>
             <Authenticated>
               <Link to="/my-bookings" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">My Bookings</Link>
               <Link to="/referrals" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">Referrals</Link>
@@ -59,8 +57,7 @@ export default function App() {
         </header>
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<Navigate to="/welcome" replace />} />
-            <Route path="/welcome" element={<WelcomeScreen />} />
+            <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/join" element={<JoinPage />} />
             <Route path="/referrals" element={<ReferralPage />} />
@@ -73,7 +70,7 @@ export default function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="*" element={<Navigate to="/welcome" replace />} />
+            <Route path="*" element={<Navigate to="/chat" replace />} />
           </Routes>
         </main>
         <Toaster />

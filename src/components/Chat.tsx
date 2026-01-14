@@ -46,10 +46,10 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
 
   // Quick action prompts to showcase app capabilities
   const quickActions = [
-    { emoji: "🏠", text: "What's the most recent sale?" },
-    { emoji: "📋", text: "Do I need a Point of Sale inspection?" },
-    { emoji: "💰", text: "Show me tax delinquent properties" },
-    { emoji: "📊", text: "Best zip codes for rentals?" },
+    { emoji: "🏠", text: "Look up 3456 E 147th St Cleveland" },
+    { emoji: "📋", text: "Do I need a Point of Sale inspection in Cleveland?" },
+    { emoji: "💰", text: "Show me pre-foreclosure leads in Cuyahoga County" },
+    { emoji: "🔧", text: "Do I need a roof permit in Lakewood?" },
   ];
 
   const handleQuickAction = (prompt: string) => {

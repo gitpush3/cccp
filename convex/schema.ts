@@ -542,91 +542,6 @@ const applicationTables = {
     .index("by_zip_code", ["zipCode"])
     .index("by_city", ["city"]),
 
-  // ===== TRIP BOOKING SYSTEM (Source of Truth) =====
-  
-  trips: defineTable({
-    title: v.string(),
-    slug: v.string(), // URL-friendly identifier
-    description: v.optional(v.string()),
-    startDate: v.string(), // ISO date
-    endDate: v.string(),
-    cutoffDate: v.string(), // Final payment must be made by this date
-    status: v.union(v.literal("draft"), v.literal("published"), v.literal("completed"), v.literal("cancelled")),
-    template: v.union(v.literal("1"), v.literal("2"), v.literal("3")), // Which template to use
-    // Hero section
-    heroImageUrl: v.optional(v.string()),
-    heroImageStorageId: v.optional(v.id("_storage")),
-    heroTagline: v.optional(v.string()),
-    // Gallery
-    galleryImages: v.optional(v.array(v.string())), // Array of image URLs
-    // Itinerary
-    itinerary: v.optional(v.array(v.object({
-      day: v.number(),
-      title: v.string(),
-      description: v.string(),
-      imageUrl: v.optional(v.string()),
-    }))),
-    // Highlights/Features
-    highlights: v.optional(v.array(v.string())),
-    // Included/Excluded
-    included: v.optional(v.array(v.string())),
-    excluded: v.optional(v.array(v.string())),
-    // Location info
-    destination: v.optional(v.string()),
-    meetingPoint: v.optional(v.string()),
-    // Additional content
-    longDescription: v.optional(v.string()), // Rich text / markdown
-    videoUrl: v.optional(v.string()), // YouTube/Vimeo embed
-    // SEO
-    metaTitle: v.optional(v.string()),
-    metaDescription: v.optional(v.string()),
-    // Legacy
-    wpId: v.optional(v.number()),
-  }).index("by_slug", ["slug"]),
-
-  packages: defineTable({
-    tripId: v.id("trips"),
-    title: v.string(),
-    price: v.number(), // Total price in cents
-    depositAmount: v.number(), // Deposit required at booking (cents)
-    description: v.optional(v.string()),
-    maxSeats: v.optional(v.number()),
-    inventory: v.optional(v.number()),
-    status: v.union(v.literal("active"), v.literal("sold_out"), v.literal("inactive")),
-  }).index("by_trip", ["tripId"]),
-
-  bookings: defineTable({
-    userId: v.id("users"),
-    tripId: v.id("trips"),
-    packageId: v.id("packages"),
-    advisorId: v.optional(v.id("users")), // The "Influencer" or "Advisor" who referred
-    totalAmount: v.number(), // Locked-in price at time of booking
-    depositPaid: v.number(),
-    status: v.union(
-      v.literal("pending_deposit"), 
-      v.literal("confirmed"), // Deposit paid
-      v.literal("fully_paid"), 
-      v.literal("cancelled"),
-      v.literal("refunded")
-    ),
-    stripeSubscriptionId: v.optional(v.string()), // For monthly installments
-    metadata: v.optional(v.any()), // Extra info like dietary reqs
-    createdAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_trip", ["tripId"])
-    .index("by_advisor", ["advisorId"])
-    .index("by_status", ["status"]),
-
-  installments: defineTable({
-    bookingId: v.id("bookings"),
-    amount: v.number(),
-    dueDate: v.number(), // Timestamp
-    status: v.union(v.literal("pending"), v.literal("paid"), v.literal("failed"), v.literal("void")),
-    stripeInvoiceId: v.optional(v.string()),
-    paidAt: v.optional(v.number()),
-  }).index("by_booking", ["bookingId"]),
-
   // Building Permits
   buildingPermits: defineTable({
     permitNumber: v.string(),
@@ -812,6 +727,131 @@ const applicationTables = {
     .index("by_city", ["city"])
     .index("by_score", ["overallScore"])
     .index("by_strategy", ["strategy"]),
+
+  // ===== ANONYMOUS LEADS - Email captures from free users =====
+  anonymousLeads: defineTable({
+    email: v.string(),
+    sessionId: v.string(),
+    consentGiven: v.boolean(),
+    capturedAt: v.number(),
+    source: v.optional(v.string()), // where they came from
+    messageCount: v.optional(v.number()), // how many messages they sent
+    lastCity: v.optional(v.string()), // last city they searched
+    convertedToUser: v.optional(v.boolean()),
+    convertedAt: v.optional(v.number()),
+  })
+    .index("by_email", ["email"])
+    .index("by_session", ["sessionId"])
+    .index("by_captured_at", ["capturedAt"]),
+
+  // ===== MUNICIPALITY CODE MATRIX - Structured lookup for codes/permits =====
+  municipalityCodeMatrix: defineTable({
+    // Identity
+    municipality: v.string(), // CLEVELAND, LAKEWOOD, OHIO STATE, CUYAHOGA COUNTY
+    municipalityType: v.union(
+      v.literal("city"),
+      v.literal("village"),
+      v.literal("township"),
+      v.literal("county"),
+      v.literal("state")
+    ),
+    population: v.optional(v.number()),
+
+    // Contact Info
+    buildingDeptPhone: v.optional(v.string()),
+    buildingDeptWebsite: v.optional(v.string()),
+    buildingDeptAddress: v.optional(v.string()),
+
+    // ===== CODES ADOPTED =====
+    buildingCode: v.string(), // "OBC" | "OBC+Local" | "Local"
+    residentialCode: v.string(), // "ORC" | "ORC+Local" | "Local"
+    electricalCode: v.string(), // "NEC2023" | "NEC2020" | "Local"
+    plumbingCode: v.string(), // "OPC" | "OPC+Local"
+    mechanicalCode: v.string(), // "OMC" | "OMC+Local"
+    fireCode: v.string(), // "OFC" | "OFC+Local"
+    propertyMaintenanceCode: v.string(), // "IPMC" | "Local" | "None"
+    energyCode: v.optional(v.string()), // "IECC" | "Local"
+    localAmendmentsNotes: v.optional(v.string()), // Key local differences
+
+    // ===== POINT OF SALE INSPECTION =====
+    pointOfSaleRequired: v.boolean(),
+    pointOfSaleFee: v.optional(v.string()), // "$150" or "Varies"
+    pointOfSaleNotes: v.optional(v.string()), // Requirements, validity period
+    pointOfSaleValidDays: v.optional(v.number()), // How long is it valid
+
+    // ===== RENTAL REGISTRATION =====
+    rentalRegistrationRequired: v.boolean(),
+    rentalRegistrationFee: v.optional(v.string()),
+    rentalInspectionRequired: v.optional(v.boolean()),
+    rentalInspectionFrequency: v.optional(v.string()), // "Annual", "Every 2 years"
+    rentalRegistrationNotes: v.optional(v.string()),
+
+    // ===== OCCUPANCY PERMIT =====
+    occupancyPermitRequired: v.boolean(),
+    occupancyPermitFee: v.optional(v.string()),
+    occupancyPermitNotes: v.optional(v.string()),
+
+    // ===== ROOF PERMIT =====
+    roofPermitRequired: v.boolean(),
+    roofPermitFee: v.optional(v.string()),
+    roofPermitNotes: v.optional(v.string()),
+
+    // ===== DECK PERMIT =====
+    deckPermitRequired: v.boolean(),
+    deckPermitFee: v.optional(v.string()),
+    deckPermitThreshold: v.optional(v.string()), // "Over 200 sq ft" or "Any attached"
+    deckPermitNotes: v.optional(v.string()),
+
+    // ===== FENCE PERMIT =====
+    fencePermitRequired: v.boolean(),
+    fencePermitFee: v.optional(v.string()),
+    fenceHeightLimit: v.optional(v.string()), // "6ft backyard, 4ft front"
+    fencePermitNotes: v.optional(v.string()),
+
+    // ===== HVAC PERMIT =====
+    hvacPermitRequired: v.boolean(),
+    hvacPermitFee: v.optional(v.string()),
+    hvacLicensedContractorRequired: v.optional(v.boolean()),
+    hvacPermitNotes: v.optional(v.string()),
+
+    // ===== ELECTRICAL PERMIT =====
+    electricalPermitRequired: v.boolean(),
+    electricalPermitFee: v.optional(v.string()),
+    electricalLicensedContractorRequired: v.boolean(),
+    electricalPermitNotes: v.optional(v.string()),
+
+    // ===== PLUMBING PERMIT =====
+    plumbingPermitRequired: v.boolean(),
+    plumbingPermitFee: v.optional(v.string()),
+    plumbingLicensedContractorRequired: v.boolean(),
+    plumbingPermitNotes: v.optional(v.string()),
+
+    // ===== DEMOLITION PERMIT =====
+    demolitionPermitRequired: v.boolean(),
+    demolitionPermitFee: v.optional(v.string()),
+    demolitionPermitNotes: v.optional(v.string()),
+
+    // ===== SPECIAL REGULATIONS =====
+    aduAllowed: v.boolean(), // Accessory Dwelling Units
+    aduNotes: v.optional(v.string()),
+    strAllowed: v.boolean(), // Short-term rentals (Airbnb)
+    strPermitRequired: v.optional(v.boolean()),
+    strNotes: v.optional(v.string()),
+    historicDistricts: v.optional(v.boolean()),
+    historicDistrictNotes: v.optional(v.string()),
+
+    // ===== SMOKE/CO REQUIREMENTS =====
+    smokeDetectorRequirements: v.optional(v.string()),
+    coDetectorRequirements: v.optional(v.string()),
+
+    // Metadata
+    lastUpdated: v.number(),
+    dataSource: v.optional(v.string()),
+  })
+    .index("by_municipality", ["municipality"])
+    .index("by_type", ["municipalityType"])
+    .index("by_pos_required", ["pointOfSaleRequired"])
+    .index("by_rental_reg", ["rentalRegistrationRequired"]),
 };
 
 export default defineSchema({

@@ -11,8 +11,6 @@
 import type * as actions from "../actions.js";
 import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
-import type * as bookings from "../bookings.js";
-import type * as bookingsActions from "../bookingsActions.js";
 import type * as censusData from "../censusData.js";
 import type * as chats from "../chats.js";
 import type * as codeContent from "../codeContent.js";
@@ -28,6 +26,7 @@ import type * as http from "../http.js";
 import type * as importRegulations from "../importRegulations.js";
 import type * as marketData from "../marketData.js";
 import type * as messages from "../messages.js";
+import type * as municipalityCodeMatrix from "../municipalityCodeMatrix.js";
 import type * as neighborhoodData from "../neighborhoodData.js";
 import type * as parcels from "../parcels.js";
 import type * as queries from "../queries.js";
@@ -39,10 +38,9 @@ import type * as seedAllMunicipalities from "../seedAllMunicipalities.js";
 import type * as seedContacts from "../seedContacts.js";
 import type * as seedData from "../seedData.js";
 import type * as seedInvestorData from "../seedInvestorData.js";
+import type * as seedMunicipalityCodeMatrix from "../seedMunicipalityCodeMatrix.js";
 import type * as stripe from "../stripe.js";
-import type * as trips from "../trips.js";
 import type * as users from "../users.js";
-import type * as webhooks from "../webhooks.js";
 
 import type {
   ApiFromModules,
@@ -54,8 +52,6 @@ declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   admin: typeof admin;
   auth: typeof auth;
-  bookings: typeof bookings;
-  bookingsActions: typeof bookingsActions;
   censusData: typeof censusData;
   chats: typeof chats;
   codeContent: typeof codeContent;
@@ -71,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   importRegulations: typeof importRegulations;
   marketData: typeof marketData;
   messages: typeof messages;
+  municipalityCodeMatrix: typeof municipalityCodeMatrix;
   neighborhoodData: typeof neighborhoodData;
   parcels: typeof parcels;
   queries: typeof queries;
@@ -82,10 +79,9 @@ declare const fullApi: ApiFromModules<{
   seedContacts: typeof seedContacts;
   seedData: typeof seedData;
   seedInvestorData: typeof seedInvestorData;
+  seedMunicipalityCodeMatrix: typeof seedMunicipalityCodeMatrix;
   stripe: typeof stripe;
-  trips: typeof trips;
   users: typeof users;
-  webhooks: typeof webhooks;
 }>;
 
 /**

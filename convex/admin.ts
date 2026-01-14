@@ -1,60 +1,43 @@
 import { query } from "./_generated/server";
-import { v } from "convex/values";
+
+// Real estate app admin dashboard stats
 
 export const getDashboardStats = query({
   args: {},
   handler: async (ctx) => {
-    const bookings = await ctx.db.query("bookings").collect();
     const users = await ctx.db.query("users").collect();
-    const installments = await ctx.db.query("installments").collect();
+    const messages = await ctx.db.query("messages").collect();
+    const anonymousLeads = await ctx.db.query("anonymousLeads").collect();
+    const formSubmissions = await ctx.db.query("formSubmissions").collect();
 
-    const totalRevenue = bookings.reduce((sum, b) => sum + b.depositPaid, 0);
-    const pendingPayments = installments.filter((i) => i.status === "pending").length;
+    // Count users by subscription status
+    const activeSubscribers = users.filter((u) => u.subscriptionStatus === "active").length;
+    const freeUsers = users.filter((u) => u.subscriptionStatus !== "active").length;
 
-    const statusCounts = {
-      pending_deposit: bookings.filter((b) => b.status === "pending_deposit").length,
-      confirmed: bookings.filter((b) => b.status === "confirmed").length,
-      fully_paid: bookings.filter((b) => b.status === "fully_paid").length,
-      cancelled: bookings.filter((b) => b.status === "cancelled").length,
-      refunded: bookings.filter((b) => b.status === "refunded").length,
-    };
+    // Count messages
+    const totalMessages = messages.length;
+    const userMessages = messages.filter((m) => m.role === "user").length;
+
+    // Leads stats
+    const totalLeads = anonymousLeads.length;
+    const convertedLeads = anonymousLeads.filter((l) => l.convertedToUser).length;
+
+    // Form submissions
+    const pendingForms = formSubmissions.filter((f) => f.status === "pending").length;
+    const processedForms = formSubmissions.filter((f) => f.status === "processed" || f.status === "granted_access").length;
 
     return {
-      totalRevenue,
-      totalBookings: bookings.length,
       totalUsers: users.length,
-      pendingPayments,
-      statusCounts,
+      activeSubscribers,
+      freeUsers,
+      totalMessages,
+      userMessages,
+      totalLeads,
+      convertedLeads,
+      conversionRate: totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : "0",
+      pendingForms,
+      processedForms,
     };
-  },
-});
-
-export const getAllBookings = query({
-  args: {},
-  handler: async (ctx) => {
-    const bookings = await ctx.db.query("bookings").order("desc").collect();
-
-    return Promise.all(
-      bookings.map(async (booking) => {
-        const trip = await ctx.db.get(booking.tripId);
-        const pkg = await ctx.db.get(booking.packageId);
-        const user = await ctx.db.get(booking.userId);
-        const advisor = booking.advisorId ? await ctx.db.get(booking.advisorId) : null;
-        const installments = await ctx.db
-          .query("installments")
-          .withIndex("by_booking", (q) => q.eq("bookingId", booking._id))
-          .collect();
-
-        return {
-          ...booking,
-          trip,
-          package: pkg,
-          user,
-          advisor,
-          installments,
-        };
-      })
-    );
   },
 });
 
@@ -65,92 +48,17 @@ export const getAllUsers = query({
   },
 });
 
-export const getPendingPayments = query({
+export const getAnonymousLeads = query({
   args: {},
   handler: async (ctx) => {
-    const installments = await ctx.db
-      .query("installments")
-      .filter((q) => q.eq(q.field("status"), "pending"))
-      .collect();
-
-    return Promise.all(
-      installments.map(async (installment) => {
-        const booking = await ctx.db.get(installment.bookingId);
-        let trip = null;
-        let user = null;
-
-        if (booking) {
-          trip = await ctx.db.get(booking.tripId);
-          user = await ctx.db.get(booking.userId);
-        }
-
-        return {
-          ...installment,
-          booking: booking
-            ? {
-                ...booking,
-                trip,
-                user,
-                metadata: booking.metadata,
-              }
-            : null,
-        };
-      })
-    );
+    return await ctx.db.query("anonymousLeads").order("desc").collect();
   },
 });
 
-export const getBookingDetails = query({
-  args: { bookingId: v.id("bookings") },
-  handler: async (ctx, args) => {
-    const booking = await ctx.db.get(args.bookingId);
-    if (!booking) return null;
-
-    const trip = await ctx.db.get(booking.tripId);
-    const pkg = await ctx.db.get(booking.packageId);
-    const user = await ctx.db.get(booking.userId);
-    const advisor = booking.advisorId ? await ctx.db.get(booking.advisorId) : null;
-    const installments = await ctx.db
-      .query("installments")
-      .withIndex("by_booking", (q) => q.eq("bookingId", args.bookingId))
-      .collect();
-
-    return {
-      ...booking,
-      trip,
-      package: pkg,
-      user,
-      advisor,
-      installments,
-    };
-  },
-});
-
-export const getAllTrips = query({
+export const getFormSubmissions = query({
   args: {},
   handler: async (ctx) => {
-    const trips = await ctx.db.query("trips").order("desc").collect();
-
-    return Promise.all(
-      trips.map(async (trip) => {
-        const packages = await ctx.db
-          .query("packages")
-          .withIndex("by_trip", (q) => q.eq("tripId", trip._id))
-          .collect();
-
-        const bookings = await ctx.db
-          .query("bookings")
-          .withIndex("by_trip", (q) => q.eq("tripId", trip._id))
-          .collect();
-
-        return {
-          ...trip,
-          packages,
-          bookingCount: bookings.length,
-          revenue: bookings.reduce((sum, b) => sum + b.depositPaid, 0),
-        };
-      })
-    );
+    return await ctx.db.query("formSubmissions").order("desc").collect();
   },
 });
 
@@ -160,7 +68,7 @@ export const getReferralStats = query({
     const commissions = await ctx.db.query("referralCommissions").collect();
     const users = await ctx.db.query("users").collect();
 
-    const advisorsWithEarnings = users
+    const referrersWithEarnings = users
       .filter((u) => (u.totalReferralEarnings || 0) > 0)
       .sort((a, b) => (b.totalReferralEarnings || 0) - (a.totalReferralEarnings || 0));
 
@@ -176,8 +84,30 @@ export const getReferralStats = query({
       totalCommissions,
       paidCommissions,
       pendingCommissions,
-      topAdvisors: advisorsWithEarnings.slice(0, 10),
-      totalAdvisors: advisorsWithEarnings.length,
+      topReferrers: referrersWithEarnings.slice(0, 10),
+      totalReferrers: referrersWithEarnings.length,
+    };
+  },
+});
+
+// Get data coverage stats
+export const getDataCoverageStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const parcels = await ctx.db.query("parcels").take(1);
+    const parcelCount = parcels.length > 0 ? "520K+" : "0";
+
+    const municipalities = await ctx.db.query("municipalities").collect();
+    const codeContent = await ctx.db.query("codeContent").collect();
+    const contacts = await ctx.db.query("contacts").collect();
+    const taxDelinquent = await ctx.db.query("taxDelinquent").collect();
+
+    return {
+      parcelCount,
+      municipalityCount: municipalities.length,
+      codeContentEntries: codeContent.length,
+      contactEntries: contacts.length,
+      taxDelinquentProperties: taxDelinquent.length,
     };
   },
 });

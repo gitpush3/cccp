@@ -1,5 +1,9 @@
-import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
+import { query, mutation, internalQuery, internalMutation, action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
+
+// N8N webhook base URL for 3bids
+const N8N_WEBHOOK_BASE = "https://snowday555.app.n8n.cloud/webhook";
 
 export const createUser = mutation({
   args: {
@@ -237,5 +241,133 @@ export const getReferralCount = query({
       .withIndex("by_referred_by", (q) => q.eq("referredBy", args.referralCode))
       .collect();
     return referrals.length;
+  },
+});
+
+// Capture anonymous user email for lead generation
+export const captureAnonymousEmail = mutation({
+  args: {
+    email: v.string(),
+    sessionId: v.string(),
+    consentGiven: v.boolean(),
+    source: v.optional(v.string()),
+    messageCount: v.optional(v.number()),
+    lastCity: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const capturedAt = Date.now();
+    const source = args.source || "chat";
+
+    // Check if email already captured
+    const existing = await ctx.db
+      .query("anonymousLeads")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+
+    let leadId;
+    let isNewLead = false;
+
+    if (existing) {
+      // Update existing record
+      await ctx.db.patch(existing._id, {
+        sessionId: args.sessionId,
+        consentGiven: args.consentGiven,
+        messageCount: args.messageCount,
+        lastCity: args.lastCity,
+      });
+      leadId = existing._id;
+    } else {
+      // Create new lead
+      isNewLead = true;
+      leadId = await ctx.db.insert("anonymousLeads", {
+        email: args.email,
+        sessionId: args.sessionId,
+        consentGiven: args.consentGiven,
+        capturedAt,
+        source,
+        messageCount: args.messageCount,
+        lastCity: args.lastCity,
+        convertedToUser: false,
+      });
+    }
+
+    // Send to n8n for Postgres sync and email campaign
+    await ctx.scheduler.runAfter(0, internal.users.sendLeadToN8N, {
+      email: args.email,
+      sessionId: args.sessionId,
+      consentGiven: args.consentGiven,
+      capturedAt,
+      source,
+      messageCount: args.messageCount,
+      lastCity: args.lastCity,
+      isNewLead,
+    });
+
+    return leadId;
+  },
+});
+
+// Check if a session has already given email
+export const checkEmailCaptured = query({
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    const lead = await ctx.db
+      .query("anonymousLeads")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .first();
+
+    return lead ? { hasEmail: true, email: lead.email } : { hasEmail: false };
+  },
+});
+
+// Internal action to send lead to n8n for Postgres sync and email campaign
+export const sendLeadToN8N = internalAction({
+  args: {
+    email: v.string(),
+    sessionId: v.string(),
+    consentGiven: v.boolean(),
+    capturedAt: v.number(),
+    source: v.string(),
+    messageCount: v.optional(v.number()),
+    lastCity: v.optional(v.string()),
+    isNewLead: v.boolean(),
+  },
+  handler: async (_ctx, args) => {
+    const webhookUrl = `${N8N_WEBHOOK_BASE}/3bids-code-lead-capture`;
+
+    const payload = {
+      event_type: "code_lead_captured",
+      source: "code.3bids.io",
+      timestamp: new Date().toISOString(),
+      lead: {
+        email: args.email,
+        session_id: args.sessionId,
+        consent_given: args.consentGiven,
+        captured_at: new Date(args.capturedAt).toISOString(),
+        source: args.source,
+        message_count: args.messageCount,
+        last_city: args.lastCity,
+        is_new_lead: args.isNewLead,
+      },
+    };
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        console.log(`N8N webhook sent successfully for ${args.email}`);
+        return { success: true };
+      } else {
+        console.warn(`N8N webhook returned ${response.status} for ${args.email}`);
+        return { success: false, status: response.status };
+      }
+    } catch (error) {
+      console.error(`N8N webhook error for ${args.email}:`, error);
+      return { success: false, error: String(error) };
+    }
   },
 });

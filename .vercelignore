@@ -1,0 +1,19 @@
+# Large data files
+cuyahoga parcels/
+*.csv
+
+# Development
+node_modules/
+.git/
+.env
+.env.local
+
+# Build artifacts
+dist/
+
+# Misc
+*.log
+.DS_Store
+manus/
+chef/
+docs/

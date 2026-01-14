@@ -1584,71 +1584,74 @@ export const seedPOSRequirements = mutation({
 
 // ===== SAMPLE DATA FOR TESTING =====
 
-// Sample tax delinquent data
+// Sample tax delinquent data - EXPANDED for demo (50+ properties across all major cities)
 export const seedSampleTaxDelinquent = mutation({
   args: {},
   handler: async (ctx) => {
     const sampleData = [
-      {
-        parcelId: "10321081",
-        address: "3456 E 147TH ST",
-        city: "CLEVELAND",
-        zipCode: "44120",
-        ownerName: "SMITH, JOHN",
-        totalAmountOwed: 8500,
-        yearsDelinquent: 3,
-        oldestDelinquentYear: 2021,
-        paymentPlanStatus: "none" as const,
-        certifiedForSale: true,
-      },
-      {
-        parcelId: "11523067",
-        address: "15234 LAKE SHORE BLVD",
-        city: "CLEVELAND",
-        zipCode: "44110",
-        ownerName: "JOHNSON LLC",
-        totalAmountOwed: 12000,
-        yearsDelinquent: 4,
-        oldestDelinquentYear: 2020,
-        paymentPlanStatus: "defaulted" as const,
-        certifiedForSale: true,
-      },
-      {
-        parcelId: "64312045",
-        address: "1823 WINCHESTER AVE",
-        city: "LAKEWOOD",
-        zipCode: "44107",
-        ownerName: "WILLIAMS, MARY",
-        totalAmountOwed: 5200,
-        yearsDelinquent: 2,
-        oldestDelinquentYear: 2022,
-        paymentPlanStatus: "none" as const,
-        certifiedForSale: false,
-      },
-      {
-        parcelId: "47125089",
-        address: "4521 BROOKPARK RD",
-        city: "PARMA",
-        zipCode: "44134",
-        ownerName: "GARCIA INVESTMENTS LLC",
-        totalAmountOwed: 15000,
-        yearsDelinquent: 5,
-        oldestDelinquentYear: 2019,
-        paymentPlanStatus: "none" as const,
-        certifiedForSale: true,
-      },
-      {
-        parcelId: "68234091",
-        address: "2156 LEE RD",
-        city: "CLEVELAND HEIGHTS",
-        zipCode: "44118",
-        ownerName: "BROWN, ROBERT",
-        totalAmountOwed: 7800,
-        yearsDelinquent: 3,
-        oldestDelinquentYear: 2021,
-        paymentPlanStatus: "active" as const,
-        certifiedForSale: false,
-      },
+      // CLEVELAND (15 properties)
+      { parcelId: "10321081", address: "3456 E 147TH ST", city: "CLEVELAND", zipCode: "44120", ownerName: "SMITH, JOHN", totalAmountOwed: 8500, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "11523067", address: "15234 LAKE SHORE BLVD", city: "CLEVELAND", zipCode: "44110", ownerName: "JOHNSON LLC", totalAmountOwed: 12000, yearsDelinquent: 4, oldestDelinquentYear: 2020, paymentPlanStatus: "defaulted" as const, certifiedForSale: true },
+      { parcelId: "10456123", address: "8901 KINSMAN RD", city: "CLEVELAND", zipCode: "44104", ownerName: "WILLIAMS, JAMES", totalAmountOwed: 6200, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "10789456", address: "2345 E 55TH ST", city: "CLEVELAND", zipCode: "44103", ownerName: "DAVIS PROPERTIES", totalAmountOwed: 18500, yearsDelinquent: 5, oldestDelinquentYear: 2019, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "10234789", address: "4567 BROADWAY AVE", city: "CLEVELAND", zipCode: "44105", ownerName: "ANDERSON, LISA", totalAmountOwed: 4800, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "active" as const, certifiedForSale: false },
+      { parcelId: "10567890", address: "7890 CEDAR AVE", city: "CLEVELAND", zipCode: "44106", ownerName: "MILLER TRUST", totalAmountOwed: 22000, yearsDelinquent: 6, oldestDelinquentYear: 2018, paymentPlanStatus: "defaulted" as const, certifiedForSale: true },
+      { parcelId: "10890123", address: "1234 SUPERIOR AVE E", city: "CLEVELAND", zipCode: "44114", ownerName: "CHEN, MICHAEL", totalAmountOwed: 9800, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "10123456", address: "5678 ST CLAIR AVE", city: "CLEVELAND", zipCode: "44103", ownerName: "MARTINEZ, CARLOS", totalAmountOwed: 7200, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "10345678", address: "9012 UNION AVE", city: "CLEVELAND", zipCode: "44105", ownerName: "THOMPSON HOLDINGS", totalAmountOwed: 15600, yearsDelinquent: 4, oldestDelinquentYear: 2020, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "10678901", address: "3456 WOODLAND AVE", city: "CLEVELAND", zipCode: "44104", ownerName: "WHITE, PATRICIA", totalAmountOwed: 5500, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "10901234", address: "6789 CARNEGIE AVE", city: "CLEVELAND", zipCode: "44103", ownerName: "HARRIS INVESTMENTS", totalAmountOwed: 28000, yearsDelinquent: 7, oldestDelinquentYear: 2017, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "10234567", address: "2345 PAYNE AVE", city: "CLEVELAND", zipCode: "44114", ownerName: "CLARK, SANDRA", totalAmountOwed: 8900, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "10567891", address: "8901 EUCLID AVE", city: "CLEVELAND", zipCode: "44106", ownerName: "LEWIS, RICHARD", totalAmountOwed: 11200, yearsDelinquent: 4, oldestDelinquentYear: 2020, paymentPlanStatus: "active" as const, certifiedForSale: false },
+      { parcelId: "10890124", address: "1234 HOUGH AVE", city: "CLEVELAND", zipCode: "44103", ownerName: "ROBINSON GROUP", totalAmountOwed: 19500, yearsDelinquent: 5, oldestDelinquentYear: 2019, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "10123457", address: "4567 CENTRAL AVE", city: "CLEVELAND", zipCode: "44104", ownerName: "WALKER, BETTY", totalAmountOwed: 6800, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+
+      // LAKEWOOD (8 properties)
+      { parcelId: "64312045", address: "1823 WINCHESTER AVE", city: "LAKEWOOD", zipCode: "44107", ownerName: "WILLIAMS, MARY", totalAmountOwed: 5200, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "64456789", address: "14567 DETROIT AVE", city: "LAKEWOOD", zipCode: "44107", ownerName: "MOORE, KEVIN", totalAmountOwed: 8900, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "64789012", address: "1678 MARS AVE", city: "LAKEWOOD", zipCode: "44107", ownerName: "TAYLOR FAMILY TRUST", totalAmountOwed: 12500, yearsDelinquent: 4, oldestDelinquentYear: 2020, paymentPlanStatus: "defaulted" as const, certifiedForSale: true },
+      { parcelId: "64012345", address: "2345 LAKEWOOD HEIGHTS BLVD", city: "LAKEWOOD", zipCode: "44107", ownerName: "JACKSON, DAVID", totalAmountOwed: 4200, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "64345678", address: "1890 WARREN RD", city: "LAKEWOOD", zipCode: "44107", ownerName: "NELSON, SUSAN", totalAmountOwed: 7600, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "64678901", address: "15234 MADISON AVE", city: "LAKEWOOD", zipCode: "44107", ownerName: "HILL PROPERTIES", totalAmountOwed: 16800, yearsDelinquent: 5, oldestDelinquentYear: 2019, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "64901234", address: "1456 LAKE AVE", city: "LAKEWOOD", zipCode: "44107", ownerName: "YOUNG, MICHELLE", totalAmountOwed: 5900, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "active" as const, certifiedForSale: false },
+      { parcelId: "64234567", address: "2567 CLIFTON BLVD", city: "LAKEWOOD", zipCode: "44107", ownerName: "KING INVESTMENTS", totalAmountOwed: 9500, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+
+      // PARMA (8 properties)
+      { parcelId: "47125089", address: "4521 BROOKPARK RD", city: "PARMA", zipCode: "44134", ownerName: "GARCIA INVESTMENTS LLC", totalAmountOwed: 15000, yearsDelinquent: 5, oldestDelinquentYear: 2019, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "47456123", address: "6789 RIDGE RD", city: "PARMA", zipCode: "44129", ownerName: "WRIGHT, THOMAS", totalAmountOwed: 7800, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "47789456", address: "2345 PEARL RD", city: "PARMA", zipCode: "44134", ownerName: "LOPEZ, MARIA", totalAmountOwed: 5600, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "47012789", address: "8901 STATE RD", city: "PARMA", zipCode: "44134", ownerName: "SCOTT HOLDINGS", totalAmountOwed: 21000, yearsDelinquent: 6, oldestDelinquentYear: 2018, paymentPlanStatus: "defaulted" as const, certifiedForSale: true },
+      { parcelId: "47345012", address: "1234 SNOW RD", city: "PARMA", zipCode: "44134", ownerName: "GREEN, CHARLES", totalAmountOwed: 4500, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "47678345", address: "5678 PLEASANT VALLEY RD", city: "PARMA", zipCode: "44134", ownerName: "ADAMS, NANCY", totalAmountOwed: 11200, yearsDelinquent: 4, oldestDelinquentYear: 2020, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "47901678", address: "3456 W RIDGEWOOD DR", city: "PARMA", zipCode: "44134", ownerName: "BAKER FAMILY LLC", totalAmountOwed: 8100, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "active" as const, certifiedForSale: false },
+      { parcelId: "47234901", address: "7890 CHEVROLET BLVD", city: "PARMA", zipCode: "44129", ownerName: "GONZALEZ, JOSE", totalAmountOwed: 6700, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+
+      // CLEVELAND HEIGHTS (6 properties)
+      { parcelId: "68234091", address: "2156 LEE RD", city: "CLEVELAND HEIGHTS", zipCode: "44118", ownerName: "BROWN, ROBERT", totalAmountOwed: 7800, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "active" as const, certifiedForSale: false },
+      { parcelId: "68567123", address: "3456 MAYFIELD RD", city: "CLEVELAND HEIGHTS", zipCode: "44118", ownerName: "HERNANDEZ, ANA", totalAmountOwed: 12500, yearsDelinquent: 4, oldestDelinquentYear: 2020, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "68890456", address: "1789 CEDAR RD", city: "CLEVELAND HEIGHTS", zipCode: "44118", ownerName: "CAMPBELL TRUST", totalAmountOwed: 9200, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "68123789", address: "4567 NOBLE RD", city: "CLEVELAND HEIGHTS", zipCode: "44121", ownerName: "MITCHELL, DONNA", totalAmountOwed: 5800, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "68456012", address: "2345 COVENTRY RD", city: "CLEVELAND HEIGHTS", zipCode: "44118", ownerName: "PEREZ INVESTMENTS", totalAmountOwed: 18900, yearsDelinquent: 5, oldestDelinquentYear: 2019, paymentPlanStatus: "defaulted" as const, certifiedForSale: true },
+      { parcelId: "68789345", address: "6789 EUCLID HEIGHTS BLVD", city: "CLEVELAND HEIGHTS", zipCode: "44106", ownerName: "ROBERTS, MARK", totalAmountOwed: 7100, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+
+      // EUCLID (5 properties)
+      { parcelId: "61234567", address: "25678 LAKE SHORE BLVD", city: "EUCLID", zipCode: "44123", ownerName: "TURNER, ANGELA", totalAmountOwed: 8900, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "61567890", address: "1456 E 222ND ST", city: "EUCLID", zipCode: "44123", ownerName: "PHILLIPS LLC", totalAmountOwed: 14500, yearsDelinquent: 4, oldestDelinquentYear: 2020, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "61890123", address: "789 BABBITT RD", city: "EUCLID", zipCode: "44123", ownerName: "CARTER, STEVEN", totalAmountOwed: 6200, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "61123456", address: "3456 EUCLID AVE", city: "EUCLID", zipCode: "44117", ownerName: "EDWARDS FAMILY", totalAmountOwed: 11800, yearsDelinquent: 4, oldestDelinquentYear: 2020, paymentPlanStatus: "active" as const, certifiedForSale: false },
+      { parcelId: "61456789", address: "5678 CHARDON RD", city: "EUCLID", zipCode: "44117", ownerName: "COLLINS, JENNIFER", totalAmountOwed: 7500, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+
+      // EAST CLEVELAND (4 properties)
+      { parcelId: "62123456", address: "1234 EUCLID AVE", city: "EAST CLEVELAND", zipCode: "44112", ownerName: "STEWART, WILLIAM", totalAmountOwed: 4200, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+      { parcelId: "62456789", address: "5678 SUPERIOR AVE", city: "EAST CLEVELAND", zipCode: "44112", ownerName: "SANCHEZ, ROSA", totalAmountOwed: 8700, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "62789012", address: "2345 SHAW AVE", city: "EAST CLEVELAND", zipCode: "44112", ownerName: "MORRIS HOLDINGS", totalAmountOwed: 15200, yearsDelinquent: 5, oldestDelinquentYear: 2019, paymentPlanStatus: "defaulted" as const, certifiedForSale: true },
+      { parcelId: "62012345", address: "7890 HAYDEN AVE", city: "EAST CLEVELAND", zipCode: "44112", ownerName: "ROGERS, DIANE", totalAmountOwed: 5500, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "none" as const, certifiedForSale: false },
+
+      // MAPLE HEIGHTS (4 properties)
+      { parcelId: "63123456", address: "5678 BROADWAY AVE", city: "MAPLE HEIGHTS", zipCode: "44137", ownerName: "REED, LAWRENCE", totalAmountOwed: 6800, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "63456789", address: "1234 WARRENSVILLE CENTER RD", city: "MAPLE HEIGHTS", zipCode: "44137", ownerName: "COOK INVESTMENTS", totalAmountOwed: 11500, yearsDelinquent: 4, oldestDelinquentYear: 2020, paymentPlanStatus: "none" as const, certifiedForSale: true },
+      { parcelId: "63789012", address: "8901 LIBBY RD", city: "MAPLE HEIGHTS", zipCode: "44137", ownerName: "MORGAN, CAROL", totalAmountOwed: 4900, yearsDelinquent: 2, oldestDelinquentYear: 2022, paymentPlanStatus: "active" as const, certifiedForSale: false },
+      { parcelId: "63012345", address: "3456 LEE RD", city: "MAPLE HEIGHTS", zipCode: "44137", ownerName: "BELL, RAYMOND", totalAmountOwed: 9200, yearsDelinquent: 3, oldestDelinquentYear: 2021, paymentPlanStatus: "none" as const, certifiedForSale: true },
     ];
 
     let inserted = 0;

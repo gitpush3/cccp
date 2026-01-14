@@ -25,6 +25,18 @@ export const getUpcomingSheriffSales = query({
   },
 });
 
+// Get ALL sheriff sales (county-wide)
+export const getAllSheriffSales = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 50;
+    return await ctx.db
+      .query("sheriffSales")
+      .order("desc")
+      .take(limit);
+  },
+});
+
 export const getSheriffSaleByParcel = query({
   args: { parcelId: v.string() },
   handler: async (ctx, args) => {
@@ -77,6 +89,18 @@ export const getTaxDelinquentByCity = query({
       .withIndex("by_city", (q) => q.eq("city", args.city))
       .order("desc")
       .take(100);
+  },
+});
+
+// Get ALL tax delinquent (county-wide)
+export const getAllTaxDelinquent = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 50;
+    return await ctx.db
+      .query("taxDelinquent")
+      .order("desc")
+      .take(limit);
   },
 });
 

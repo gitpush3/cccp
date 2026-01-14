@@ -715,7 +715,10 @@ export const getHotLeads = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
-    const city = args.city?.toUpperCase();
+    // Handle "Cuyahoga County" or "county" as county-wide (all cities)
+    const cityInput = args.city?.toLowerCase() || "";
+    const isCountyWide = cityInput.includes("cuyahoga") || cityInput === "county" || cityInput === "all";
+    const city = isCountyWide ? undefined : args.city?.toUpperCase();
 
     // Master lead list
     const leads: Map<string, {

@@ -1,4 +1,4 @@
-import { mutation, action } from "./_generated/server";
+import { mutation, action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 
@@ -452,5 +452,74 @@ export const clearTable = mutation({
     }
 
     return { deleted: records.length };
+  },
+});
+
+// ===== WEEKLY DATA REFRESH TRIGGER =====
+// Called by cron job weekly - triggers n8n webhook or logs for manual run
+export const triggerWeeklyRefresh = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
+    const timestamp = new Date().toISOString();
+
+    console.log(`[WEEKLY REFRESH] Triggered at ${timestamp}`);
+
+    // If n8n webhook is configured, trigger the scraper workflow
+    if (n8nWebhookUrl) {
+      try {
+        const response = await fetch(n8nWebhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            trigger: "weekly_refresh",
+            timestamp,
+            targets: ["tax_delinquent", "sheriff_sales", "code_violations"],
+          }),
+        });
+
+        if (response.ok) {
+          console.log(`[WEEKLY REFRESH] n8n webhook triggered successfully`);
+          return { success: true, method: "n8n_webhook", timestamp };
+        } else {
+          console.error(`[WEEKLY REFRESH] n8n webhook failed: ${response.status}`);
+          return { success: false, method: "n8n_webhook", error: response.statusText };
+        }
+      } catch (error: any) {
+        console.error(`[WEEKLY REFRESH] n8n webhook error: ${error.message}`);
+        return { success: false, method: "n8n_webhook", error: error.message };
+      }
+    }
+
+    // No webhook configured - log for manual intervention
+    console.log(`[WEEKLY REFRESH] No N8N_WEBHOOK_URL configured. Run manually:`);
+    console.log(`  - npx convex run seedData:seedSampleTaxDelinquent`);
+    console.log(`  - npx convex run seedData:seedSampleSheriffSales`);
+    console.log(`  - Or import real data via dataImports:importTaxDelinquentBatch`);
+
+    return {
+      success: true,
+      method: "manual",
+      message: "No N8N_WEBHOOK_URL configured. Run seed functions manually or set up n8n workflow.",
+      timestamp,
+    };
+  },
+});
+
+// ===== DATA STATS =====
+// Get current data counts for monitoring
+export const getDataStats = action({
+  args: {},
+  handler: async (ctx): Promise<{ taxDelinquent: number; sheriffSales: number; lastChecked: string }> => {
+    const taxDelinquent: any[] = await ctx.runQuery(api.distressedData.getAllTaxDelinquent, { limit: 1000 });
+    const sheriffSales: any[] = await ctx.runQuery(api.distressedData.getAllSheriffSales, { limit: 1000 });
+
+    return {
+      taxDelinquent: taxDelinquent.length,
+      sheriffSales: sheriffSales.length,
+      lastChecked: new Date().toISOString(),
+    };
   },
 });

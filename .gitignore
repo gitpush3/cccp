@@ -47,3 +47,4 @@ out/
 
 # OS Files
 Thumbs.db
+.env*.local

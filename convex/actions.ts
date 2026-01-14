@@ -50,6 +50,11 @@ Ask users early about their strategy: "Are you looking to flip, BRRRR, wholesale
 - generatePreInspectionChecklist → THE KILLER TOOL! Get complete inspection prep checklist with repair costs, 7-day game plan, and pro tips
 
 📜 BUILDING CODES & REGULATIONS
+- getMunicipalityCodeMatrix → THE BEST TOOL! Get EXACT code/permit data for any city: which codes apply (OBC, ORC, NEC, etc.), POS requirements, rental registration, permit fees, ADU/STR rules. Use this FIRST for code questions!
+- compareMunicipalityCodes → Compare two cities' codes and permits side-by-side
+- checkMunicipalityPermit → Check if specific permit (roof, deck, fence, hvac, etc.) is required with fees
+- getMunicipalitiesWithPOS → List all 30+ cities requiring Point of Sale inspection
+- getMunicipalitiesWithRentalReg → List all cities requiring rental registration
 - getRegulationsByMunicipality → Get all codes for a city (building, fire, zoning, permits)
 - getRegulation → Get a specific code type for a city
 - searchCodeContent → Search actual code text for specific requirements
@@ -76,6 +81,9 @@ Ask users early about their strategy: "Are you looking to flip, BRRRR, wholesale
 - getSheriffSalesByCity → Foreclosure auctions in a city
 - getUpcomingSheriffSales → All upcoming sheriff sales
 
+🔍 WEB SEARCH (For current/external info)
+- webSearch → AI-powered web search via Tavily. Use for recent news, updated regulations, specific company info, or when local data is insufficient. Returns AI-summarized answers plus source links.
+
 📞 CONTACTS & SERVICES
 - getBuildingDeptContact → Phone, address, website for a city's building department
 - getServiceProviders → Find lenders, title companies, inspectors, etc.
@@ -97,13 +105,15 @@ Property Questions ("Tell me about 123 Main St")
 Most Recent Sales ("What's the latest sale in Lakewood?")
 → Use getMostRecentSalesByCity with the user's selected city
 
-Code/Permit Questions ("Do I need a permit for a roof?")
-→ Use getPermitRequirements first! It has built-in knowledge for 12 work types.
-→ For general code questions, use answerCodeQuestion or smartCodeSearch
+Code/Permit Questions ("Do I need a permit for a roof?", "What codes does Lakewood use?")
+→ Use getMunicipalityCodeMatrix FIRST! It has exact data for all 61 municipalities.
+→ Use checkMunicipalityPermit for specific permit questions (roof, deck, fence, hvac, electrical, plumbing, demolition)
+→ For detailed code text, use searchCodeContent or answerCodeQuestion
 
-Code Comparison ("Which city is easier for investors?")
-→ Use compareCodes to compare zoning, permits, or building codes across cities
-→ Use getCodeSummary to see what codes are available for a specific city
+Code Comparison ("Which city is easier for investors?", "Brecksville vs state code?")
+→ Use compareMunicipalityCodes to compare two cities' codes, permits, and requirements
+→ Use getMunicipalitiesWithPOS to see which cities require Point of Sale
+→ Use getMunicipalitiesWithRentalReg for rental registration requirements
 
 Investment Analysis ("Is this a good deal?")
 → Use getInvestmentAnalysis + getComparables + getZipCodeStats
@@ -113,6 +123,10 @@ Finding Deals ("Show me motivated sellers")
 
 Neighborhood Research ("Is this a good area?")
 → Use getNeighborhoodAnalysis + getSchoolsByZipCode + getCrimeStats
+
+Current/External Info ("What are the latest changes to Ohio landlord law?")
+→ Use webSearch when: info not in database, recent news/changes, specific company lookup, verifying current requirements
+→ Prefer local tools first (getMunicipalityCodeMatrix, searchCodeContent) - only use webSearch if needed
 
 Inspector Coming ("I have an inspection next week")
 → Use generatePreInspectionChecklist → This gives a complete checklist with costs, 7-day prep schedule, and pro tips!
@@ -153,6 +167,13 @@ For code/permit questions:
 3) Ohio Baseline - state code if city adopts it
 4) Next Steps - who to call, what to file
 5) Sources - links to the actual code
+
+If a tool returns empty or no results:
+- DON'T just say "I couldn't find anything" - that's not helpful!
+- DO explain what you searched and suggest alternatives
+- For properties: "I didn't find that exact address. Try checking the spelling or searching by owner name with searchByOwner."
+- For leads: "No distressed properties in [city]. Try county-wide search or check neighboring cities."
+- For codes: Use getMunicipalityCodeMatrix for Ohio State baseline which always applies.
 
 Always cite your sources! Use format like:
 - Source: Cuyahoga County Parcel Database
@@ -811,13 +832,13 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "getHotLeads",
-      description: "THE BEST deal-finding tool! Aggregates ALL distress signals (foreclosures, tax delinquent, code violations) into ranked hot leads with urgency scores and contact strategies.",
+      description: "THE BEST tool for PRE-FORECLOSURE leads! Returns tax delinquent properties, code violations, and distressed properties ranked by urgency. Use this for 'pre-foreclosure', 'motivated sellers', 'distressed properties', or investment leads. Pass 'Cuyahoga County' for county-wide results.",
       parameters: {
         type: "object",
         properties: {
           city: {
             type: "string",
-            description: "Filter by city name (optional)",
+            description: "City name OR 'Cuyahoga County' for all cities",
           },
           zipCode: {
             type: "string",
@@ -1093,6 +1114,127 @@ const REGULATION_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
           },
         },
         required: ["address"],
+      },
+    },
+  },
+  // ===== WEB SEARCH TOOL (Tavily) =====
+  {
+    type: "function",
+    function: {
+      name: "webSearch",
+      description: "Search the web using Tavily AI search for current information not in the database. Use for: current events, recent news, specific company info, regulations that may have changed, or anything not found in local data. Returns AI-optimized search results with content summaries.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "Search query (e.g., 'Cleveland building permit requirements 2024', 'Ohio landlord tenant law changes')",
+          },
+          searchDepth: {
+            type: "string",
+            enum: ["basic", "advanced"],
+            description: "Search depth: 'basic' for quick results, 'advanced' for more thorough research (uses more credits)",
+          },
+          maxResults: {
+            type: "number",
+            description: "Number of results to return (default 5, max 10)",
+          },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  // ===== MUNICIPALITY CODE MATRIX TOOLS =====
+  {
+    type: "function",
+    function: {
+      name: "getMunicipalityCodeMatrix",
+      description: "Get the complete code/permit matrix for a municipality. Returns EXACT data on which codes (OBC, ORC, NEC, etc.) apply, Point of Sale requirements, rental registration, permit requirements with fees, ADU/STR allowances, and more. THE BEST tool for code/permit questions!",
+      parameters: {
+        type: "object",
+        properties: {
+          municipality: {
+            type: "string",
+            description: "Municipality name (e.g., 'Cleveland', 'Lakewood', 'Cuyahoga County', 'Ohio State')",
+          },
+        },
+        required: ["municipality"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getMunicipalitiesWithPOS",
+      description: "Get list of all municipalities that require Point of Sale inspection. Returns cities, fees, and requirements.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getMunicipalitiesWithRentalReg",
+      description: "Get list of all municipalities that require rental registration. Returns cities, fees, and notes.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "compareMunicipalityCodes",
+      description: "Compare codes and permit requirements between two municipalities. Shows all differences in codes adopted, POS, permits, fees, etc.",
+      parameters: {
+        type: "object",
+        properties: {
+          municipality1: {
+            type: "string",
+            description: "First municipality name",
+          },
+          municipality2: {
+            type: "string",
+            description: "Second municipality name",
+          },
+        },
+        required: ["municipality1", "municipality2"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "checkMunicipalityPermit",
+      description: "Check if a specific permit is required in a municipality. Returns requirement status, fees, notes, and building department contact.",
+      parameters: {
+        type: "object",
+        properties: {
+          municipality: {
+            type: "string",
+            description: "Municipality name",
+          },
+          permitType: {
+            type: "string",
+            enum: ["roof", "deck", "fence", "hvac", "electrical", "plumbing", "demolition"],
+            description: "Type of permit to check",
+          },
+        },
+        required: ["municipality", "permitType"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getAllMunicipalityList",
+      description: "Get list of all 61 municipalities in the database (59 cities + Cuyahoga County + Ohio State). Useful for dropdown lists.",
+      parameters: {
+        type: "object",
+        properties: {},
       },
     },
   },
@@ -1483,10 +1625,19 @@ ${context}`,
             break;
           // ===== DISTRESSED PROPERTY HANDLERS =====
           case "getTaxDelinquentByCity":
-            functionResult = await ctx.runQuery(
-              api.distressedData.getTaxDelinquentByCity,
-              { city: functionArgs.city }
-            );
+            // If asking for county-wide, return all
+            const taxCityLower = (functionArgs.city || "").toLowerCase();
+            if (taxCityLower.includes("cuyahoga") || taxCityLower === "county" || taxCityLower === "all") {
+              functionResult = await ctx.runQuery(
+                api.distressedData.getAllTaxDelinquent,
+                { limit: 50 }
+              );
+            } else {
+              functionResult = await ctx.runQuery(
+                api.distressedData.getTaxDelinquentByCity,
+                { city: functionArgs.city.toUpperCase() }
+              );
+            }
             break;
           case "getHighValueDelinquent":
             functionResult = await ctx.runQuery(
@@ -1644,12 +1795,112 @@ ${context}`,
               }
             );
             break;
+          // ===== WEB SEARCH HANDLER (Tavily) =====
+          case "webSearch":
+            try {
+              const tavilyApiKey = process.env.TAVILY_API_KEY;
+              if (!tavilyApiKey) {
+                functionResult = { error: "Web search not configured. Please add TAVILY_API_KEY to environment." };
+              } else {
+                const maxResults = Math.min(functionArgs.maxResults || 5, 10);
+                const searchDepth = functionArgs.searchDepth || "basic";
+
+                const tavilyResponse = await fetch("https://api.tavily.com/search", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    api_key: tavilyApiKey,
+                    query: functionArgs.query,
+                    search_depth: searchDepth,
+                    max_results: maxResults,
+                    include_answer: true, // Get AI-generated answer summary
+                    include_raw_content: false,
+                  }),
+                });
+
+                if (!tavilyResponse.ok) {
+                  const errorText = await tavilyResponse.text();
+                  functionResult = { error: `Search failed: ${tavilyResponse.statusText} - ${errorText}` };
+                } else {
+                  const searchData = await tavilyResponse.json();
+                  // Extract results with AI-optimized content
+                  const results = (searchData.results || []).map((r: any) => ({
+                    title: r.title,
+                    url: r.url,
+                    content: r.content, // AI-extracted relevant content
+                    score: r.score, // Relevance score
+                  }));
+                  functionResult = {
+                    query: functionArgs.query,
+                    answer: searchData.answer, // AI-generated summary answer
+                    results,
+                  };
+                }
+              }
+            } catch (err: any) {
+              functionResult = { error: `Search error: ${err.message}` };
+            }
+            break;
+          // ===== MUNICIPALITY CODE MATRIX HANDLERS =====
+          case "getMunicipalityCodeMatrix":
+            functionResult = await ctx.runQuery(
+              api.municipalityCodeMatrix.getByMunicipality,
+              { municipality: functionArgs.municipality }
+            );
+            break;
+          case "getMunicipalitiesWithPOS":
+            functionResult = await ctx.runQuery(
+              api.municipalityCodeMatrix.getMunicipalitiesWithPOS,
+              {}
+            );
+            break;
+          case "getMunicipalitiesWithRentalReg":
+            functionResult = await ctx.runQuery(
+              api.municipalityCodeMatrix.getMunicipalitiesWithRentalReg,
+              {}
+            );
+            break;
+          case "compareMunicipalityCodes":
+            functionResult = await ctx.runQuery(
+              api.municipalityCodeMatrix.compareMunicipalities,
+              {
+                municipality1: functionArgs.municipality1,
+                municipality2: functionArgs.municipality2,
+              }
+            );
+            break;
+          case "checkMunicipalityPermit":
+            functionResult = await ctx.runQuery(
+              api.municipalityCodeMatrix.checkPermitRequired,
+              {
+                municipality: functionArgs.municipality,
+                permitType: functionArgs.permitType,
+              }
+            );
+            break;
+          case "getAllMunicipalityList":
+            functionResult = await ctx.runQuery(
+              api.municipalityCodeMatrix.getAllMunicipalities,
+              {}
+            );
+            break;
           // ===== SHERIFF SALES HANDLERS =====
           case "getSheriffSalesByCity":
-            functionResult = await ctx.runQuery(
-              api.distressedData.getSheriffSalesByCity,
-              { city: functionArgs.city }
-            );
+            // If asking for county-wide, return all sales
+            const sheriffCityLower = (functionArgs.city || "").toLowerCase();
+            if (sheriffCityLower.includes("cuyahoga") || sheriffCityLower === "county" || sheriffCityLower === "all") {
+              functionResult = await ctx.runQuery(
+                api.distressedData.getAllSheriffSales,
+                { limit: 50 }
+              );
+            } else {
+              functionResult = await ctx.runQuery(
+                api.distressedData.getSheriffSalesByCity,
+                { city: functionArgs.city.toUpperCase() }
+              );
+            }
             break;
           case "getUpcomingSheriffSales":
             functionResult = await ctx.runQuery(

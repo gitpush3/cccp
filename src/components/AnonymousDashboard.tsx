@@ -1,29 +1,25 @@
 import { useState } from "react";
-import { CitySelector } from "./CitySelector";
 import { AnonymousChat } from "./AnonymousChat";
-import { SignInButton } from "@clerk/clerk-react";
-import { Plus, Menu, X } from "lucide-react";
-import LogoOnBlack from "../assets/logo_noall_onblack_dark.png";
-import { getSessionMessageCount } from "../utils/sessionUtils";
+import { CitySelector } from "./CitySelector";
+import { Plus, Menu, X, Sparkles } from "lucide-react";
+import FaviconLogo from "../assets/3fav-180x180_360.png";
 
 export function AnonymousDashboard() {
-  const [selectedCity, setSelectedCity] = useState<string>("");
   const [chatId] = useState(() => `anon-chat-${Date.now()}`);
+  const [selectedCity, setSelectedCity] = useState<string>("Cuyahoga County");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
-  const messageCount = getSessionMessageCount();
-  const remainingMessages = Math.max(0, 5 - messageCount);
 
   const startNewChat = () => {
-    window.location.reload(); // Simple way to start fresh for anonymous users
+    window.location.reload();
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-dark overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {isMobileSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity"
           onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}
@@ -31,28 +27,38 @@ export function AnonymousDashboard() {
       {/* Sidebar */}
       <div className={`
         fixed lg:relative inset-y-0 left-0 z-50 lg:z-0
-        ${isDesktopSidebarCollapsed ? 'lg:w-16' : 'lg:w-80'}
-        ${isMobileSidebarOpen ? 'w-80' : 'w-0 lg:w-16 lg:w-80'}
-        bg-primary text-white transition-all duration-300 ease-in-out
+        ${isDesktopSidebarCollapsed ? 'lg:w-20' : 'lg:w-80'}
+        ${isMobileSidebarOpen ? 'w-80' : 'w-0 lg:w-20 lg:w-80'}
+        bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white
+        transition-all duration-300 ease-in-out
         flex flex-col overflow-hidden
+        shadow-2xl shadow-black/20
       `}>
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <div className="flex items-center justify-between p-5 border-b border-white/10">
           {!isDesktopSidebarCollapsed && (
             <div className="flex items-center gap-3">
-              <img src={LogoOnBlack} alt="Logo" className="h-8 w-8 object-cover rounded-full" />
-              <span className="font-bold text-lg">Anonymous Chat</span>
+              <div className="relative">
+                <img src={FaviconLogo} alt="3bids" className="h-10 w-10 object-cover rounded-xl shadow-lg border-2 border-accent" />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
+                  <Sparkles className="w-2 h-2 text-white" />
+                </div>
+              </div>
+              <div>
+                <span className="font-bold text-lg tracking-tight">Code Chat</span>
+                <p className="text-xs text-slate-400">AI-Powered Assistant</p>
+              </div>
             </div>
           )}
           <button
             onClick={() => setIsDesktopSidebarCollapsed(!isDesktopSidebarCollapsed)}
-            className="hidden lg:block p-1 hover:bg-white/10 rounded"
+            className="hidden lg:flex p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5 text-slate-400" />
           </button>
           <button
             onClick={() => setIsMobileSidebarOpen(false)}
-            className="lg:hidden p-1 hover:bg-white/10 rounded"
+            className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -60,73 +66,72 @@ export function AnonymousDashboard() {
 
         {!isDesktopSidebarCollapsed && (
           <>
-            {/* Message Counter */}
-            <div className="p-3 border-b border-white/10">
-              <div className="bg-white/10 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold">{remainingMessages}</div>
-                <div className="text-sm opacity-90">free messages left</div>
-                <SignInButton mode="modal">
-                  <button className="mt-2 text-xs bg-accent hover:bg-accent/90 px-3 py-1 rounded-full transition-colors">
-                    Sign up for 5 more
-                  </button>
-                </SignInButton>
-              </div>
-            </div>
-
             {/* New Chat Button */}
-            <div className="p-3 border-b border-white/10">
+            <div className="p-4">
               <button
                 onClick={startNewChat}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3
+                  bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70
+                  text-white rounded-xl font-semibold transition-all duration-200
+                  shadow-lg shadow-accent/25 hover:shadow-xl hover:shadow-accent/30
+                  hover:-translate-y-0.5 active:translate-y-0"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5" />
                 New Chat
               </button>
             </div>
 
-            {/* City Selector */}
-            <div className="p-3 border-b border-white/10">
-              <CitySelector 
-                selectedCity={selectedCity} 
+            {/* Jurisdiction Selector */}
+            <div className="px-4 pb-4">
+              <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
+                Jurisdiction
+              </label>
+              <CitySelector
+                selectedCity={selectedCity}
                 onCitySelect={setSelectedCity}
               />
             </div>
 
-            {/* Features Preview */}
-            <div className="flex-1 p-3 overflow-y-auto">
-              <div className="space-y-3">
-                <div className="text-sm font-semibold opacity-90">What you can ask:</div>
-                <div className="space-y-2 text-xs opacity-75">
-                  <div className="bg-white/5 rounded p-2">
-                    "What's the permit fee for a roof in Lakewood?"
+            {/* Divider */}
+            <div className="mx-4 border-t border-white/10" />
+
+            {/* What you can ask */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                Try asking
+              </h3>
+              <div className="space-y-2">
+                {[
+                  "I have a property I need information on",
+                  "How many smoke alarms do I need per sq ft in Lakewood?",
+                  "Please show me pre-foreclosure leads in Cuyahoga County",
+                  "What city code does Brecksville have vs state code?",
+                ].map((question, i) => (
+                  <div
+                    key={i}
+                    className="p-3 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-slate-300
+                      cursor-pointer transition-all duration-200 hover:translate-x-1
+                      border border-transparent hover:border-white/10"
+                  >
+                    "{question}"
                   </div>
-                  <div className="bg-white/5 rounded p-2">
-                    "Tell me about 1234 Main St Cleveland"
-                  </div>
-                  <div className="bg-white/5 rounded p-2">
-                    "Do I need a permit for electrical work?"
-                  </div>
-                </div>
-                
-                <div className="mt-4 p-3 bg-white/10 rounded-lg">
-                  <div className="text-sm font-semibold mb-2">Sign up to unlock:</div>
-                  <ul className="text-xs space-y-1 opacity-90">
-                    <li>• 5 more messages</li>
-                    <li>• Chat history</li>
-                    <li>• File uploads</li>
-                    <li>• Pro upgrade option</li>
-                  </ul>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* Sign Up CTA */}
-            <div className="p-3 border-t border-white/10">
-              <SignInButton mode="modal">
-                <button className="w-full px-4 py-2 bg-white text-primary rounded-lg font-medium hover:bg-gray-100 transition-colors">
-                  Sign Up Free
-                </button>
-              </SignInButton>
+            {/* Footer */}
+            <div className="p-4 border-t border-white/10">
+              <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
+                <span>Powered by</span>
+                <a
+                  href="https://3bids.io"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent hover:text-accent/80 font-medium transition-colors"
+                >
+                  3bids.io
+                </a>
+              </div>
             </div>
           </>
         )}
@@ -135,67 +140,25 @@ export function AnonymousDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-dark-surface border-b border-gray-200 dark:border-gray-800">
+        <div className="lg:hidden flex items-center justify-between p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-slate-700/50">
           <button
             onClick={() => setIsMobileSidebarOpen(true)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5 text-gray-600 dark:text-slate-400" />
           </button>
-          <div className="text-center">
-            <div className="font-medium text-gray-900 dark:text-gray-100">
-              {remainingMessages} messages left
-            </div>
-            <SignInButton mode="modal">
-              <button className="text-xs text-primary dark:text-accent hover:underline">
-                Sign up for more
-              </button>
-            </SignInButton>
+          <div className="font-semibold text-gray-900 dark:text-white">
+            Cuyahoga County Code Chat
           </div>
+          <div className="w-10" />
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 min-h-0">
-          {selectedCity ? (
-            <AnonymousChat 
-              chatId={chatId} 
-              jurisdiction={selectedCity} 
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-dark">
-              <div className="text-center max-w-md mx-auto p-8">
-                <div className="mb-6">
-                  <img src={LogoOnBlack} alt="Logo" className="h-16 w-16 mx-auto mb-4 rounded-full" />
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                    Welcome to Anonymous Chat
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Get instant answers about building codes, permits, and property information.
-                  </p>
-                </div>
-                
-                <div className="mb-6">
-                  <div className="text-3xl font-bold text-primary dark:text-accent mb-1">
-                    {remainingMessages}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    free messages remaining
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Select a city from the sidebar to start chatting
-                  </p>
-                  <SignInButton mode="modal">
-                    <button className="px-6 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium transition-colors">
-                      Sign Up for More Messages
-                    </button>
-                  </SignInButton>
-                </div>
-              </div>
-            </div>
-          )}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <AnonymousChat
+            chatId={chatId}
+            jurisdiction={selectedCity || "Cuyahoga County"}
+          />
         </div>
       </div>
     </div>
