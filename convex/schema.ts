@@ -253,6 +253,51 @@ const applicationTables = {
       filterFields: ["municipality", "codeType"],
     }),
 
+  // Chat analytics for tracking usage
+  chatAnalytics: defineTable({
+    sessionId: v.optional(v.string()),
+    clerkId: v.optional(v.string()),
+    chatId: v.string(),
+    jurisdiction: v.string(),
+    messageCount: v.number(),
+    firstMessageAt: v.number(),
+    lastMessageAt: v.number(),
+    isAnonymous: v.boolean(),
+  })
+    .index("by_session_id", ["sessionId"])
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_chat_id", ["chatId"])
+    .index("by_last_message", ["lastMessageAt"]),
+
+  // Daily aggregated analytics
+  dailyAnalytics: defineTable({
+    date: v.string(), // YYYY-MM-DD format
+    totalMessages: v.number(),
+    totalChats: v.number(),
+    uniqueUsers: v.number(),
+    anonymousUsers: v.number(),
+    authenticatedUsers: v.number(),
+    topJurisdictions: v.optional(v.array(v.object({
+      jurisdiction: v.string(),
+      count: v.number(),
+    }))),
+  })
+    .index("by_date", ["date"]),
+
+  // User feedback after 8 messages
+  userFeedback: defineTable({
+    sessionId: v.optional(v.string()), // For anonymous users
+    clerkId: v.optional(v.string()), // For authenticated users
+    email: v.optional(v.string()),
+    isHelpful: v.optional(v.union(v.literal("yes"), v.literal("no"), v.literal("too_early"))),
+    roleInRealEstate: v.optional(v.string()), // What they do in Cuyahoga real estate
+    otherMarkets: v.optional(v.string()), // Which other markets they'd want
+    submittedAt: v.number(),
+  })
+    .index("by_session_id", ["sessionId"])
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_email", ["email"]),
+
   // Legacy muniCodes table (for vector search - kept for backward compatibility)
   muniCodes: defineTable({
     jurisdiction: v.string(),
@@ -466,8 +511,92 @@ const applicationTables = {
   })
     .index("by_parcel_id", ["parcelId"])
     .index("by_city", ["city"])
-    .index("by_status", ["status"])
-    .index("by_sale_date", ["saleDate"]),
+    .index("by_status", ["status"]),
+
+  // ===== PRE-FORECLOSURE TRACKING =====
+  // Tracks the full timeline of events leading up to a sheriff sale
+  // Data sourced from Cuyahoga County Clerk of Courts docket
+  preForeclosureEvents: defineTable({
+    // Case identification
+    caseNumber: v.string(),                    // CV-24-123456 format
+    parcelId: v.optional(v.string()),          // Link to parcels table
+    address: v.string(),
+    city: v.string(),
+    zipCode: v.optional(v.string()),
+
+    // Timeline events (all dates as ISO strings)
+    lisPendensDate: v.optional(v.string()),    // First public notice - EARLIEST warning
+    complaintFiledDate: v.optional(v.string()),// Lawsuit filed
+    summonsServedDate: v.optional(v.string()), // Owner officially notified
+    answerDeadline: v.optional(v.string()),    // 28 days from summons
+    answerFiled: v.optional(v.boolean()),      // Did owner respond? false = likely default
+    defaultMotionDate: v.optional(v.string()), // Motion for default judgment
+    defaultJudgmentDate: v.optional(v.string()),// Default judgment granted
+    decreeDate: v.optional(v.string()),        // Decree of foreclosure issued
+    praecipeDate: v.optional(v.string()),      // $500 deposit, triggers appraisal
+    appraisalDate: v.optional(v.string()),     // Property appraised
+    appraisedValue: v.optional(v.number()),    // Appraised value
+    advertisingStartDate: v.optional(v.string()),// 3 weeks before sale
+    scheduledSaleDate: v.optional(v.string()), // Actual sheriff sale date
+
+    // Current stage in process
+    currentStage: v.union(
+      v.literal("lis_pendens"),      // ~6-7 months before sale
+      v.literal("complaint_filed"),   // ~6 months before sale
+      v.literal("summons_served"),    // ~5.5 months before sale
+      v.literal("answer_deadline"),   // ~5 months before sale
+      v.literal("default_motion"),    // ~4.5 months before sale
+      v.literal("default_judgment"),  // ~4 months before sale
+      v.literal("decree_issued"),     // ~3.5 months before sale
+      v.literal("praecipe_filed"),    // ~3 months before sale
+      v.literal("appraisal"),         // ~2 months before sale
+      v.literal("advertising"),       // ~3 weeks before sale
+      v.literal("scheduled"),         // Sale date set
+      v.literal("completed"),         // Sale occurred
+      v.literal("dismissed")          // Case dismissed (owner saved it)
+    ),
+
+    // Calculated fields for investor prioritization
+    daysUntilSale: v.optional(v.number()),     // Countdown to sale
+    daysSinceFiling: v.optional(v.number()),   // Days since lis pendens
+    urgencyScore: v.number(),                   // 1-10, higher = hotter lead
+
+    // Parties involved
+    plaintiff: v.optional(v.string()),          // Bank/lender name
+    plaintiffAttorney: v.optional(v.string()),  // Attorney firm
+    defendant: v.optional(v.string()),          // Homeowner name
+
+    // Property details (denormalized for quick access)
+    propertyType: v.optional(v.string()),       // SFR, Multi, Condo, etc.
+    estimatedValue: v.optional(v.number()),     // From parcels table
+    totalOwed: v.optional(v.number()),          // Mortgage balance if known
+    equityEstimate: v.optional(v.number()),     // Estimated equity
+
+    // Investor action tracking
+    investorNotes: v.optional(v.string()),      // System-generated tips
+    bestContactWindow: v.optional(v.string()),  // "Now - 3 months until sale"
+    recommendedAction: v.optional(v.string()),  // "Contact homeowner", "Monitor", etc.
+
+    // Source tracking
+    sourceUrl: v.optional(v.string()),          // Link to court docket
+    lastScrapedDate: v.optional(v.string()),    // When we last pulled data
+    lastUpdated: v.number(),
+  })
+    .index("by_case_number", ["caseNumber"])
+    .index("by_parcel_id", ["parcelId"])
+    .index("by_city", ["city"])
+    .index("by_city_and_stage", ["city", "currentStage"])
+    .index("by_stage", ["currentStage"])
+    .index("by_urgency", ["urgencyScore"])
+    .index("by_scheduled_sale", ["scheduledSaleDate"])
+    .searchIndex("search_address", {
+      searchField: "address",
+      filterFields: ["city", "currentStage"],
+    })
+    .searchIndex("search_defendant", {
+      searchField: "defendant",
+      filterFields: ["city"],
+    }),
 
   // ===== TIER 2: NEIGHBORHOOD QUALITY DATA =====
 

@@ -10,6 +10,7 @@
 
 import type * as actions from "../actions.js";
 import type * as admin from "../admin.js";
+import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as censusData from "../censusData.js";
 import type * as chats from "../chats.js";
@@ -20,6 +21,7 @@ import type * as crons from "../crons.js";
 import type * as dataImports from "../dataImports.js";
 import type * as dealAnalysis from "../dealAnalysis.js";
 import type * as distressedData from "../distressedData.js";
+import type * as feedback from "../feedback.js";
 import type * as formSubmissions from "../formSubmissions.js";
 import type * as formSubmissionsActions from "../formSubmissionsActions.js";
 import type * as http from "../http.js";
@@ -29,6 +31,7 @@ import type * as messages from "../messages.js";
 import type * as municipalityCodeMatrix from "../municipalityCodeMatrix.js";
 import type * as neighborhoodData from "../neighborhoodData.js";
 import type * as parcels from "../parcels.js";
+import type * as preForeclosure from "../preForeclosure.js";
 import type * as queries from "../queries.js";
 import type * as regulations from "../regulations.js";
 import type * as router from "../router.js";
@@ -51,6 +54,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   admin: typeof admin;
+  analytics: typeof analytics;
   auth: typeof auth;
   censusData: typeof censusData;
   chats: typeof chats;
@@ -61,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   dataImports: typeof dataImports;
   dealAnalysis: typeof dealAnalysis;
   distressedData: typeof distressedData;
+  feedback: typeof feedback;
   formSubmissions: typeof formSubmissions;
   formSubmissionsActions: typeof formSubmissionsActions;
   http: typeof http;
@@ -70,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   municipalityCodeMatrix: typeof municipalityCodeMatrix;
   neighborhoodData: typeof neighborhoodData;
   parcels: typeof parcels;
+  preForeclosure: typeof preForeclosure;
   queries: typeof queries;
   regulations: typeof regulations;
   router: typeof router;
