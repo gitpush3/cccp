@@ -7,12 +7,6 @@ import { Dashboard } from "./components/Dashboard";
 import { AnonymousDashboard } from "./components/AnonymousDashboard";
 import { Paywall } from "./components/Paywall";
 import ReferralPage from "./components/ReferralPage";
-import TripsListPage from "./pages/trips/index";
-import TripDetailPage from "./pages/trips/[slug]";
-import TripPage from "./pages/trips/TripPage";
-import BookingSuccessPage from "./pages/booking/success";
-import MyBookings from "./pages/dashboard/MyBookings";
-import EditBooking from "./pages/dashboard/EditBooking";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import { useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes, Link } from "react-router-dom";
@@ -30,7 +24,6 @@ export default function App() {
             <img src={FaviconLogo} alt="Logo" className="h-10 w-10 object-cover rounded-full border-2 border-accent" />
             <h2 className="text-lg font-bold text-primary dark:text-white tracking-tight">Cuyahoga Code, Permit & Parcel Chat</h2>
             <Authenticated>
-              <Link to="/my-bookings" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">My Bookings</Link>
               <Link to="/referrals" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors ml-4">Referrals</Link>
             </Authenticated>
           </div>
@@ -61,12 +54,6 @@ export default function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/join" element={<JoinPage />} />
             <Route path="/referrals" element={<ReferralPage />} />
-            <Route path="/trips" element={<TripsListPage />} />
-            <Route path="/trips/:slug" element={<TripDetailPage />} />
-            <Route path="/trip-:tripId" element={<TripPage />} />
-            <Route path="/booking/success" element={<BookingSuccessPage />} />
-            <Route path="/my-bookings" element={<MyBookings />} />
-            <Route path="/bookings/:bookingId/edit" element={<EditBooking />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/about" element={<AboutPage />} />
