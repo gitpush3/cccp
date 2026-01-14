@@ -30,6 +30,7 @@ import type * as marketData from "../marketData.js";
 import type * as messages from "../messages.js";
 import type * as neighborhoodData from "../neighborhoodData.js";
 import type * as parcels from "../parcels.js";
+import type * as preForeclosure from "../preForeclosure.js";
 import type * as queries from "../queries.js";
 import type * as regulations from "../regulations.js";
 import type * as router from "../router.js";
@@ -71,6 +72,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   neighborhoodData: typeof neighborhoodData;
   parcels: typeof parcels;
+  preForeclosure: typeof preForeclosure;
   queries: typeof queries;
   regulations: typeof regulations;
   router: typeof router;

@@ -46,10 +46,10 @@ export function Chat({ chatId, jurisdiction }: ChatProps) {
 
   // Quick action prompts to showcase app capabilities
   const quickActions = [
+    { emoji: "🔮", text: "Find me pre-foreclosure houses in Lakewood" },
     { emoji: "🏠", text: "What's the most recent sale?" },
     { emoji: "📋", text: "Do I need a Point of Sale inspection?" },
     { emoji: "💰", text: "Show me tax delinquent properties" },
-    { emoji: "📊", text: "Best zip codes for rentals?" },
   ];
 
   const handleQuickAction = (prompt: string) => {
